@@ -2,11 +2,12 @@
 
 #[macro_use] extern crate rocket;
 
-#[get("/")]
-fn index() -> &'static str {
-    "Hello, world!"
-}
+mod finance;
+mod time;
 
 fn main() {
-    rocket::ignite().mount("/", routes![index]).launch();
+    rocket::ignite()
+        .mount("/finance", routes![finance::index])
+        .mount("/time", routes![time::index])
+        .launch();
 }
