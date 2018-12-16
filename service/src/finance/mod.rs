@@ -1,4 +1,3 @@
-#[get("/")]
-pub fn index() -> &'static str {
-    "Hello, world!"
-}
+pub mod account;
+pub mod controller;
+pub mod service;
