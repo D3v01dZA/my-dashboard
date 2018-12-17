@@ -20,6 +20,6 @@ pub fn accounts_put(account_service: State<AccountService>, account: Json<Unsave
 }
 
 #[get("/accounts/<id>")]
-pub fn accounts_get(account_service: State<AccountService>, id: u64) -> Json<Option<Account>> {
-    Json(account_service.get_account(id))
+pub fn accounts_get(account_service: State<AccountService>, id: u64) -> Option<Json<Account>> {
+    account_service.get_account(id).map(|account| Json(account))
 }

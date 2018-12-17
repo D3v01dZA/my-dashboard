@@ -18,7 +18,7 @@ impl AccountService {
     }
 
     pub fn get_account(&self, id: u64) -> Option<Account> {
-        self.entries.read().unwrap().get(id as usize).map(|f| f.clone())
+        self.entries.read().unwrap().get(id as usize).map(|account| account.clone())
     }
 
     pub fn create_account(&self, unsaved_account: UnsavedAccount) -> Account {
