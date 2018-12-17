@@ -23,8 +23,8 @@ impl AccountService {
 
     pub fn create_account(&self, unsaved_account: UnsavedAccount) -> Account {
         let mut entries: RwLockWriteGuard<Vec<Account>> = self.entries.write().unwrap();
-        let len: u64 = entries.len() as u64;
-        entries.push(unsaved_account.to_saved(len));
-        self.get_account(len).unwrap()
+        let account: Account = unsaved_account.to_saved(entries.len() as u64);
+        entries.push(account.clone());
+        account
     }
 }
