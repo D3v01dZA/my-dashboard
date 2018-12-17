@@ -16,10 +16,6 @@ impl Account {
 }
 
 impl UnsavedAccount {
-    pub fn create(balance: u64) -> UnsavedAccount {
-        UnsavedAccount { balance }
-    }
-
     pub fn to_saved(&self, id: u64) -> Account {
         Account::create(id, self.balance)
     }

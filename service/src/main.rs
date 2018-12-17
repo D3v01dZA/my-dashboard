@@ -2,7 +2,6 @@
 
 #[macro_use] extern crate rocket;
 #[macro_use] extern crate serde_derive;
-#[macro_use] extern crate lazy_static;
 
 extern crate serde;
 
@@ -17,6 +16,7 @@ fn main() {
             finance::controller::accounts_put,
             finance::controller::accounts_get
         ])
+        .manage(finance::service::AccountService::create())
         .mount("/time-sheets", routes![
             time::index
         ])

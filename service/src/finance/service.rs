@@ -1,28 +1,30 @@
 use crate::finance::account::*;
 
 use std::vec::Vec;
-use std::sync::Mutex;
+use std::sync::RwLock;
+use std::sync::RwLockWriteGuard;
 
 pub struct AccountService {
-    entries: Vec<Account>
+    entries: RwLock<Vec<Account>>
 }
 
 impl AccountService {
     pub fn create() -> AccountService {
-        AccountService { entries: vec![] }
+        AccountService { entries: RwLock::new(vec![]) }
     }
 
     pub fn get_accounts(&self) -> Vec<Account> {
-        self.entries.to_vec()
+        self.entries.read().unwrap().to_vec()
     }
 
     pub fn get_account(&self, id: u64) -> Option<Account> {
-        self.entries.get(id as usize).map(|f| f.clone())
+        self.entries.read().unwrap().get(id as usize).map(|f| f.clone())
     }
 
-    pub fn create_account(&mut self, unsaved_account: UnsavedAccount) -> Account {
-        let len: u64 = self.entries.len() as u64;
-        self.entries.push(unsaved_account.to_saved(len));
+    pub fn create_account(&self, unsaved_account: UnsavedAccount) -> Account {
+        let mut entries: RwLockWriteGuard<Vec<Account>> = self.entries.write().unwrap();
+        let len: u64 = entries.len() as u64;
+        entries.push(unsaved_account.to_saved(len));
         self.get_account(len).unwrap()
     }
 }

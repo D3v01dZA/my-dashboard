@@ -11,7 +11,7 @@ pub fn index() -> &'static str {
 
 #[get("/accounts")]
 pub fn accounts(account_service: State<AccountService>) -> Json<Vec<Account>> {
-    Json(ACCOUNT_SERVICE.get_accounts())
+    Json(account_service.get_accounts())
 }
 
 #[post("/accounts", data = "<account>")]
@@ -21,5 +21,5 @@ pub fn accounts_put(account_service: State<AccountService>, account: Json<Unsave
 
 #[get("/accounts/<id>")]
 pub fn accounts_get(account_service: State<AccountService>, id: u64) -> Json<Option<Account>> {
-    Json(ACCOUNT_SERVICE.get_account(id))
+    Json(account_service.get_account(id))
 }
