@@ -1,4 +1,4 @@
-use crate::finance::account::*;
+use crate::finance::model::*;
 use crate::finance::service::*;
 
 use rocket::State;
@@ -20,6 +20,6 @@ pub fn accounts_put(account_service: State<AccountService>, account: Json<Unsave
 }
 
 #[get("/accounts/<id>")]
-pub fn accounts_get(account_service: State<AccountService>, id: u64) -> Option<Json<Account>> {
+pub fn accounts_get(account_service: State<AccountService>, id: i32) -> Option<Json<Account>> {
     account_service.get_account(id).map(|account| Json(account))
 }
