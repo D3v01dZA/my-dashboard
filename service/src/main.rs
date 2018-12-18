@@ -16,6 +16,8 @@ use dotenv::dotenv;
 
 fn main() {
     dotenv().ok();
+    let account_service = finance::service::AccountService::create();
+    let db_pool = db::connection::create();
     rocket::ignite()
         .mount("/finances", routes![
             finance::controller::index,
@@ -23,7 +25,8 @@ fn main() {
             finance::controller::accounts_put,
             finance::controller::accounts_get
         ])
-        .manage(finance::service::AccountService::create())
+        .manage(db_pool)
+        .manage(account_service)
         .mount("/time-sheets", routes![
             time::index
         ])
