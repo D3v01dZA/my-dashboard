@@ -33,10 +33,18 @@ fn main() {
             time::index
         ])
         .register(catchers![
+            unauthorized,
             not_found,
             internal_error
         ])
         .launch();
+}
+
+#[catch(401)]
+fn unauthorized() -> JsonValue {
+    json!({
+        "message": "not authorized"
+    })
 }
 
 #[catch(404)]
