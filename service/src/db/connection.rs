@@ -36,6 +36,7 @@ impl DbPool {
             }
         }) {
             Ok(_) => result,
+            Err(diesel::result::Error::RollbackTransaction) => result,
             Err(error) => Err(format!("{}", error.to_string()))
         }
     }
