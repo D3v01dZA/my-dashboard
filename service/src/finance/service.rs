@@ -1,10 +1,11 @@
 use crate::finance::model::{Account, UnsavedAccount};
 use crate::db::schema::accounts::dsl::accounts;
 use crate::db::connection::DbConnection;
+use crate::result::Res;
+use crate::result::Error;
 
 use std::vec::Vec;
 use diesel::prelude::*;
-use diesel::result::Error;
 
 pub struct AccountService {
 
@@ -15,23 +16,23 @@ impl AccountService {
         AccountService{ }
     }
 
-    pub fn get_accounts(&self, connection: &DbConnection) -> Result<Vec<Account>, String> {
+    pub fn get_accounts(&self, connection: &DbConnection) -> Res<Vec<Account>> {
         accounts.load::<Account>(connection)
-            .map_err(|err| format!("{}", err))
+            .map_err(|err| Error::Diesel(err))
     }
 
-    pub fn get_account(&self, connection: &DbConnection, id: i32) -> Result<Option<Account>, String> {
+    pub fn get_account(&self, connection: &DbConnection, id: i32) -> Res<Option<Account>> {
         match accounts.find(id).first::<Account>(connection) {
             Ok(account) => Ok(Some(account)),
-            Err(Error::NotFound) => Ok(None),
-            Err(unknown) => Err(format!("{}", unknown))
+            Err(diesel::result::Error::NotFound) => Ok(None),
+            Err(err) => Err(Error::Diesel(err))
         }
     }
 
-    pub fn create_account(&self, connection: &DbConnection, unsaved_account: UnsavedAccount) -> Result<Account, String> {
+    pub fn create_account(&self, connection: &DbConnection, unsaved_account: UnsavedAccount) -> Res<Account> {
         diesel::insert_into(accounts)
             .values(&unsaved_account)
             .get_result(connection)
-            .map_err(|err| format!("{}", err))
+            .map_err(|err| Error::Diesel(err))
     }
 }

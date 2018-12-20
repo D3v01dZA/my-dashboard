@@ -8,10 +8,12 @@
 
 extern crate serde;
 extern crate dotenv;
+extern crate base64;
 
 pub mod finance;
 pub mod time;
 pub mod db;
+pub mod result;
 
 use dotenv::dotenv;
 use rocket_contrib::json::JsonValue;
