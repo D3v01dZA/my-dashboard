@@ -1,5 +1,7 @@
 use crate::result::Res;
 use crate::result::Error;
+use crate::user::model::{Authentication, User};
+use crate::user::facade::UserFacade;
 
 use rocket::request::FromRequest;
 use rocket::Request;
@@ -8,30 +10,41 @@ use rocket::request::Outcome;
 use rocket::outcome::Outcome::Success;
 use rocket::outcome::Outcome::Failure;
 use std::str::from_utf8;
+use rocket::State;
 
-pub struct User {
-    name: String,
-    password: String
-}
+pub mod model;
+pub mod facade;
+mod user_service;
 
-impl<'a, 'r> FromRequest<'a, 'r> for User {
+impl<'a, 'r> FromRequest<'a, 'r> for Authentication {
     type Error = ();
 
-    fn from_request(request: &'a Request<'r>) -> Outcome<User, ()> {
-        match read_authorization(request) {
+    fn from_request(request: &'a Request<'r>) -> Outcome<Authentication, ()> {
+        match authorize(request) {
             Ok(user) => Success(user),
-            Err(_) => Failure((Status::Unauthorized, ()))
+            Err(err) => {
+                warn!("Authorization: {}", err);
+                Failure((Status::Unauthorized, ()))
+            }
         }
     }
 }
 
-fn read_authorization(request: &Request) -> Res<User> {
+fn authorize(request: &Request) -> Res<Authentication> {
+    let (name, password) = read_authorization(request)?;
+    let user_facade = match request.guard::<State<UserFacade>>() {
+        Success(user_facade) => Ok(user_facade),
+        _ => Err(Error::Sundry("Request returned no user facade".to_string()))
+    }?;
+    user_facade.authenticate(name, password)
+}
+
+fn read_authorization(request: &Request) -> Res<(String, String)> {
     let single_header = extract_single_header(request.headers().get("Authorization").collect())?;
     let base_sixty_four = read_base_sixty_four_value(single_header)?;
     let decoded = decode_base_sixty_four(base_sixty_four)?;
     let utf = decoded_to_utf(decoded)?;
-    let split_auth = split_auth(utf)?;
-    Ok(User {name: split_auth.0, password: split_auth.1})
+    split_auth(utf)
 }
 
 fn extract_single_header(headers: Vec<&str>) -> Res<&str> {

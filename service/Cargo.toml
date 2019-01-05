@@ -12,3 +12,6 @@ serde_derive = "1.0.82"
 diesel = { version = "1.3.3", features = ["postgres", "r2d2"] }
 dotenv = "0.13.0"
 base64 = "0.10.0"
+log = { version = "0.4.6", features = ["std", "serde"] }
+simple_logger = "1.0.1"
+blake2 = "0.8"

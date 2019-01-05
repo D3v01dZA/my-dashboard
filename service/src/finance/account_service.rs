@@ -1,11 +1,13 @@
-use crate::finance::model::{Account, UnsavedAccount};
+use crate::finance::model::{Account, UnattachedAccount};
 use crate::db::schema::accounts::dsl::accounts;
 use crate::db::connection::DbConnection;
+use crate::user::model::Authentication;
 use crate::result::Res;
 use crate::result::Error;
 
 use std::vec::Vec;
 use diesel::prelude::*;
+use crate::finance::model::UnsavedAccount;
 
 pub struct AccountService {
 
@@ -29,9 +31,9 @@ impl AccountService {
         }
     }
 
-    pub fn create_account(&self, connection: &DbConnection, unsaved_account: UnsavedAccount) -> Res<Account> {
+    pub fn create_account(&self, connection: &DbConnection, authentication: &Authentication, account: UnattachedAccount) -> Res<Account> {
         diesel::insert_into(accounts)
-            .values(&unsaved_account)
+            .values(&UnsavedAccount::create(authentication, account))
             .get_result(connection)
             .map_err(|err| Error::Diesel(err))
     }

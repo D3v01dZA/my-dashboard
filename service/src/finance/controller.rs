@@ -1,37 +1,45 @@
-use crate::finance::model::{Account, UnsavedAccount};
-use crate::finance::service::AccountService;
-use crate::db::connection::DbPool;
+use crate::finance::model::{Account, UnattachedAccount};
+use crate::finance::facade::FinanceFacade;
+use crate::user::model::Authentication;
 
 use rocket::State;
 use rocket_contrib::json::Json;
-use crate::db::user::User;
 
 #[get("/")]
-pub fn index(user: User) -> &'static str {
+pub fn index(user: Authentication) -> &'static str {
     "Account Index"
 }
 
 #[get("/accounts")]
-pub fn accounts(user: User, db_pool: State<DbPool>, account_service: State<AccountService>) -> Json<Vec<Account>> {
-    match db_pool.in_transaction(|connection| account_service.get_accounts(connection)) {
+pub fn accounts(authentication: Authentication, finance_facade: State<FinanceFacade>) -> Json<Vec<Account>> {
+    match finance_facade.get_accounts(&authentication) {
         Ok(accounts) => Json(accounts),
-        Err(err) => panic!(err)
+        Err(err) => {
+            error!("{}", err);
+            panic!(err)
+        }
     }
 }
 
 #[post("/accounts", data = "<account>")]
-pub fn accounts_put(user: User, db_pool: State<DbPool>, account_service: State<AccountService>, account: Json<UnsavedAccount>) -> Json<Account> {
-    match db_pool.in_transaction(|connection| account_service.create_account(connection, account.into_inner())) {
+pub fn accounts_put(authentication: Authentication, finance_facade: State<FinanceFacade>, account: Json<UnattachedAccount>) -> Json<Account> {
+    match finance_facade.create_account(&authentication, account.into_inner()) {
         Ok(account) => Json(account),
-        Err(err) => panic!(err)
+        Err(err) => {
+            error!("{}", err);
+            panic!(err)
+        }
     }
 }
 
 #[get("/accounts/<id>")]
-pub fn accounts_get(user: User, db_pool: State<DbPool>, account_service: State<AccountService>, id: i32) -> Option<Json<Account>> {
-    match db_pool.in_transaction(|connection| account_service.get_account(connection, id)) {
+pub fn accounts_get(authentication: Authentication, finance_facade: State<FinanceFacade>, id: i32) -> Option<Json<Account>> {
+    match finance_facade.get_account(&authentication, id) {
         Ok(Some(account)) => Some(Json(account)),
         Ok(None) => None,
-        Err(err) => panic!(err)
+        Err(err) => {
+            error!("{}", err);
+            panic!(err)
+        }
     }
 }
