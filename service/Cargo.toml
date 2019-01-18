@@ -15,3 +15,4 @@ base64 = "0.10.0"
 log = { version = "0.4.6", features = ["std", "serde"] }
 simple_logger = "1.0.1"
 blake2 = "0.8"
+sha3 = "0.8.1"

@@ -10,7 +10,7 @@ table! {
     users (id) {
         id -> Int4,
         name -> Varchar,
-        password -> Varchar,
+        password -> Array<Int4>,
         salt_one -> Varchar,
         salt_two -> Varchar,
     }

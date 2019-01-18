@@ -1,0 +1,1 @@
+ALTER TABLE users ALTER COLUMN password TYPE INTEGER[] USING CAST (password AS INTEGER[]);

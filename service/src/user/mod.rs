@@ -1,6 +1,6 @@
 use crate::result::Res;
 use crate::result::Error;
-use crate::user::model::{Authentication, User};
+use crate::user::model::Authentication;
 use crate::user::facade::UserFacade;
 
 use rocket::request::FromRequest;
@@ -15,6 +15,7 @@ use rocket::State;
 pub mod model;
 pub mod facade;
 mod user_service;
+mod authentication_service;
 
 impl<'a, 'r> FromRequest<'a, 'r> for Authentication {
     type Error = ();
