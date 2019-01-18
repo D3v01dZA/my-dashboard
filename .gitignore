@@ -1,3 +1,9 @@
+# Gradle
+gradle/
+.gradle/
+gradlew*
+
+# IntelliJ
 .idea/
 
 # Compiled class file
