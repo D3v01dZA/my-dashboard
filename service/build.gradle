@@ -29,5 +29,6 @@ dependencies {
     compile("org.springframework.boot:spring-boot-starter-web:${bootVersion}")
     compile("org.springframework.boot:spring-boot-starter-jdbc:${bootVersion}")
     compile("org.springframework.boot:spring-boot-starter-security:${bootVersion}")
+    compile("org.liquibase:liquibase-core:3.6.2")
     compile("org.postgresql:postgresql:42.2.5")
 }
