@@ -23,7 +23,7 @@ public class UserDetailsService implements org.springframework.security.core.use
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userService.getUserByUsername(username.toLowerCase())
-                .map(user -> new User(user.getUsername(), user.getPassword(), Collections.singleton(new SimpleGrantedAuthority("USER"))))
+                .map(user -> new User(user.getUsername(), user.getPassword(), Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"))))
                 .orElseThrow(() -> new UsernameNotFoundException("No Such User"));
     }
 
