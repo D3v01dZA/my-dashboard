@@ -13,7 +13,7 @@ import java.util.Collections;
 @Service
 public class UserDetailsService implements org.springframework.security.core.userdetails.UserDetailsService {
 
-    private final UserService userService;
+    private UserService userService;
 
     @Autowired
     public UserDetailsService(UserService userService) {
