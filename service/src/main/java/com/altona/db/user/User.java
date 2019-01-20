@@ -1,28 +1,19 @@
 package com.altona.db.user;
 
-import java.util.Objects;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NonNull;
 
+@AllArgsConstructor
 public class User {
 
+    @Getter
     private int id;
+    @NonNull
+    @Getter
     private String username;
+    @NonNull
+    @Getter
     private String password;
 
-    User(int id, String username, String password) {
-        this.id = id;
-        this.username = Objects.requireNonNull(username);
-        this.password = Objects.requireNonNull(password);
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
 }

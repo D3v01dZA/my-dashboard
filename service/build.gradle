@@ -31,4 +31,6 @@ dependencies {
     compile("org.springframework.boot:spring-boot-starter-security:${bootVersion}")
     compile("org.liquibase:liquibase-core:3.6.2")
     compile("org.postgresql:postgresql:42.2.5")
+    
+    compileOnly("org.projectlombok:lombok:1.18.4")
 }

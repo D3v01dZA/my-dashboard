@@ -1,6 +1,6 @@
 package com.altona.db.user;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
@@ -11,14 +11,10 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@AllArgsConstructor
 public class UserService {
 
     private NamedParameterJdbcTemplate namedJdbcTemplate;
-
-    @Autowired
-    public UserService(NamedParameterJdbcTemplate namedJdbcTemplate) {
-        this.namedJdbcTemplate = namedJdbcTemplate;
-    }
 
     public User getUser(Authentication authentication) {
         return getUserByUsername(authentication.getName())
