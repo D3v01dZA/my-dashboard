@@ -1,26 +1,16 @@
 package com.altona.db.time;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NonNull;
 
-import java.util.Objects;
-
+@AllArgsConstructor
 public class Project {
 
+    @Getter
     private int id;
+    @NonNull
+    @Getter
     private String name;
 
-    @JsonCreator
-    Project(@JsonProperty("id") int id, @JsonProperty("name") String name) {
-        this.id = id;
-        this.name = Objects.requireNonNull(name);
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
 }

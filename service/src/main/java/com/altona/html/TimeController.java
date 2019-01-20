@@ -5,6 +5,7 @@ import com.altona.db.time.Time;
 import com.altona.db.time.ProjectService;
 import com.altona.db.time.TimeService;
 import com.altona.db.user.UserService;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,18 +16,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@AllArgsConstructor
 public class TimeController {
 
     private UserService userService;
     private ProjectService projectService;
     private TimeService timeService;
-
-    @Autowired
-    public TimeController(UserService userService, ProjectService projectService, TimeService timeService) {
-        this.userService = userService;
-        this.projectService = projectService;
-        this.timeService = timeService;
-    }
 
     @Transactional(readOnly = true)
     @RequestMapping(path = "/time/project", method = RequestMethod.GET, produces = "application/json")
