@@ -18,6 +18,8 @@ public class AuthenticationConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/**")
                 .hasRole("USER")
                 .and()
+                .csrf()
+                .disable()
                 .httpBasic();
     }
 
