@@ -7,11 +7,36 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".MainActivity">
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/recycler_view_settings"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scrollbars="vertical"
-        tools:layout_editor_absoluteX="8dp"
-        tools:layout_editor_absoluteY="8dp"/>
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:paddingHorizontal="@dimen/activity_horizontal_margin"
+            android:paddingVertical="@dimen/padding_vertical"
+            android:text="@string/action_settings"
+            android:textColor="@color/colorPrimary"
+            android:textSize="@dimen/heading_size"
+            tools:layout_editor_absoluteY="731dp" />
+
+        <View
+            android:id="@+id/divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?android:attr/listDivider" />
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycler_view_settings"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="vertical"
+            tools:layout_editor_absoluteX="0dp"
+            tools:layout_editor_absoluteY="128dp" />
+    </LinearLayout>
+
 </android.support.constraint.ConstraintLayout>
