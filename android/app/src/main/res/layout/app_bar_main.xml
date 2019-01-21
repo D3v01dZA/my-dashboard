@@ -22,7 +22,7 @@
 
     <include layout="@layout/content_main"
         android:id="@+id/main_content"
-        android:visibility="visible"/>
+        android:visibility="gone"/>
 
     <include layout="@layout/content_time"
         android:id="@+id/time_content"
