@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 @Service
 public class TimeService {
@@ -30,44 +32,35 @@ public class TimeService {
     }
 
     public Optional<WorkStart> startProjectWork(User user, int projectId) {
-        Optional<Project> projectOptional = projectService.getProject(user, projectId);
-        if (projectOptional.isPresent()) {
-            Project project = projectOptional.get();
-            Optional<Time> currentlyRunningOptional = currentlyRunningProjectWork(project);
-            if (currentlyRunningOptional.isPresent()) {
-                return Optional.of(WorkStart.alreadyStarted(currentlyRunningOptional.get().getId()));
-            } else {
-                Number key = timeJdbcInsert.executeAndReturnKey(new MapSqlParameterSource()
-                        .addValue("type", Time.Type.WORK)
-                        .addValue("start_time", new Date())
-                        .addValue("project_id", project.getId()));
-                return Optional.of(WorkStart.started(key.intValue()));
-            }
-        } else {
-            return Optional.empty();
-        }
+        return runningWorkAwareFunction(
+                user,
+                projectId,
+                (project, currentlyRunning) -> WorkStart.alreadyStarted(currentlyRunning.getId()),
+                project -> {
+                    Number key = timeJdbcInsert.executeAndReturnKey(new MapSqlParameterSource()
+                            .addValue("type", Time.Type.WORK)
+                            .addValue("start_time", new Date())
+                            .addValue("project_id", project.getId()));
+                    return WorkStart.started(key.intValue());
+                }
+        );
     }
 
     public Optional<WorkEnd> endProjectWork(User user, int projectId) {
-        Optional<Project> projectOptional = projectService.getProject(user, projectId);
-        if (projectOptional.isPresent()) {
-            Project project = projectOptional.get();
-            Optional<Time> currentlyRunningOptional = currentlyRunningProjectWork(project);
-            if (currentlyRunningOptional.isPresent()) {
-                Time time = currentlyRunningOptional.get();
-                namedJdbc.update(
-                        "UPDATE time SET end_time = :endTime WHERE id = :id",
-                        new MapSqlParameterSource()
-                                .addValue("endTime", new Date())
-                                .addValue("id", time.getId())
-                );
-                return Optional.of(WorkEnd.ended(time.getId()));
-            } else {
-                return Optional.of(WorkEnd.notStarted());
-            }
-        } else {
-            return Optional.empty();
-        }
+        return runningWorkAwareFunction(
+                user,
+                projectId,
+                (project, currentlyRunning) -> {
+                    namedJdbc.update(
+                            "UPDATE time SET end_time = :endTime WHERE id = :id",
+                            new MapSqlParameterSource()
+                                    .addValue("endTime", new Date())
+                                    .addValue("id", currentlyRunning.getId())
+                    );
+                    return WorkEnd.ended(currentlyRunning.getId());
+                },
+                project -> WorkEnd.notStarted()
+        );
     }
 
     public Optional<List<Time>> getTimes(User user, int projectId) {
@@ -82,6 +75,23 @@ public class TimeService {
     public Optional<Time> getTime(User user, int projectId, int timeId) {
         return projectService.getProject(user, projectId)
                 .flatMap(project -> getTime(project, timeId));
+    }
+
+    private <T> Optional<T> runningWorkAwareFunction(
+            User user,
+            int projectId,
+            BiFunction<Project, Time, ? extends T> whenRunning,
+            Function<Project, ? extends T> whenNotRunning
+    ) {
+        return projectService.getProject(user, projectId)
+                .map(project -> {
+                    Optional<Time> currentlyRunningOptional = currentlyRunningProjectWork(project);
+                    if (currentlyRunningOptional.isPresent()) {
+                        return whenRunning.apply(project, currentlyRunningOptional.get());
+                    } else {
+                        return whenNotRunning.apply(project);
+                    }
+                });
     }
 
     private Optional<Time> currentlyRunningProjectWork(Project project) {
