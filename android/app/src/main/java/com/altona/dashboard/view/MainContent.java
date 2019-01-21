@@ -3,12 +3,15 @@ package com.altona.dashboard.view;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.altona.dashboard.MainActivity;
+import com.altona.dashboard.R;
+
 public class MainContent implements AppView {
 
     private ViewGroup mainContent;
 
-    public MainContent(ViewGroup mainContent) {
-        this.mainContent = mainContent;
+    public MainContent(MainActivity mainActivity) {
+        this.mainContent = mainActivity.findViewById(R.id.main_content);
     }
 
     @Override
@@ -18,7 +21,7 @@ public class MainContent implements AppView {
 
     @Override
     public void leave() {
-        mainContent.setVisibility(View.INVISIBLE);
+        mainContent.setVisibility(View.GONE);
     }
 
 }

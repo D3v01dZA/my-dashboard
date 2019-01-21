@@ -1,5 +1,6 @@
 package com.altona.dashboard;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -14,7 +15,8 @@ import android.view.ViewGroup;
 import com.altona.dashboard.nav.Navigation;
 import com.altona.dashboard.view.MainContent;
 import com.altona.dashboard.view.ConfigurationContent;
-import com.altona.dashboard.view.SettingsContent;
+import com.altona.dashboard.view.settings.Settings;
+import com.altona.dashboard.view.settings.SettingsContent;
 import com.altona.dashboard.view.TimeContent;
 
 public class MainActivity extends AppCompatActivity {
@@ -35,10 +37,10 @@ public class MainActivity extends AppCompatActivity {
 
         NavigationView navigationView = findViewById(R.id.nav_view);
         this.navigation = new Navigation(
-                new MainContent((ViewGroup) findViewById(R.id.main_content)),
-                new TimeContent((ViewGroup) findViewById(R.id.time_content)),
-                new ConfigurationContent((ViewGroup) findViewById(R.id.configuration_content)),
-                new SettingsContent((ViewGroup) findViewById(R.id.settings_content)),
+                new MainContent(this),
+                new TimeContent(this),
+                new ConfigurationContent(this),
+                new SettingsContent(this),
                 drawer
         );
         navigationView.setNavigationItemSelectedListener(navigation);
