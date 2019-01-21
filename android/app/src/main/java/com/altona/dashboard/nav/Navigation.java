@@ -49,6 +49,14 @@ public class Navigation implements NavigationView.OnNavigationItemSelectedListen
         return true;
     }
 
+    public void backPressed(Runnable delegate) {
+        if (current == mainContent) {
+            delegate.run();
+        } else {
+            enter(mainContent);
+        }
+    }
+
     public void enterSettings() {
         enter(settingsContent);
     }

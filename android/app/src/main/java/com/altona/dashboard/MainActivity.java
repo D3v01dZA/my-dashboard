@@ -50,7 +50,12 @@ public class MainActivity extends AppCompatActivity {
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            super.onBackPressed();
+            navigation.backPressed(new Runnable() {
+                @Override
+                public void run() {
+                    MainActivity.super.onBackPressed();
+                }
+            });
         }
     }
 
