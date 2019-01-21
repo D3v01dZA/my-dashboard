@@ -1,25 +1,14 @@
-package com.altona.db.time;
+package com.altona.db.time.control;
 
-import com.altona.db.user.User;
+import com.altona.db.time.Project;
+import com.altona.db.time.Time;
+import com.altona.db.time.TimeService;
 
 import java.util.Optional;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 public interface TimeServiceRunningHelpers {
-
-    static <T> Optional<T> runningBreakAwareFunction(
-            TimeService timeService,
-            ProjectService projectService,
-            User user,
-            int projectId,
-            BiFunction<Project, Time, T> whenRunning,
-            Function<Project, T> whenNotRunning
-    ) {
-        return projectService.getProject(user, projectId)
-                .map(project -> runningBreakAwareFunction(timeService, project, time -> whenRunning.apply(project, time), () -> whenNotRunning.apply(project)));
-    }
 
     static <T> T runningBreakAwareFunction(
             TimeService timeService,
@@ -28,18 +17,6 @@ public interface TimeServiceRunningHelpers {
             Supplier<T> whenNotRunning
     ) {
         return runningAwareFunction(timeService, Time.Type.BREAK, project, whenRunning, whenNotRunning);
-    }
-
-    static <T> Optional<T> runningWorkAwareFunction(
-            TimeService timeService,
-            ProjectService projectService,
-            User user,
-            int projectId,
-            BiFunction<Project, Time, T> whenRunning,
-            Function<Project, T> whenNotRunning
-    ) {
-        return projectService.getProject(user, projectId)
-                .map(project -> runningWorkAwareFunction(timeService, project, time -> whenRunning.apply(project, time), () -> whenNotRunning.apply(project)));
     }
 
     static <T> T runningWorkAwareFunction(

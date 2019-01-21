@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Service;
 
+import javax.sql.DataSource;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,9 +19,9 @@ public class ProjectService {
     private SimpleJdbcInsert projectJdbcInsert;
 
     @Autowired
-    public ProjectService(NamedParameterJdbcTemplate namedJdbc, SimpleJdbcInsert projectJdbcInsert) {
+    public ProjectService(NamedParameterJdbcTemplate namedJdbc, DataSource dataSource) {
         this.namedJdbc = namedJdbc;
-        this.projectJdbcInsert = projectJdbcInsert
+        this.projectJdbcInsert = new SimpleJdbcInsert(dataSource)
                 .withTableName("project")
                 .usingGeneratedKeyColumns("id");
     }
