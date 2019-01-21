@@ -33,7 +33,7 @@ public class ProjectService {
         );
     }
 
-    public Optional<Project> getProject(User user, Integer projectId) {
+    public Optional<Project> getProject(User user, int projectId) {
         try {
             return Optional.of(namedJdbc.queryForObject(
                     "SELECT id, name FROM project WHERE id = :projectId AND user_id = :userId",

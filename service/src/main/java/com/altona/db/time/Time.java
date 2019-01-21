@@ -12,13 +12,15 @@ public class Time {
 
     @Getter
     private int id;
-    @NonNull
+
     @Getter
+    @NonNull
     private Type type;
-    @NonNull
+
     @Getter
-    private Date start;
     @NonNull
+    private Date start;
+
     private Date end;
 
     Time(int id, String type, Date start, Date end) {
@@ -27,5 +29,10 @@ public class Time {
 
     public Optional<Date> getEnd() {
         return Optional.ofNullable(end);
+    }
+
+    public enum Type {
+        WORK,
+        BREAK;
     }
 }
