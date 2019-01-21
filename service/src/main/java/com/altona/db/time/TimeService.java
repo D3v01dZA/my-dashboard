@@ -11,8 +11,9 @@ import org.springframework.stereotype.Service;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.BiFunction;
-import java.util.function.Function;
+
+import static com.altona.db.time.TimeServiceRunningHelpers.runningBreakAwareFunction;
+import static com.altona.db.time.TimeServiceRunningHelpers.runningWorkAwareFunction;
 
 @Service
 public class TimeService {
@@ -32,34 +33,43 @@ public class TimeService {
     }
 
     public Optional<WorkStart> startProjectWork(User user, int projectId) {
-        return runningWorkAwareFunction(
-                user,
-                projectId,
-                (project, currentlyRunning) -> WorkStart.alreadyStarted(currentlyRunning.getId()),
-                project -> {
-                    Number key = timeJdbcInsert.executeAndReturnKey(new MapSqlParameterSource()
-                            .addValue("type", Time.Type.WORK)
-                            .addValue("start_time", new Date())
-                            .addValue("project_id", project.getId()));
-                    return WorkStart.started(key.intValue());
-                }
+        return runningWorkAwareFunction(this, projectService, user, projectId,
+                (project, runningWork) -> WorkStart.alreadyStarted(runningWork.getId()),
+                project -> WorkStart.started(startTime(project, Time.Type.WORK).getId())
         );
     }
 
-    public Optional<WorkEnd> endProjectWork(User user, int projectId) {
-        return runningWorkAwareFunction(
-                user,
-                projectId,
-                (project, currentlyRunning) -> {
-                    namedJdbc.update(
-                            "UPDATE time SET end_time = :endTime WHERE id = :id",
-                            new MapSqlParameterSource()
-                                    .addValue("endTime", new Date())
-                                    .addValue("id", currentlyRunning.getId())
+    public Optional<WorkStop> endProjectWork(User user, int projectId) {
+        return runningWorkAwareFunction(this, projectService, user, projectId,
+                (project, runningWork) -> {
+                    Date now = new Date();
+                    Time endedWork = stopTime(project, runningWork, now);
+                    return runningBreakAwareFunction(this, project,
+                            (runningBreak) -> WorkStop.ended(endedWork.getId(), stopTime(project, runningBreak, now).getId()),
+                            () -> WorkStop.ended(endedWork.getId())
                     );
-                    return WorkEnd.ended(currentlyRunning.getId());
                 },
-                project -> WorkEnd.notStarted()
+                project -> WorkStop.notStarted()
+        );
+    }
+
+    public Optional<BreakStart> startProjectBreak(User user, int projectId) {
+        return runningWorkAwareFunction(this, projectService, user, projectId,
+                (project, runningWork) -> runningBreakAwareFunction(this, project,
+                        runningBreak -> BreakStart.breakAlreadyStarted(runningBreak.getId()),
+                        () -> BreakStart.started(startTime(project, Time.Type.BREAK).getId())
+                ),
+                project -> BreakStart.workNotStarted()
+        );
+    }
+
+    public Optional<BreakStop> endProjectBreak(User user, int projectId) {
+        return runningBreakAwareFunction(this, projectService, user, projectId,
+                (project, runningBreak) -> BreakStop.stopped(stopTime(project, runningBreak).getId()),
+                project -> runningWorkAwareFunction(this, project,
+                        runningWork -> BreakStop.breakNotStarted(),
+                        BreakStop::workNotStarted
+                )
         );
     }
 
@@ -77,28 +87,35 @@ public class TimeService {
                 .flatMap(project -> getTime(project, timeId));
     }
 
-    private <T> Optional<T> runningWorkAwareFunction(
-            User user,
-            int projectId,
-            BiFunction<Project, Time, ? extends T> whenRunning,
-            Function<Project, ? extends T> whenNotRunning
-    ) {
-        return projectService.getProject(user, projectId)
-                .map(project -> {
-                    Optional<Time> currentlyRunningOptional = currentlyRunningProjectWork(project);
-                    if (currentlyRunningOptional.isPresent()) {
-                        return whenRunning.apply(project, currentlyRunningOptional.get());
-                    } else {
-                        return whenNotRunning.apply(project);
-                    }
-                });
+    public Optional<Time> getRunningProjectTime(Project project, Time.Type type) {
+        return getSingleTimeFromQuery(
+                "SELECT id, type, start_time, end_time FROM time WHERE end_time IS NULL AND type = :type AND project_id = :projectId",
+                new MapSqlParameterSource()
+                        .addValue("type", type.name())
+                        .addValue("projectId", project.getId())
+        );
     }
 
-    private Optional<Time> currentlyRunningProjectWork(Project project) {
-        return getSingleTimeFromQuery(
-                "SELECT id, type, start_time, end_time FROM time WHERE end_time IS NULL AND type = 'WORK' AND project_id = :projectId",
-                new MapSqlParameterSource("projectId", project.getId())
+    private Time startTime(Project project, Time.Type type) {
+        Number key = timeJdbcInsert.executeAndReturnKey(new MapSqlParameterSource()
+                .addValue("type", type.name())
+                .addValue("start_time", new Date())
+                .addValue("project_id", project.getId()));
+        return getTime(project, key.intValue()).get();
+    }
+
+    private Time stopTime(Project project, Time time) {
+        return stopTime(project, time, new Date());
+    }
+
+    private Time stopTime(Project project, Time time, Date stopTime) {
+        namedJdbc.update(
+                "UPDATE time SET end_time = :endTime WHERE id = :id",
+                new MapSqlParameterSource()
+                        .addValue("endTime", stopTime)
+                        .addValue("id", time.getId())
         );
+        return getTime(project, time.getId()).get();
     }
 
     private Optional<Time> getTime(Project project, int timeId) {
@@ -114,7 +131,11 @@ public class TimeService {
         try {
             return Optional.of(namedJdbc.queryForObject(query, parameters, TIME_ROW_MAPPER));
         } catch (IncorrectResultSizeDataAccessException ex) {
-            return Optional.empty();
+            if (ex.getActualSize() == 0) {
+                return Optional.empty();
+            } else {
+                throw new IllegalStateException("Multiple records found");
+            }
         }
     }
 

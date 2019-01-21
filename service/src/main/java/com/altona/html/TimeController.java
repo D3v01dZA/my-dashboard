@@ -48,9 +48,25 @@ public class TimeController {
     }
 
     @Transactional
+    @RequestMapping(path = "/time/project/{projectId}/start-break", method = RequestMethod.POST, produces = "application/json")
+    public ResponseEntity<BreakStart> startBreak(Authentication authentication, @PathVariable Integer projectId) {
+        return timeService.startProjectBreak(userService.getUser(authentication), projectId)
+                .map(project -> new ResponseEntity<>(project, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @Transactional
     @RequestMapping(path = "/time/project/{projectId}/end-work", method = RequestMethod.POST, produces = "application/json")
-    public ResponseEntity<WorkEnd> endWork(Authentication authentication, @PathVariable Integer projectId) {
+    public ResponseEntity<WorkStop> endWork(Authentication authentication, @PathVariable Integer projectId) {
         return timeService.endProjectWork(userService.getUser(authentication), projectId)
+                .map(project -> new ResponseEntity<>(project, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @Transactional
+    @RequestMapping(path = "/time/project/{projectId}/end-break", method = RequestMethod.POST, produces = "application/json")
+    public ResponseEntity<BreakStop> endBreak(Authentication authentication, @PathVariable Integer projectId) {
+        return timeService.endProjectBreak(userService.getUser(authentication), projectId)
                 .map(project -> new ResponseEntity<>(project, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
