@@ -10,12 +10,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.ViewGroup;
 
 import com.altona.dashboard.nav.Navigation;
 import com.altona.dashboard.view.MainContent;
 import com.altona.dashboard.view.ConfigurationContent;
-import com.altona.dashboard.view.settings.Settings;
 import com.altona.dashboard.view.settings.SettingsContent;
 import com.altona.dashboard.view.TimeContent;
 
