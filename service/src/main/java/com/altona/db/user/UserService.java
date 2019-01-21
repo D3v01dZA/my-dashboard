@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.TimeZone;
 
 @Service
 @AllArgsConstructor
@@ -18,6 +19,12 @@ public class UserService {
 
     public User getUser(Authentication authentication) {
         return getUserByUsername(authentication.getName())
+                .orElseThrow(() -> new InsufficientAuthenticationException("Couldn't determine current user"));
+    }
+
+    public UserContext getUserContext(Authentication authentication, TimeZone timeZone) {
+        return getUserByUsername(authentication.getName())
+                .map(user -> new UserContext(user, timeZone))
                 .orElseThrow(() -> new InsufficientAuthenticationException("Couldn't determine current user"));
     }
 

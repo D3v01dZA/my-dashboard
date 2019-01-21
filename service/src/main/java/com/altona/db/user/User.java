@@ -1,10 +1,11 @@
 package com.altona.db.user;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 public class User {
 
     @Getter

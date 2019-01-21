@@ -18,6 +18,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.altona.db.time.control.TimeServiceRunningHelpers.runningBreakAwareFunction;
 import static com.altona.db.time.control.TimeServiceRunningHelpers.runningWorkAwareFunction;
@@ -27,11 +28,13 @@ public class TimeService {
 
     private static final RowMapper<Time> TIME_ROW_MAPPER = (rs, rn) -> {
         try {
+            String endTime = rs.getString("end_time");
+            String startTime = rs.getString("start_time");
             return new Time(
                     rs.getInt("id"),
                     rs.getString("type"),
-                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSX").parse(rs.getString("start_time")),
-                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSX").parse(rs.getString("end_time"))
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSX").parse(startTime),
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSX").parse(endTime)
             );
         } catch (ParseException e) {
             throw new RuntimeException(e);
@@ -89,39 +92,24 @@ public class TimeService {
         );
     }
 
-    public List<Time> getTimes(Project project) {
+    public List<ZoneTime> getZoneTimes(TimeZoneMapper timeZoneMapper, Project project) {
         return namedJdbc.query(
                 "SELECT id, type, start_time, end_time FROM time WHERE project_id = :projectId",
                 new MapSqlParameterSource("projectId", project.getId()),
-                TIME_ROW_MAPPER
-        );
+                rowMapper()
+        )
+                .stream()
+                .map(time -> new ZoneTime(timeZoneMapper, time))
+                .collect(Collectors.toList());
     }
 
-    public Optional<Time> getTime(Project project, int timeId) {
-        return getSingleTimeFromQuery(
-                "SELECT id, type, start_time, end_time FROM time WHERE id = :id AND project_id = :projectId",
-                new MapSqlParameterSource()
-                        .addValue("id", timeId)
-                        .addValue("projectId", project.getId())
-        );
+    public Optional<ZoneTime> getZoneTime(TimeZoneMapper timeZoneMapper, Project project, int timeId) {
+        return getTime(project, timeId).map(time -> new ZoneTime(timeZoneMapper, time));
     }
 
-    public Summary getSummary(Project project, Summary.Type type) {
-        return Summary.create(getTimes(project, type));
-    }
-
-    public Optional<Time> getRunningProjectTime(Project project, Time.Type type) {
-        return getSingleTimeFromQuery(
-                "SELECT id, type, start_time, end_time FROM time WHERE end_time IS NULL AND type = :type AND project_id = :projectId",
-                new MapSqlParameterSource()
-                        .addValue("type", type.name())
-                        .addValue("projectId", project.getId())
-        );
-    }
-
-    private List<Time> getTimes(Project project, Summary.Type type) {
+    public Summary getSummary(TimeZoneMapper timeZoneMapper, Project project, Summary.Type type) {
         Summary.Dates dates = type.getDates();
-        return namedJdbc.query(
+        List<ZoneTime> zoneTimeList = namedJdbc.query(
                 "SELECT id, type, start_time, end_time FROM time WHERE end_time IS NOT NULL " +
                         "AND (end_time < :toDate AND start_time > :fromDate) " +
                         "OR (end_time > :toDate AND start_time > :fromDate) " +
@@ -133,7 +121,20 @@ public class TimeService {
                         .addValue("fromDate", dates.getFrom())
                         .addValue("toDate", dates.getTo())
                         .addValue("projectId", project.getId()),
-                TIME_ROW_MAPPER
+                rowMapper()
+        )
+                .stream()
+                .map(time -> new ZoneTime(timeZoneMapper, time))
+                .collect(Collectors.toList());
+        return Summary.create(zoneTimeList);
+    }
+
+    public Optional<Time> getRunningProjectTime(Project project, Time.Type type) {
+        return getSingleTimeFromQuery(
+                "SELECT id, type, start_time, end_time FROM time WHERE end_time IS NULL AND type = :type AND project_id = :projectId",
+                new MapSqlParameterSource()
+                        .addValue("type", type.name())
+                        .addValue("projectId", project.getId())
         );
     }
 
@@ -149,19 +150,28 @@ public class TimeService {
         return stopTime(project, time, new Date());
     }
 
-    private Time stopTime(Project project, Time time, Date stopTime) {
+    private Time stopTime(Project project, Time zoneTime, Date stopTime) {
         namedJdbc.update(
                 "UPDATE time SET end_time = :endTime WHERE id = :id",
                 new MapSqlParameterSource()
                         .addValue("endTime", stopTime)
-                        .addValue("id", time.getId())
+                        .addValue("id", zoneTime.getId())
         );
-        return getTime(project, time.getId()).get();
+        return getTime(project, zoneTime.getId()).get();
+    }
+
+    public Optional<Time> getTime(Project project, int timeId) {
+        return getSingleTimeFromQuery(
+                "SELECT id, type, start_time, end_time FROM time WHERE id = :id AND project_id = :projectId",
+                new MapSqlParameterSource()
+                        .addValue("id", timeId)
+                        .addValue("projectId", project.getId())
+        );
     }
 
     private Optional<Time> getSingleTimeFromQuery(String query, MapSqlParameterSource parameters) {
         try {
-            return Optional.of(namedJdbc.queryForObject(query, parameters, TIME_ROW_MAPPER));
+            return Optional.of(namedJdbc.queryForObject(query, parameters, rowMapper()));
         } catch (IncorrectResultSizeDataAccessException ex) {
             if (ex.getActualSize() == 0) {
                 return Optional.empty();
@@ -169,6 +179,10 @@ public class TimeService {
                 throw new IllegalStateException("Multiple records found");
             }
         }
+    }
+
+    private RowMapper<Time> rowMapper() {
+        return TIME_ROW_MAPPER;
     }
 
 }
