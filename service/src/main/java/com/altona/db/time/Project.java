@@ -9,8 +9,9 @@ public class Project {
 
     @Getter
     private int id;
-    @NonNull
+
     @Getter
+    @NonNull
     private String name;
 
 }

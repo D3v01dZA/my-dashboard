@@ -1,4 +1,4 @@
-package com.altona.util;
+package com.altona.config;
 
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.config.AbstractFactoryBean;

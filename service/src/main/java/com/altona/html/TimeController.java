@@ -1,12 +1,8 @@
 package com.altona.html;
 
-import com.altona.db.time.Project;
-import com.altona.db.time.Time;
-import com.altona.db.time.ProjectService;
-import com.altona.db.time.TimeService;
+import com.altona.db.time.*;
 import com.altona.db.user.UserService;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -43,10 +39,34 @@ public class TimeController {
         return projectService.createProject(userService.getUser(authentication), project);
     }
 
+    @Transactional
+    @RequestMapping(path = "/time/project/{projectId}/start-work", method = RequestMethod.POST, produces = "application/json")
+    public ResponseEntity<WorkStart> startWork(Authentication authentication, @PathVariable Integer projectId) {
+        return timeService.startProjectWork(userService.getUser(authentication), projectId)
+                .map(project -> new ResponseEntity<>(project, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @Transactional
+    @RequestMapping(path = "/time/project/{projectId}/end-work", method = RequestMethod.POST, produces = "application/json")
+    public ResponseEntity<WorkEnd> endWork(Authentication authentication, @PathVariable Integer projectId) {
+        return timeService.endProjectWork(userService.getUser(authentication), projectId)
+                .map(project -> new ResponseEntity<>(project, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
     @Transactional(readOnly = true)
     @RequestMapping(path = "/time/project/{projectId}/time", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<List<Time>> getTime(Authentication authentication, @PathVariable Integer projectId) {
         return timeService.getTimes(userService.getUser(authentication), projectId)
+                .map(timeList -> new ResponseEntity<>(timeList, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @Transactional(readOnly = true)
+    @RequestMapping(path = "/time/project/{projectId}/time/{timeId}", method = RequestMethod.GET, produces = "application/json")
+    public ResponseEntity<Time> getTime(Authentication authentication, @PathVariable Integer projectId, @PathVariable Integer timeId) {
+        return timeService.getTime(userService.getUser(authentication), projectId, timeId)
                 .map(timeList -> new ResponseEntity<>(timeList, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }

@@ -9,11 +9,13 @@ public class User {
 
     @Getter
     private int id;
-    @NonNull
+
     @Getter
+    @NonNull
     private String username;
-    @NonNull
+
     @Getter
+    @NonNull
     private String password;
 
 }

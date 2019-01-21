@@ -48,4 +48,9 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="rename_end_because_jdbc_template_does_something_strange" author="chris">
+        <renameColumn tableName="time" oldColumnName="start" newColumnName="start_time"/>
+        <renameColumn tableName="time" oldColumnName="end" newColumnName="end_time"/>
+    </changeSet>
+
 </databaseChangeLog>
