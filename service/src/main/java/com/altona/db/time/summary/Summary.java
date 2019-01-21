@@ -12,12 +12,13 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Summary {
 
-    private Map<LocalDate, LocalTime> timeMap;
+    private List<SummaryTime> times;
 
     public static Summary create(List<ZoneTime> zoneTimes) {
         LocalDateTime now = LocalDateTime.now();
@@ -33,7 +34,11 @@ public class Summary {
                 addTimes(timeMap, fromDate, toDate, fromDateTime, toDateTime, zoneTime.getType());
             }
         }
-        return new Summary(timeMap);
+        List<SummaryTime> summaryTimes = timeMap.entrySet().stream()
+                .sorted(Comparator.comparing(Map.Entry::getKey))
+                .map(entry -> new SummaryTime(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
+        return new Summary(summaryTimes);
     }
 
     private static void addTimes(Map<LocalDate, LocalTime> map, LocalDate lowerDate, LocalDate upperDate, LocalDateTime fromDate, LocalDateTime toDate, Time.Type type) {
