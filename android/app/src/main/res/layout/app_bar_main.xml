@@ -20,7 +20,21 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <include layout="@layout/content_main" />
+    <include layout="@layout/content_main"
+        android:id="@+id/main_content"
+        android:visibility="visible"/>
+
+    <include layout="@layout/content_time"
+        android:id="@+id/time_content"
+        android:visibility="gone"/>
+
+    <include layout="@layout/content_configuration"
+        android:id="@+id/configuration_content"
+        android:visibility="gone"/>
+
+    <include layout="@layout/content_settings"
+        android:id="@+id/settings_content"
+        android:visibility="gone"/>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
@@ -28,6 +42,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        app:srcCompat="@android:drawable/ic_dialog_email" />
+        android:visibility="visible"
+        app:srcCompat="@android:drawable/ic_media_play" />
 
 </android.support.design.widget.CoordinatorLayout>
