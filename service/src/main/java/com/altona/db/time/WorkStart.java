@@ -17,16 +17,16 @@ public class WorkStart {
     private int timeId;
 
     public static WorkStart alreadyStarted(int timeId) {
-        return new WorkStart(Result.ALREADY_STARTED, timeId);
+        return new WorkStart(Result.WORK_ALREADY_STARTED, timeId);
     }
 
     public static WorkStart started(int timeId) {
-        return new WorkStart(Result.STARTED, timeId);
+        return new WorkStart(Result.WORK_STARTED, timeId);
     }
 
     private enum Result {
-        ALREADY_STARTED,
-        STARTED
+        WORK_ALREADY_STARTED,
+        WORK_STARTED
     }
 
 }
