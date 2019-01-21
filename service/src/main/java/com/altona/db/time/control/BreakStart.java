@@ -1,4 +1,4 @@
-package com.altona.db.time;
+package com.altona.db.time.control;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -16,15 +16,15 @@ public class BreakStart {
 
     private Integer timeId;
 
-    static BreakStart started(int timeId) {
+    public static BreakStart started(int timeId) {
         return new BreakStart(Result.BREAK_STARTED, timeId);
     }
 
-    static BreakStart breakAlreadyStarted(int timeId) {
+    public static BreakStart breakAlreadyStarted(int timeId) {
         return new BreakStart(Result.BREAK_ALREADY_STARTED, timeId);
     }
 
-    static BreakStart workNotStarted() {
+    public static BreakStart workNotStarted() {
         return new BreakStart(Result.WORK_NOT_STARTED, null);
     }
 

@@ -1,24 +1,23 @@
 package com.altona.db.time;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Optional;
 
-@AllArgsConstructor
 public class Time {
 
     @Getter
     private int id;
 
     @Getter
-    @NonNull
     private Type type;
 
     @Getter
-    @NonNull
     private Date start;
 
     private Date end;
@@ -27,12 +26,31 @@ public class Time {
         this(id, Type.valueOf(type), start, end);
     }
 
+    private Time(int id, @NonNull Type type, @NonNull Date start, Date end) {
+        this.id = id;
+        this.type = Objects.requireNonNull(type);
+        this.start = Objects.requireNonNull(start);
+        this.end = end;
+    }
+
     public Optional<Date> getEnd() {
         return Optional.ofNullable(end);
     }
 
     public enum Type {
-        WORK,
-        BREAK;
+        WORK {
+            @Override
+            public LocalTime add(LocalTime left, LocalTime right) {
+                return left.plus(right.toNanoOfDay(), ChronoUnit.NANOS);
+            }
+        },
+        BREAK {
+            @Override
+            public LocalTime add(LocalTime left, LocalTime right) {
+                return left.minus(right.toNanoOfDay(), ChronoUnit.NANOS);
+            }
+        };
+
+        public abstract LocalTime add(LocalTime left, LocalTime right);
     }
 }

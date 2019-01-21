@@ -1,12 +1,13 @@
-package com.altona.db.time;
+package com.altona.db.time.control;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 
 import java.util.Optional;
 
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class WorkStop {
 
     @Getter
@@ -16,15 +17,15 @@ public class WorkStop {
     private Integer workTimeId;
     private Integer breakTimeId;
 
-    static WorkStop notStarted() {
+    public static WorkStop notStarted() {
         return new WorkStop(Result.WORK_NOT_STARTED, null, null);
     }
 
-    static WorkStop ended(int workId) {
+    public static WorkStop ended(int workId) {
         return new WorkStop(Result.WORK_STOPPED, workId, null);
     }
 
-    static WorkStop ended(int workId, int breakId) {
+    public static WorkStop ended(int workId, int breakId) {
         return new WorkStop(Result.WORK_AND_BREAK_STOPPED, workId, breakId);
     }
 
