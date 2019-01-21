@@ -1,21 +1,23 @@
 package com.altona.db.time;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NonNull;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import java.util.Objects;
 import java.util.Optional;
 
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Time {
 
     @Getter
     private int id;
 
     @Getter
-    private Type type;
+    private Time.Type type;
 
     @Getter
     private Date start;
@@ -23,14 +25,7 @@ public class Time {
     private Date end;
 
     Time(int id, String type, Date start, Date end) {
-        this(id, Type.valueOf(type), start, end);
-    }
-
-    private Time(int id, @NonNull Type type, @NonNull Date start, Date end) {
-        this.id = id;
-        this.type = Objects.requireNonNull(type);
-        this.start = Objects.requireNonNull(start);
-        this.end = end;
+        this(id, Time.Type.valueOf(type), start, end);
     }
 
     public Optional<Date> getEnd() {
