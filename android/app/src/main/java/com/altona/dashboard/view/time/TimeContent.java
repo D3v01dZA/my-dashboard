@@ -14,7 +14,7 @@ import com.altona.dashboard.nav.Navigation;
 import com.altona.dashboard.service.LoginService;
 import com.altona.dashboard.view.NavigationStatus;
 import com.altona.dashboard.view.SecureAppView;
-import com.altona.dashboard.view.UserInputDialog;
+import com.altona.dashboard.view.util.UserInputDialog;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 

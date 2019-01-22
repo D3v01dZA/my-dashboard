@@ -9,7 +9,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.altona.dashboard.R;
-import com.altona.dashboard.view.UserInputDialog;
+import com.altona.dashboard.view.util.UserInputDialog;
 
 public class SettingsRecyclerAdapter extends RecyclerView.Adapter<SettingsRecyclerAdapter.ViewHolder> {
 
