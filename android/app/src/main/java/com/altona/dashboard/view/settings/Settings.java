@@ -3,6 +3,8 @@ package com.altona.dashboard.view.settings;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.altona.dashboard.nav.Navigation;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -12,10 +14,12 @@ public class Settings {
     private static final String HOST = "host";
 
     private SharedPreferences sharedPreferences;
+    private Navigation navigation;
     private List<Entry> entries;
 
-    public Settings(Context context) {
+    public Settings(Context context, Navigation navigation) {
         this.sharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE);
+        this.navigation = navigation;
         recreateEntries();
     }
 
@@ -27,6 +31,7 @@ public class Settings {
         sharedPreferences.edit()
                 .putString(HOST, host)
                 .apply();
+        navigation.logout();
     }
 
     List<Entry> getEntries() {
