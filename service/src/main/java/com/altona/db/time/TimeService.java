@@ -34,7 +34,7 @@ public class TimeService {
                     rs.getInt("id"),
                     rs.getString("type"),
                     new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSX").parse(startTime),
-                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSX").parse(endTime)
+                    endTime == null ? null : new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSX").parse(endTime)
             );
         } catch (ParseException e) {
             throw new RuntimeException(e);

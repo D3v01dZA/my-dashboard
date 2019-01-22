@@ -4,17 +4,15 @@ import android.view.View;
 
 import com.altona.dashboard.MainActivity;
 import com.altona.dashboard.nav.Navigation;
-import com.altona.dashboard.service.LoginService;
+import com.altona.dashboard.service.login.LoginService;
 
 public abstract class SecureAppView<T extends View> extends AppView<T> {
 
     protected LoginService loginService;
-    protected Navigation navigation;
 
     protected SecureAppView(MainActivity mainActivity, LoginService loginService, Navigation navigation, T view) {
-        super(mainActivity, view);
+        super(mainActivity, navigation, view);
         this.loginService = loginService;
-        this.navigation = navigation;
     }
 
     @Override

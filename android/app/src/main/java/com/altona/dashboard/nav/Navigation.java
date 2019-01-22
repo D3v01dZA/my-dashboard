@@ -7,7 +7,8 @@ import android.view.MenuItem;
 
 import com.altona.dashboard.MainActivity;
 import com.altona.dashboard.R;
-import com.altona.dashboard.service.LoginService;
+import com.altona.dashboard.service.login.LoginService;
+import com.altona.dashboard.service.time.TimeService;
 import com.altona.dashboard.view.AppView;
 import com.altona.dashboard.view.configuration.ConfigurationContent;
 import com.altona.dashboard.view.NavigationStatus;
@@ -40,10 +41,11 @@ public class Navigation implements NavigationView.OnNavigationItemSelectedListen
         Settings settings = new Settings(mainActivity, this);
         OkHttpClient okHttpClient = new OkHttpClient();
         this.loginService = new LoginService(mainActivity, settings, okHttpClient);
+        TimeService timeService = new TimeService(loginService);
         this.mainContent = new MainContent(mainActivity, loginService, this);
-        this.timeContent = new TimeContent(mainActivity, loginService, this);
+        this.timeContent = new TimeContent(mainActivity, loginService, this, timeService);
         this.configurationContent = new ConfigurationContent(mainActivity, loginService, this);
-        this.settingsContent = new SettingsContent(mainActivity, settings);
+        this.settingsContent = new SettingsContent(mainActivity, this, settings);
         this.loginContent = new LoginContent(mainActivity, loginService, this);
         this.drawer = drawer;
         this.current = loginContent;

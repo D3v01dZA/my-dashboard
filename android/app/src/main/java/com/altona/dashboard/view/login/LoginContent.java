@@ -7,7 +7,7 @@ import android.widget.EditText;
 import com.altona.dashboard.MainActivity;
 import com.altona.dashboard.R;
 import com.altona.dashboard.nav.Navigation;
-import com.altona.dashboard.service.LoginService;
+import com.altona.dashboard.service.login.LoginService;
 import com.altona.dashboard.view.InsecureAppView;
 import com.altona.dashboard.view.NavigationStatus;
 
@@ -21,7 +21,7 @@ public class LoginContent extends InsecureAppView<ViewGroup> {
     private EditText passwordField;
 
     public LoginContent(MainActivity mainActivity, LoginService loginService, Navigation navigation) {
-        super(mainActivity, mainActivity.findViewById(R.id.login_content));
+        super(mainActivity, navigation, mainActivity.findViewById(R.id.login_content));
         this.loginService = loginService;
         this.navigation = navigation;
         this.button = view.findViewById(R.id.login_button);

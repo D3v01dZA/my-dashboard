@@ -38,6 +38,12 @@
             android:gravity="center"
             android:orientation="vertical">
 
+            <View
+                android:id="@+id/view"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?android:attr/listDivider" />
+
             <Spinner
                 android:id="@+id/time_project_spinner"
                 android:layout_width="match_parent"

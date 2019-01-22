@@ -5,7 +5,7 @@ public class ServiceResponse {
     private int code;
     private String value;
 
-    ServiceResponse(Integer code, String value) {
+    public ServiceResponse(Integer code, String value) {
         this.code = code;
         this.value = value;
     }
