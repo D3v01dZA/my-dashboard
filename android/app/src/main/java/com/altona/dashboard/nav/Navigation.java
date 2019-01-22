@@ -10,6 +10,7 @@ import com.altona.dashboard.R;
 import com.altona.dashboard.service.LoginService;
 import com.altona.dashboard.view.AppView;
 import com.altona.dashboard.view.ConfigurationContent;
+import com.altona.dashboard.view.NavigationStatus;
 import com.altona.dashboard.view.login.LoginContent;
 import com.altona.dashboard.view.MainContent;
 import com.altona.dashboard.view.settings.Settings;
@@ -22,15 +23,15 @@ public class Navigation implements NavigationView.OnNavigationItemSelectedListen
 
     private LoginService loginService;
 
-    private AppView mainContent;
-    private AppView timeContent;
-    private AppView configurationContent;
-    private AppView settingsContent;
-    private AppView loginContent;
+    private MainContent mainContent;
+    private TimeContent timeContent;
+    private ConfigurationContent configurationContent;
+    private SettingsContent settingsContent;
+    private LoginContent loginContent;
 
     private DrawerLayout drawer;
 
-    private AppView current;
+    private AppView<?> current;
 
     public Navigation(
             MainActivity mainActivity,
@@ -87,15 +88,19 @@ public class Navigation implements NavigationView.OnNavigationItemSelectedListen
         }
     }
 
-    private boolean enter(AppView appView) {
+    private boolean enter(AppView<?> appView) {
         current.leave();
-        boolean successful = appView.enter(loginContent);
-        if (successful) {
+        NavigationStatus status = appView.enter();
+        if (status == NavigationStatus.SUCCESS) {
             current = appView;
+            return true;
+        } else if (status == NavigationStatus.LOGIN_REDIRECT) {
+            return enter(loginContent);
+        } else if (status == NavigationStatus.MAIN_REDIRECT) {
+            return enter(mainContent);
         } else {
-            current = loginContent;
+            throw new IllegalArgumentException("Unrecognized Navigation Status: " + status);
         }
-        return successful;
     }
 
 }
