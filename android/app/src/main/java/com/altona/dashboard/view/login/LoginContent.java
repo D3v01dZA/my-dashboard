@@ -10,11 +10,11 @@ import com.altona.dashboard.MainActivity;
 import com.altona.dashboard.R;
 import com.altona.dashboard.nav.Navigation;
 import com.altona.dashboard.service.LoginService;
-import com.altona.dashboard.view.AppView;
+import com.altona.dashboard.view.InsecureAppView;
+import com.altona.dashboard.view.NavigationStatus;
 
-public class LoginContent implements AppView {
+public class LoginContent extends InsecureAppView<ViewGroup> {
 
-    private ViewGroup content;
     private LoginService loginService;
     private Navigation navigation;
 
@@ -23,28 +23,22 @@ public class LoginContent implements AppView {
     private EditText passwordField;
 
     public LoginContent(MainActivity mainActivity, LoginService loginService, Navigation navigation) {
-        this.content = mainActivity.findViewById(R.id.login_content);
+        super(mainActivity, mainActivity.findViewById(R.id.login_content));
         this.loginService = loginService;
         this.navigation = navigation;
-        this.button = content.findViewById(R.id.login_button);
-        this.usernameField = content.findViewById(R.id.login_username);
-        this.passwordField = content.findViewById(R.id.login_password);
+        this.button = view.findViewById(R.id.login_button);
+        this.usernameField = view.findViewById(R.id.login_username);
+        this.passwordField = view.findViewById(R.id.login_password);
         setupLoginButton();
     }
 
     @Override
-    public boolean enter(AppView loginRedirect) {
+    public NavigationStatus onEnter() {
         if (!loginService.isLoggedIn()) {
             usernameField.setText("test");
             passwordField.setText("password");
         }
-        content.setVisibility(View.VISIBLE);
-        return false;
-    }
-
-    @Override
-    public void leave() {
-        content.setVisibility(View.GONE);
+        return NavigationStatus.SUCCESS;
     }
 
     private void setupLoginButton() {
@@ -54,12 +48,13 @@ public class LoginContent implements AppView {
                     usernameField.getText().toString(),
                     passwordField.getText().toString(),
                     () -> {
-                        Toast.makeText(content.getContext(), "Login Succeeded", Toast.LENGTH_SHORT).show();
+                        hideKeyboard();
+                        toast("Login Succeeded");
                         button.setEnabled(true);
                         navigation.enterMain();
                     },
                     result -> {
-                        Toast.makeText(content.getContext(), result, Toast.LENGTH_SHORT).show();
+                        toast(result);
                         button.setEnabled(true);
                     });
         });

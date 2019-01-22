@@ -7,14 +7,14 @@ import com.altona.dashboard.R;
 import com.altona.dashboard.nav.Navigation;
 import com.altona.dashboard.service.LoginService;
 
-public class ConfigurationContent extends AbstractSecureView<ViewGroup> {
+public class ConfigurationContent extends SecureAppView<ViewGroup> {
 
     public ConfigurationContent(MainActivity mainActivity, LoginService loginService, Navigation navigation) {
-        super(loginService, navigation, mainActivity.findViewById(R.id.configuration_content));
+        super(mainActivity, loginService, navigation, mainActivity.findViewById(R.id.configuration_content));
     }
 
     @Override
-    public void onEnter() {
-
+    public NavigationStatus onEnter() {
+        return NavigationStatus.SUCCESS;
     }
 }

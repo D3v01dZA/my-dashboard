@@ -6,14 +6,14 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
-import android.widget.Toast;
 
 import com.altona.dashboard.GsonHolder;
 import com.altona.dashboard.MainActivity;
 import com.altona.dashboard.R;
 import com.altona.dashboard.nav.Navigation;
 import com.altona.dashboard.service.LoginService;
-import com.altona.dashboard.view.AbstractSecureView;
+import com.altona.dashboard.view.NavigationStatus;
+import com.altona.dashboard.view.SecureAppView;
 import com.altona.dashboard.view.UserInputDialog;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -24,7 +24,7 @@ import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 
-public class TimeContent extends AbstractSecureView<ViewGroup> {
+public class TimeContent extends SecureAppView<ViewGroup> {
 
     private Spinner projectSpinner;
 
@@ -35,7 +35,7 @@ public class TimeContent extends AbstractSecureView<ViewGroup> {
     private Button pauseButton;
 
     public TimeContent(MainActivity mainActivity, LoginService loginService, Navigation navigation) {
-        super(loginService, navigation, mainActivity.findViewById(R.id.time_content));
+        super(mainActivity, loginService, navigation, mainActivity.findViewById(R.id.time_content));
         this.projectSpinner = view.findViewById(R.id.time_project_spinner);
         this.startButton = view.findViewById(R.id.time_start_button);
         this.secondaryButtonContainer = view.findViewById(R.id.time_secondary_buttons);
@@ -45,7 +45,7 @@ public class TimeContent extends AbstractSecureView<ViewGroup> {
     }
 
     @Override
-    public void onEnter() {
+    public NavigationStatus onEnter() {
         loginService.tryExecute(new Request.Builder().get(), "/time/project", response -> {
             JsonArray elements = GsonHolder.INSTANCE.fromJson(response.getValue(), JsonArray.class);
             if (elements.size() == 0) {
@@ -58,9 +58,10 @@ public class TimeContent extends AbstractSecureView<ViewGroup> {
                 projectSpinner.setAdapter(stringArrayAdapter);
             }
         }, error -> {
-            Toast.makeText(view.getContext(), "Logging out because: " + error, Toast.LENGTH_SHORT).show();
+            toast("Failure: " + error);
             navigation.logout();
         });
+        return NavigationStatus.SUCCESS;
     }
 
     private void createProject() {
