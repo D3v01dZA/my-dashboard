@@ -5,8 +5,16 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.view.MenuItem;
 
+import com.altona.dashboard.MainActivity;
 import com.altona.dashboard.R;
+import com.altona.dashboard.service.LoginService;
 import com.altona.dashboard.view.AppView;
+import com.altona.dashboard.view.ConfigurationContent;
+import com.altona.dashboard.view.login.LoginContent;
+import com.altona.dashboard.view.MainContent;
+import com.altona.dashboard.view.settings.Settings;
+import com.altona.dashboard.view.settings.SettingsContent;
+import com.altona.dashboard.view.time.TimeContent;
 
 public class Navigation implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -14,39 +22,41 @@ public class Navigation implements NavigationView.OnNavigationItemSelectedListen
     private AppView timeContent;
     private AppView configurationContent;
     private AppView settingsContent;
+    private AppView loginContent;
 
     private DrawerLayout drawer;
 
     private AppView current;
 
     public Navigation(
-            AppView mainContent,
-            AppView timeContent,
-            AppView configurationContent,
-            AppView settingsContent,
+            MainActivity mainActivity,
             DrawerLayout drawer
     ) {
-        this.mainContent = mainContent;
-        this.timeContent = timeContent;
-        this.configurationContent = configurationContent;
-        this.settingsContent = settingsContent;
+        Settings settings = new Settings(mainActivity);
+        LoginService loginService = new LoginService(settings);
+        this.mainContent = new MainContent(mainActivity, loginService);
+        this.timeContent = new TimeContent(mainActivity, loginService);
+        this.configurationContent = new ConfigurationContent(mainActivity, loginService);
+        this.settingsContent = new SettingsContent(mainActivity, settings);
+        this.loginContent = new LoginContent(mainActivity, loginService, this);
         this.drawer = drawer;
-        this.current = mainContent;
-        current.enter();
+        this.current = loginContent;
+        enter(mainContent);
     }
 
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         int id = item.getItemId();
+        boolean successful = false;
         if (id == R.id.nav_home) {
-            enter(mainContent);
+            successful = enter(mainContent);
         } else if (id == R.id.nav_settings) {
-            enter(configurationContent);
+            successful = enter(configurationContent);
         } else if (id == R.id.nav_time) {
-            enter(timeContent);
+            successful = enter(timeContent);
         }
         drawer.closeDrawer(GravityCompat.START);
-        return true;
+        return successful;
     }
 
     public void backPressed(Runnable delegate) {
@@ -57,14 +67,23 @@ public class Navigation implements NavigationView.OnNavigationItemSelectedListen
         }
     }
 
+    public void enterMain() {
+        enter(mainContent);
+    }
+
     public void enterSettings() {
         enter(settingsContent);
     }
 
-    private void enter(AppView appView) {
+    private boolean enter(AppView appView) {
         current.leave();
-        appView.enter();
-        current = appView;
+        boolean successful = appView.enter(loginContent);
+        if (successful) {
+            current = appView;
+        } else {
+            current = loginContent;
+        }
+        return successful;
     }
 
 }

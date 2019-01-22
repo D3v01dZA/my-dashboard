@@ -36,4 +36,8 @@
         android:id="@+id/settings_content"
         android:visibility="gone"/>
 
+    <include layout="@layout/content_login"
+        android:id="@+id/login_content"
+        android:visibility="gone"/>
+
 </android.support.design.widget.CoordinatorLayout>

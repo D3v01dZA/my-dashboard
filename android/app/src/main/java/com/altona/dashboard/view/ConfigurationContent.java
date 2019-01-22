@@ -1,27 +1,15 @@
 package com.altona.dashboard.view;
 
-import android.view.View;
 import android.view.ViewGroup;
 
 import com.altona.dashboard.MainActivity;
 import com.altona.dashboard.R;
+import com.altona.dashboard.service.LoginService;
 
-public class ConfigurationContent implements AppView {
+public class ConfigurationContent extends AbstractSecureView<ViewGroup> {
 
-    private ViewGroup configurationContent;
-
-    public ConfigurationContent(MainActivity mainActivity) {
-        this.configurationContent = mainActivity.findViewById(R.id.configuration_content);
-    }
-
-    @Override
-    public void enter() {
-        configurationContent.setVisibility(View.VISIBLE);
-    }
-
-    @Override
-    public void leave() {
-        configurationContent.setVisibility(View.GONE);
+    public ConfigurationContent(MainActivity mainActivity, LoginService loginService) {
+        super(loginService, (ViewGroup) mainActivity.findViewById(R.id.configuration_content));
     }
 
 }
