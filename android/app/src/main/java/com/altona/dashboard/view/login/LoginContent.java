@@ -4,12 +4,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.altona.dashboard.MainActivity;
 import com.altona.dashboard.R;
 import com.altona.dashboard.nav.Navigation;
 import com.altona.dashboard.service.LoginService;
 import com.altona.dashboard.view.AppView;
+
+import java.util.Optional;
 
 public class LoginContent implements AppView {
 
@@ -47,8 +50,13 @@ public class LoginContent implements AppView {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                loginService.setUsernameAndPassword(usernameField.getText().toString(), usernameField.getText().toString());
-                navigation.enterMain();
+                Optional<String> result = loginService.tryLogin(usernameField.getText().toString(), passwordField.getText().toString());
+                if (result.isPresent()) {
+                    Toast.makeText(content.getContext(), result.get(), Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(content.getContext(), "Login Succeeded", Toast.LENGTH_SHORT).show();
+                    navigation.enterMain();
+                }
             }
         });
     }

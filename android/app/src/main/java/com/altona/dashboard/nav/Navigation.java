@@ -16,6 +16,8 @@ import com.altona.dashboard.view.settings.Settings;
 import com.altona.dashboard.view.settings.SettingsContent;
 import com.altona.dashboard.view.time.TimeContent;
 
+import okhttp3.OkHttpClient;
+
 public class Navigation implements NavigationView.OnNavigationItemSelectedListener {
 
     private AppView mainContent;
@@ -33,7 +35,8 @@ public class Navigation implements NavigationView.OnNavigationItemSelectedListen
             DrawerLayout drawer
     ) {
         Settings settings = new Settings(mainActivity);
-        LoginService loginService = new LoginService(settings);
+        OkHttpClient okHttpClient = new OkHttpClient();
+        LoginService loginService = new LoginService(settings, okHttpClient);
         this.mainContent = new MainContent(mainActivity, loginService);
         this.timeContent = new TimeContent(mainActivity, loginService);
         this.configurationContent = new ConfigurationContent(mainActivity, loginService);
