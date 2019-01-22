@@ -20,6 +20,8 @@ import okhttp3.OkHttpClient;
 
 public class Navigation implements NavigationView.OnNavigationItemSelectedListener {
 
+    private LoginService loginService;
+
     private AppView mainContent;
     private AppView timeContent;
     private AppView configurationContent;
@@ -36,7 +38,7 @@ public class Navigation implements NavigationView.OnNavigationItemSelectedListen
     ) {
         Settings settings = new Settings(mainActivity);
         OkHttpClient okHttpClient = new OkHttpClient();
-        LoginService loginService = new LoginService(settings, okHttpClient);
+        this.loginService = new LoginService(settings, okHttpClient);
         this.mainContent = new MainContent(mainActivity, loginService);
         this.timeContent = new TimeContent(mainActivity, loginService);
         this.configurationContent = new ConfigurationContent(mainActivity, loginService);
@@ -76,6 +78,11 @@ public class Navigation implements NavigationView.OnNavigationItemSelectedListen
 
     public void enterSettings() {
         enter(settingsContent);
+    }
+
+    public void logout() {
+        loginService.logout();
+        enter(loginContent);
     }
 
     private boolean enter(AppView appView) {

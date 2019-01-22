@@ -11,12 +11,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.altona.dashboard.nav.Navigation;
-import com.altona.dashboard.service.LoginService;
-import com.altona.dashboard.view.MainContent;
-import com.altona.dashboard.view.ConfigurationContent;
-import com.altona.dashboard.view.settings.Settings;
-import com.altona.dashboard.view.settings.SettingsContent;
-import com.altona.dashboard.view.time.TimeContent;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -74,6 +68,9 @@ public class MainActivity extends AppCompatActivity {
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             navigation.enterSettings();
+            return true;
+        } else if (id == R.id.action_logout) {
+            navigation.logout();
             return true;
         }
 
