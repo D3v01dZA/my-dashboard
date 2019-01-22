@@ -43,6 +43,11 @@ public class LoginService {
         }
     }
 
+    public void logout() {
+        username = null;
+        password = null;
+    }
+
     public boolean isLoggedIn() {
         return username != null;
     }

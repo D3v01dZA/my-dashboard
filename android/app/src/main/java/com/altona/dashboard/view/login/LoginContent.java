@@ -1,5 +1,6 @@
 package com.altona.dashboard.view.login;
 
+import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -36,6 +37,10 @@ public class LoginContent implements AppView {
 
     @Override
     public boolean enter(AppView loginRedirect) {
+        if (!loginService.isLoggedIn()) {
+            usernameField.setText("test");
+            passwordField.setText("password");
+        }
         content.setVisibility(View.VISIBLE);
         return false;
     }
@@ -46,15 +51,17 @@ public class LoginContent implements AppView {
     }
 
     private void setupLoginButton() {
-        Button button = content.findViewById(R.id.login_button);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Context context = content.getContext();
+                button.setEnabled(false);
                 Optional<String> result = loginService.tryLogin(usernameField.getText().toString(), passwordField.getText().toString());
+                button.setEnabled(true);
                 if (result.isPresent()) {
-                    Toast.makeText(content.getContext(), result.get(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, result.get(), Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(content.getContext(), "Login Succeeded", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "Login Succeeded", Toast.LENGTH_SHORT).show();
                     navigation.enterMain();
                 }
             }
