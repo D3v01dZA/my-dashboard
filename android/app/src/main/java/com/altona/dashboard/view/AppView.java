@@ -2,7 +2,7 @@ package com.altona.dashboard.view;
 
 public interface AppView {
 
-    void enter();
+    boolean enter(AppView loginRedirect);
 
     void leave();
 

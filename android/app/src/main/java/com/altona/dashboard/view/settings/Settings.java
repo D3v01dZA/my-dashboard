@@ -14,7 +14,7 @@ public class Settings {
     private SharedPreferences sharedPreferences;
     private List<Entry> entries;
 
-    Settings(Context context) {
+    public Settings(Context context) {
         this.sharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE);
         recreateEntries();
     }

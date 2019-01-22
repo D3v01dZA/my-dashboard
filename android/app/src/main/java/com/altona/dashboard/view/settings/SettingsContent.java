@@ -18,16 +18,17 @@ public class SettingsContent implements AppView {
 
     private Settings settings;
 
-    public SettingsContent(MainActivity mainActivity) {
+    public SettingsContent(MainActivity mainActivity, Settings settings) {
         this.content = mainActivity.findViewById(R.id.settings_content);
         this.recycler = mainActivity.findViewById(R.id.recycler_view_settings);
-        this.settings = new Settings(mainActivity);
+        this.settings = settings;
         setupRecycler(mainActivity);
     }
 
     @Override
-    public void enter() {
+    public boolean enter(AppView loginRedirect) {
         content.setVisibility(View.VISIBLE);
+        return true;
     }
 
     @Override

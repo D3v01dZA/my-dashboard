@@ -13,7 +13,7 @@ public class RootController {
     @RequestMapping(path = "/", produces = "application/json")
     @Transactional(readOnly = true)
     public String index(Authentication authentication) {
-        return "Time Controller " + authentication.getName() + "!";
+        return "Root Controller " + authentication.getName() + "!";
     }
 
 }
