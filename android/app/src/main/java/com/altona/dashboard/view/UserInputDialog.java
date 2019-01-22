@@ -1,4 +1,4 @@
-package com.altona.dashboard.view.settings;
+package com.altona.dashboard.view;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -12,24 +12,27 @@ import com.altona.dashboard.R;
 
 import java.util.function.Consumer;
 
-public class SettingsUserInputDialog {
+public class UserInputDialog {
 
-    static void open(Context context, String property, String currentValue, final Consumer<String> setter) {
+    public static void open(Context context, String text, String value, Consumer<String> onOk, Runnable onCancel) {
         View view = LayoutInflater.from(context)
                 .inflate(R.layout.dialog_user_input, null);
 
         TextView textView = view.findViewById(R.id.dialog_title);
-        textView.setText("Set " + property);
+        textView.setText(text);
         final EditText editText = view.findViewById(R.id.dialog_input);
-        editText.setText(currentValue);
+        editText.setText(value);
 
         AlertDialog alertDialog = new AlertDialog.Builder(context)
                 .setView(view)
                 .setPositiveButton("OK", (dialog, which) -> {
-                    setter.accept(editText.getText().toString());
+                    onOk.accept(editText.getText().toString());
                     dialog.dismiss();
                 })
-                .setNegativeButton("Cancel", (dialog, which) -> dialog.cancel())
+                .setNegativeButton("Cancel", (dialog, which) -> {
+                    onCancel.run();
+                    dialog.cancel();
+                })
                 .create();
         alertDialog.show();
     }

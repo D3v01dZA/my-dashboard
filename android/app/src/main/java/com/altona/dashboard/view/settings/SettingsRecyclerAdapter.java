@@ -9,8 +9,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.altona.dashboard.R;
-
-import java.util.function.Consumer;
+import com.altona.dashboard.view.UserInputDialog;
 
 public class SettingsRecyclerAdapter extends RecyclerView.Adapter<SettingsRecyclerAdapter.ViewHolder> {
 
@@ -44,10 +43,10 @@ public class SettingsRecyclerAdapter extends RecyclerView.Adapter<SettingsRecycl
 
     void onItemClick(int i) {
         final Settings.Entry entry = settings.getEntries().get(i);
-        SettingsUserInputDialog.open(context, entry.getKey(), entry.getValue(), s -> {
-            entry.set(s);
+        UserInputDialog.open(context, "Set " + entry.getKey(), entry.getValue(), string -> {
+            entry.set(string);
             notifyDataSetChanged();
-        });
+        }, () -> {});
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
