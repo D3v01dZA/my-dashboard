@@ -40,12 +40,7 @@ public class Settings {
 
     private void recreateEntries() {
         List<Entry> entries = new ArrayList<>();
-        entries.add(new Entry("Host", getHost(), new Consumer<String>() {
-            @Override
-            public void accept(String s) {
-                setHost(s);
-            }
-        }));
+        entries.add(new Entry("Host", getHost(), this::setHost));
         this.entries = entries;
     }
 

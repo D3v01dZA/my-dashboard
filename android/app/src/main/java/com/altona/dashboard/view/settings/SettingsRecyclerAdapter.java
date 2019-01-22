@@ -44,12 +44,9 @@ public class SettingsRecyclerAdapter extends RecyclerView.Adapter<SettingsRecycl
 
     void onItemClick(int i) {
         final Settings.Entry entry = settings.getEntries().get(i);
-        SettingsUserInputDialog.open(context, entry.getKey(), entry.getValue(), new Consumer<String>() {
-            @Override
-            public void accept(String s) {
-                entry.set(s);
-                notifyDataSetChanged();
-            }
+        SettingsUserInputDialog.open(context, entry.getKey(), entry.getValue(), s -> {
+            entry.set(s);
+            notifyDataSetChanged();
         });
     }
 
