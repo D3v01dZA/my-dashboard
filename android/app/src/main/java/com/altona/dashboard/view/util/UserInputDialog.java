@@ -1,4 +1,4 @@
-package com.altona.dashboard.view;
+package com.altona.dashboard.view.util;
 
 import android.app.AlertDialog;
 import android.content.Context;
