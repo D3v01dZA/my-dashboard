@@ -36,12 +36,12 @@ public class Navigation implements NavigationView.OnNavigationItemSelectedListen
             MainActivity mainActivity,
             DrawerLayout drawer
     ) {
-        Settings settings = new Settings(mainActivity);
+        Settings settings = new Settings(mainActivity, this);
         OkHttpClient okHttpClient = new OkHttpClient();
         this.loginService = new LoginService(settings, okHttpClient);
-        this.mainContent = new MainContent(mainActivity, loginService);
-        this.timeContent = new TimeContent(mainActivity, loginService);
-        this.configurationContent = new ConfigurationContent(mainActivity, loginService);
+        this.mainContent = new MainContent(mainActivity, loginService, this);
+        this.timeContent = new TimeContent(mainActivity, loginService, this);
+        this.configurationContent = new ConfigurationContent(mainActivity, loginService, this);
         this.settingsContent = new SettingsContent(mainActivity, settings);
         this.loginContent = new LoginContent(mainActivity, loginService, this);
         this.drawer = drawer;
