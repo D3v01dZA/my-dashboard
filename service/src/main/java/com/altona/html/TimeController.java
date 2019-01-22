@@ -80,7 +80,7 @@ public class TimeController {
     }
 
     @Transactional
-    @RequestMapping(path = "/time/project/{projectId}/end-work", method = RequestMethod.POST, produces = "application/json")
+    @RequestMapping(path = "/time/project/{projectId}/stop-work", method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<WorkStop> endWork(
             Authentication authentication,
             @PathVariable Integer projectId
@@ -92,7 +92,7 @@ public class TimeController {
     }
 
     @Transactional
-    @RequestMapping(path = "/time/project/{projectId}/end-break", method = RequestMethod.POST, produces = "application/json")
+    @RequestMapping(path = "/time/project/{projectId}/stop-break", method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<BreakStop> endBreak(
             Authentication authentication,
             @PathVariable Integer projectId

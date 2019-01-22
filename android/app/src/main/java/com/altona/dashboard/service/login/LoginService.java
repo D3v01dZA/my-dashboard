@@ -1,8 +1,9 @@
-package com.altona.dashboard.service;
+package com.altona.dashboard.service.login;
 
 import android.util.Base64;
 
 import com.altona.dashboard.MainActivity;
+import com.altona.dashboard.service.ServiceResponse;
 import com.altona.dashboard.view.settings.Settings;
 
 import java.io.IOException;

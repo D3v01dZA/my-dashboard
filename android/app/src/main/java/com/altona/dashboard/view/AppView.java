@@ -4,14 +4,17 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.altona.dashboard.MainActivity;
+import com.altona.dashboard.nav.Navigation;
 
 public abstract class AppView<T extends View> {
 
     protected MainActivity mainActivity;
     protected T view;
+    protected Navigation navigation;
 
-    AppView(MainActivity mainActivity, T view) {
+    AppView(MainActivity mainActivity, Navigation navigation, T view) {
         this.mainActivity = mainActivity;
+        this.navigation = navigation;
         this.view = view;
     }
 
@@ -25,6 +28,11 @@ public abstract class AppView<T extends View> {
 
     protected void hideKeyboard() {
         mainActivity.hideKeyboard();
+    }
+
+    protected void logoutErrorHandler(String message) {
+        toast("Error: " + message);
+        navigation.logout();
     }
 
 }

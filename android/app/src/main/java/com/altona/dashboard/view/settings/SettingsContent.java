@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 
 import com.altona.dashboard.MainActivity;
 import com.altona.dashboard.R;
+import com.altona.dashboard.nav.Navigation;
 import com.altona.dashboard.view.InsecureAppView;
 import com.altona.dashboard.view.NavigationStatus;
 
@@ -17,8 +18,8 @@ public class SettingsContent extends InsecureAppView<ViewGroup> {
 
     private Settings settings;
 
-    public SettingsContent(MainActivity mainActivity, Settings settings) {
-        super(mainActivity, mainActivity.findViewById(R.id.settings_content));
+    public SettingsContent(MainActivity mainActivity, Navigation navigation, Settings settings) {
+        super(mainActivity, navigation, mainActivity.findViewById(R.id.settings_content));
         this.recycler = mainActivity.findViewById(R.id.recycler_view_settings);
         this.settings = settings;
         setupRecycler(mainActivity);

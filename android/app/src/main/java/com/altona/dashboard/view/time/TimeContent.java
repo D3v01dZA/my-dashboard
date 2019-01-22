@@ -2,29 +2,27 @@ package com.altona.dashboard.view.time;
 
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 
-import com.altona.dashboard.GsonHolder;
 import com.altona.dashboard.MainActivity;
 import com.altona.dashboard.R;
 import com.altona.dashboard.nav.Navigation;
-import com.altona.dashboard.service.LoginService;
+import com.altona.dashboard.service.login.LoginService;
+import com.altona.dashboard.service.time.Project;
+import com.altona.dashboard.service.time.TimeService;
 import com.altona.dashboard.view.NavigationStatus;
 import com.altona.dashboard.view.SecureAppView;
 import com.altona.dashboard.view.util.UserInputDialog;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-
-import java.util.ArrayList;
 
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 
 public class TimeContent extends SecureAppView<ViewGroup> {
+
+    private TimeService timeService;
 
     private Spinner projectSpinner;
 
@@ -34,8 +32,9 @@ public class TimeContent extends SecureAppView<ViewGroup> {
     private Button stopButton;
     private Button pauseButton;
 
-    public TimeContent(MainActivity mainActivity, LoginService loginService, Navigation navigation) {
+    public TimeContent(MainActivity mainActivity, LoginService loginService, Navigation navigation, TimeService timeService) {
         super(mainActivity, loginService, navigation, mainActivity.findViewById(R.id.time_content));
+        this.timeService = timeService;
         this.projectSpinner = view.findViewById(R.id.time_project_spinner);
         this.startButton = view.findViewById(R.id.time_start_button);
         this.secondaryButtonContainer = view.findViewById(R.id.time_secondary_buttons);
@@ -46,21 +45,13 @@ public class TimeContent extends SecureAppView<ViewGroup> {
 
     @Override
     public NavigationStatus onEnter() {
-        loginService.tryExecute(new Request.Builder().get(), "/time/project", response -> {
-            JsonArray elements = GsonHolder.INSTANCE.fromJson(response.getValue(), JsonArray.class);
-            if (elements.size() == 0) {
+        timeService.getProjects(projects -> {
+            if (projects.size() == 0) {
                 createProject();
             } else {
-                ArrayAdapter<String> stringArrayAdapter = new ArrayAdapter<>(projectSpinner.getContext(), R.layout.support_simple_spinner_dropdown_item, new ArrayList<>());
-                for (JsonElement element : elements) {
-                    stringArrayAdapter.add(element.getAsJsonObject().get("name").getAsString());
-                }
-                projectSpinner.setAdapter(stringArrayAdapter);
+                projectSpinner.setAdapter(new TimeSpinnerAdapter(mainActivity, projects));
             }
-        }, error -> {
-            toast("Failure: " + error);
-            navigation.logout();
-        });
+        }, this::logoutErrorHandler);
         return NavigationStatus.SUCCESS;
     }
 
@@ -81,22 +72,45 @@ public class TimeContent extends SecureAppView<ViewGroup> {
     }
 
     private void start() {
-        loginService.tryExecute(new Request.Builder().post(RequestBody.create(MediaType.get("application/json"), "")), "/time/project/1/start", response -> {}, failure -> {});
-        startButton.setVisibility(View.GONE);
-        secondaryButtonContainer.setVisibility(View.VISIBLE);
+        Project project = (Project) projectSpinner.getSelectedItem();
+        timeService.startWork(
+                project,
+                jsonObject -> {
+                    startButton.setVisibility(View.GONE);
+                    secondaryButtonContainer.setVisibility(View.VISIBLE);
+                },
+                this::logoutErrorHandler
+        );
     }
 
     private void stop() {
-        startButton.setVisibility(View.VISIBLE);
-        secondaryButtonContainer.setVisibility(View.GONE);
-        pauseButton.setText("Pause");
+        Project project = (Project) projectSpinner.getSelectedItem();
+        timeService.stopWork(
+                project,
+                jsonObject -> {
+                    startButton.setVisibility(View.VISIBLE);
+                    secondaryButtonContainer.setVisibility(View.GONE);
+                    pauseButton.setText("Pause");
+                },
+                this::logoutErrorHandler
+        );
     }
 
     private void pause() {
+        Project project = (Project) projectSpinner.getSelectedItem();
         if ("Pause".equalsIgnoreCase(pauseButton.getText().toString())) {
-            pauseButton.setText("Resume");
+            timeService.startBreak(
+                    project,
+                    jsonObject -> pauseButton.setText("Resume"),
+                    this::logoutErrorHandler
+            );
         } else {
-            pauseButton.setText("Pause");
+            timeService.stopBreak(
+                    project,
+                    jsonObject -> pauseButton.setText("Pause"),
+                    this::logoutErrorHandler
+            );
+            ;
         }
     }
 
