@@ -38,7 +38,7 @@ public class Navigation implements NavigationView.OnNavigationItemSelectedListen
     ) {
         Settings settings = new Settings(mainActivity, this);
         OkHttpClient okHttpClient = new OkHttpClient();
-        this.loginService = new LoginService(settings, okHttpClient);
+        this.loginService = new LoginService(mainActivity, settings, okHttpClient);
         this.mainContent = new MainContent(mainActivity, loginService, this);
         this.timeContent = new TimeContent(mainActivity, loginService, this);
         this.configurationContent = new ConfigurationContent(mainActivity, loginService, this);

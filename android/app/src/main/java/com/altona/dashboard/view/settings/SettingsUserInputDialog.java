@@ -25,18 +25,12 @@ public class SettingsUserInputDialog {
 
         AlertDialog alertDialog = new AlertDialog.Builder(context)
                 .setView(view)
-                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        setter.accept(editText.getText().toString());
-                        dialog.dismiss();
-                    }
-                }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                }).create();
+                .setPositiveButton("OK", (dialog, which) -> {
+                    setter.accept(editText.getText().toString());
+                    dialog.dismiss();
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.cancel())
+                .create();
         alertDialog.show();
     }
 

@@ -1,21 +1,24 @@
 package com.altona.dashboard.service;
 
-import android.os.AsyncTask;
 import android.util.Base64;
 
+import com.altona.dashboard.MainActivity;
 import com.altona.dashboard.view.settings.Settings;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Optional;
-import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
 
+import okhttp3.Call;
+import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
 public class LoginService {
+
+    private MainActivity mainActivity;
 
     private Settings settings;
     private OkHttpClient httpClient;
@@ -23,37 +26,79 @@ public class LoginService {
     private String username;
     private String password;
 
-    public LoginService(Settings settings, OkHttpClient httpClient) {
+    public LoginService(MainActivity mainActivity, Settings settings, OkHttpClient httpClient) {
+        this.mainActivity = mainActivity;
         this.settings = settings;
         this.httpClient = httpClient;
     }
 
-    public String getUrl(String url) {
-        return settings.getHost() + url;
-    }
-
-    public ServiceResponse tryExecute(Request.Builder builder) {
+    public void tryExecute(Request.Builder builder, String subUrl, Consumer<ServiceResponse> onSuccess, Consumer<String> onFailure) {
         try {
-            return new Execute(httpClient, builder, username, password).execute().get();
-        } catch (ExecutionException e) {
-            return ServiceResponse.failure("Unknown ExecutionException: " + e.getMessage());
-        } catch (InterruptedException e) {
-            return ServiceResponse.failure("Unknown InterruptedException: " + e.getMessage());
+            URL url = new URL(settings.getHost() + subUrl);
+            String auth = Base64.encodeToString((username + ":" + password).getBytes(), Base64.DEFAULT);
+            // Base64 returns an \n at the end which my Samsung REALLY doesn't like
+            while (auth.endsWith("\n")) {
+                auth = auth.substring(0, auth.length() - 1);
+            }
+            httpClient.newCall(builder.url(url).header("Authorization", "Basic " + auth).build())
+                    .enqueue(new Callback() {
+                        @Override
+                        public void onFailure(Call call, IOException e) {
+                            mainActivity.runOnUiThread(() -> onFailure.accept("Unknown IOException: " + e.getMessage()));
+                        }
+
+                        @Override
+                        public void onResponse(Call call, Response response) {
+                            try {
+                                ServiceResponse serviceResponse = new ServiceResponse(response.code(), response.body().string());
+                                mainActivity.runOnUiThread(() -> onSuccess.accept(serviceResponse));
+                            } catch (IOException e) {
+                                mainActivity.runOnUiThread(() -> onFailure.accept("Unknown IOException: " + e.getMessage()));
+                            }
+                        }
+                    });
+        } catch (MalformedURLException e) {
+            mainActivity.runOnUiThread(() -> onFailure.accept("Host " + settings.getHost() + " is not valid"));
         }
     }
 
-    public Optional<String> tryLogin(String username, String password) {
+    public void tryLogin(String username, String password, Runnable onSuccess, Consumer<String> onFailure) {
         try {
-            Optional<String> result = new LoginAttempt(settings, httpClient, username, password).execute().get();
-            if (!result.isPresent()) {
-                this.username = username;
-                this.password = password;
+            URL url = new URL(settings.getHost());
+            String auth = Base64.encodeToString((username + ":" + password).getBytes(), Base64.DEFAULT);
+            // Base64 returns an \n at the end which my Samsung REALLY doesn't like
+            while (auth.endsWith("\n")) {
+                auth = auth.substring(0, auth.length() - 1);
             }
-            return result;
-        } catch (ExecutionException e) {
-            return Optional.of("Unknown ExecutionException: " + e.getMessage());
-        } catch (InterruptedException e) {
-            return Optional.of("Unknown InterruptedException: " + e.getMessage());
+            Request request = new Request.Builder()
+                    .url(url)
+                    .get()
+                    .header("Authorization", "Basic " + auth)
+                    .build();
+            httpClient.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    mainActivity.runOnUiThread(() -> onFailure.accept("Unknown IOException: " + e.getMessage()));
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    if (response.code() == 200) {
+                        String string = response.body().string();
+                        if (string.startsWith("Root Controller")) {
+                            LoginService.this.username = username;
+                            LoginService.this.password = password;
+                            mainActivity.runOnUiThread(() -> onSuccess.run());
+                        } else {
+                            mainActivity.runOnUiThread(() -> onFailure.accept("Wrong value received: " + string));
+                        }
+                    } else {
+                        mainActivity.runOnUiThread(() -> onFailure.accept("Wrong response code received: " + response.code()));
+                    }
+                }
+            });
+        } catch (MalformedURLException e) {
+            mainActivity.runOnUiThread(() -> onFailure.accept("Host " + settings.getHost() + " is not valid"));
         }
     }
 
@@ -64,90 +109,6 @@ public class LoginService {
 
     public boolean isLoggedIn() {
         return username != null;
-    }
-
-    private static class Execute extends AsyncTask<Void, Void, ServiceResponse> {
-
-        private OkHttpClient httpClient;
-
-        private Request.Builder builder;
-
-        private String username;
-        private String password;
-
-        Execute(OkHttpClient httpClient, Request.Builder builder, String username, String password) {
-            this.httpClient = httpClient;
-            this.builder = builder;
-            this.username = username;
-            this.password = password;
-        }
-
-        @Override
-        protected ServiceResponse doInBackground(Void... voids) {
-            try {
-                String auth = Base64.encodeToString((username + ":" + password).getBytes(), Base64.DEFAULT);
-                // Base64 return a \n at the end which my Samsung REALLY doesn't like
-                while (auth.endsWith("\n")) {
-                    auth = auth.substring(0, auth.length() - 1);
-                }
-                Request request = builder
-                        .header("Authorization", "Basic " + auth)
-                        .build();
-                Response response = httpClient.newCall(request).execute();
-                return ServiceResponse.success(response.code(), response.body().string());
-            } catch (IOException e) {
-                return ServiceResponse.failure("Unknown IOException: " + e.getMessage());
-            }
-        }
-
-    }
-
-    private static class LoginAttempt extends AsyncTask<Void, Void, Optional<String>> {
-
-        private Settings settings;
-        private OkHttpClient httpClient;
-
-        private String username;
-        private String password;
-
-        LoginAttempt(Settings settings, OkHttpClient httpClient, String username, String password) {
-            this.settings = settings;
-            this.httpClient = httpClient;
-            this.username = username;
-            this.password = password;
-        }
-
-        @Override
-        protected Optional<String> doInBackground(Void... voids) {
-            try {
-                URL url = new URL(settings.getHost());
-                String auth = Base64.encodeToString((username + ":" + password).getBytes(), Base64.DEFAULT);
-                // Base64 return a \n at the end which my Samsung REALLY doesn't like
-                while (auth.endsWith("\n")) {
-                    auth = auth.substring(0, auth.length() - 1);
-                }
-                Request request = new Request.Builder()
-                        .url(url)
-                        .get()
-                        .header("Authorization", "Basic " + auth)
-                        .build();
-                Response response = httpClient.newCall(request).execute();
-                if (response.code() == 200) {
-                    String string = response.body().string();
-                    if (string.startsWith("Root Controller")) {
-                        return Optional.empty();
-                    } else {
-                        return Optional.of("Wrong value received: " + string);
-                    }
-                } else {
-                    return Optional.of("Wrong response code received: " + response.code());
-                }
-            } catch (MalformedURLException e) {
-                return Optional.of("Host " + settings.getHost() + " is not valid");
-            } catch (IOException e) {
-                return Optional.of("Unknown IOException: " + e.getMessage());
-            }
-        }
     }
 
 }
