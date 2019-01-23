@@ -52,7 +52,7 @@ public class LoginContent extends InsecureAppView<ViewGroup> {
                         navigation.enterMain();
                     },
                     result -> {
-                        toast(result);
+                        longToast(result);
                         button.setEnabled(true);
                     });
         });

@@ -30,9 +30,12 @@ public abstract class SecureAppView<T extends View> extends AppView<T> {
 
     @Override
     public void leave() {
+        onLeave();
         view.setVisibility(View.GONE);
     }
 
     public abstract NavigationStatus onEnter();
+
+    public abstract void onLeave();
 
 }
