@@ -35,7 +35,7 @@ public interface TimeServiceRunningHelpers {
             Function<Time, T> whenRunning,
             Supplier<T> whenNotRunning
     ) {
-        Optional<Time> currentlyRunningOptional = timeService.getRunningProjectTime(project, type);
+        Optional<Time> currentlyRunningOptional = timeService.runningProjectTime(project, type);
         if (currentlyRunningOptional.isPresent()) {
             return whenRunning.apply(currentlyRunningOptional.get());
         } else {

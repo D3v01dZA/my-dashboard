@@ -1,11 +1,9 @@
 package com.altona.html;
 
 import com.altona.db.time.*;
-import com.altona.db.time.control.BreakStart;
-import com.altona.db.time.control.BreakStop;
-import com.altona.db.time.control.WorkStart;
-import com.altona.db.time.control.WorkStop;
+import com.altona.db.time.control.*;
 import com.altona.db.time.summary.Summary;
+import com.altona.db.user.User;
 import com.altona.db.user.UserContext;
 import com.altona.db.user.UserService;
 import lombok.AllArgsConstructor;
@@ -103,6 +101,18 @@ public class TimeController {
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    @Transactional(readOnly = true)
+    @RequestMapping(path = "/time/project/{projectId}/time-status", method = RequestMethod.POST, produces = "application/json")
+    public ResponseEntity<TimeStatus> timeStatus(
+            Authentication authentication,
+            @PathVariable Integer projectId
+    ) {
+        return projectService.getProject(userService.getUser(authentication), projectId)
+                .map(project -> timeService.timeStatus(project))
+                .map(breakStop -> new ResponseEntity<>(breakStop, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
     @Transactional
     @RequestMapping(path = "/time/project/{projectId}/summary", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<Summary> getSummary(
@@ -113,7 +123,7 @@ public class TimeController {
     ) {
         UserContext userContext = userService.getUserContext(authentication, timeZone);
         return projectService.getProject(userContext, projectId)
-                .map(project -> timeService.getSummary(userContext, project, type))
+                .map(project -> timeService.summary(userContext, project, type))
                 .map(timeList -> new ResponseEntity<>(timeList, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -127,7 +137,7 @@ public class TimeController {
     ) {
         UserContext userContext = userService.getUserContext(authentication, timeZone);
         return projectService.getProject(userContext, projectId)
-                .map(project -> timeService.getZoneTimes(userContext, project))
+                .map(project -> timeService.zoneTimes(userContext, project))
                 .map(timeList -> new ResponseEntity<>(timeList, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -142,7 +152,7 @@ public class TimeController {
     ) {
         UserContext userContext = userService.getUserContext(authentication, timeZone);
         return projectService.getProject(userContext, projectId)
-                .map(project -> timeService.getZoneTime(userContext, project, timeId))
+                .map(project -> timeService.zoneTime(userContext, project, timeId))
                 .map(timeList -> new ResponseEntity<>(timeList, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }

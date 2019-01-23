@@ -1,9 +1,6 @@
 package com.altona.db.time;
 
-import com.altona.db.time.control.BreakStart;
-import com.altona.db.time.control.BreakStop;
-import com.altona.db.time.control.WorkStart;
-import com.altona.db.time.control.WorkStop;
+import com.altona.db.time.control.*;
 import com.altona.db.time.summary.Summary;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.RowMapper;
@@ -11,10 +8,14 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 import javax.sql.DataSource;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -92,44 +93,51 @@ public class TimeService {
         );
     }
 
-    public List<ZoneTime> getZoneTimes(TimeZoneMapper timeZoneMapper, Project project) {
-        return namedJdbc.query(
-                "SELECT id, type, start_time, end_time FROM time WHERE project_id = :projectId",
-                new MapSqlParameterSource("projectId", project.getId()),
-                rowMapper()
-        )
+    public TimeStatus timeStatus(Project project) {
+        return runningWorkAwareFunction(this, project,
+                runningWork -> {
+                    Date now = new Date();
+                    LocalTime workTime = runningWork.time(now);
+                    LocalTime breakTime = timesListFromDate(project, runningWork.getStart())
+                            .stream()
+                            .map(time -> {
+                                Assert.isTrue(time.getType() == Time.Type.BREAK, "All times after a non-ended work should be breaks");
+                                return time.time(now);
+                            })
+                            .reduce(
+                                    LocalTime.of(0, 0),
+                                    (timeOne, timeTwo) -> timeOne.plus(timeTwo.toNanoOfDay(), ChronoUnit.NANOS)
+                            );
+                    return runningBreakAwareFunction(this, project,
+                            runningBreak -> TimeStatus.onBreak(workTime, breakTime),
+                            () -> TimeStatus.atWork(workTime, breakTime)
+                    );
+                },
+                TimeStatus::none
+        );
+    }
+
+    public List<ZoneTime> zoneTimes(TimeZoneMapper timeZoneMapper, Project project) {
+        return timeList(project)
                 .stream()
                 .map(time -> new ZoneTime(timeZoneMapper, time))
                 .collect(Collectors.toList());
     }
 
-    public Optional<ZoneTime> getZoneTime(TimeZoneMapper timeZoneMapper, Project project, int timeId) {
-        return getTime(project, timeId).map(time -> new ZoneTime(timeZoneMapper, time));
+    public Optional<ZoneTime> zoneTime(TimeZoneMapper timeZoneMapper, Project project, int timeId) {
+        return time(project, timeId).map(time -> new ZoneTime(timeZoneMapper, time));
     }
 
-    public Summary getSummary(TimeZoneMapper timeZoneMapper, Project project, Summary.Type type) {
+    public Summary summary(TimeZoneMapper timeZoneMapper, Project project, Summary.Type type) {
         Summary.Dates dates = type.getDates();
-        List<ZoneTime> zoneTimeList = namedJdbc.query(
-                "SELECT id, type, start_time, end_time FROM time WHERE end_time IS NOT NULL " +
-                        "AND (end_time < :toDate AND start_time > :fromDate) " +
-                        "OR (end_time > :toDate AND start_time > :fromDate) " +
-                        "OR (end_time < :toDate AND start_time < :fromDate) " +
-                        "OR (end_time > :toDate AND start_time < :fromDate) " +
-                        "AND project_id = :projectId " +
-                        "ORDER BY start_time DESC, end_time DESC",
-                new MapSqlParameterSource()
-                        .addValue("fromDate", dates.getFrom())
-                        .addValue("toDate", dates.getTo())
-                        .addValue("projectId", project.getId()),
-                rowMapper()
-        )
+        List<ZoneTime> zoneTimeList = timeListBetween(project, dates)
                 .stream()
                 .map(time -> new ZoneTime(timeZoneMapper, time))
                 .collect(Collectors.toList());
         return Summary.create(zoneTimeList);
     }
 
-    public Optional<Time> getRunningProjectTime(Project project, Time.Type type) {
+    public Optional<Time> runningProjectTime(Project project, Time.Type type) {
         return getSingleTimeFromQuery(
                 "SELECT id, type, start_time, end_time FROM time WHERE end_time IS NULL AND type = :type AND project_id = :projectId",
                 new MapSqlParameterSource()
@@ -143,7 +151,7 @@ public class TimeService {
                 .addValue("type", type.name())
                 .addValue("start_time", new Date())
                 .addValue("project_id", project.getId()));
-        return getTime(project, key.intValue()).get();
+        return time(project, key.intValue()).get();
     }
 
     private Time stopTime(Project project, Time time) {
@@ -157,10 +165,45 @@ public class TimeService {
                         .addValue("endTime", stopTime)
                         .addValue("id", zoneTime.getId())
         );
-        return getTime(project, zoneTime.getId()).get();
+        return time(project, zoneTime.getId()).get();
     }
 
-    public Optional<Time> getTime(Project project, int timeId) {
+    private List<Time> timeList(Project project) {
+        return namedJdbc.query(
+                "SELECT id, type, start_time, end_time FROM time WHERE project_id = :projectId",
+                new MapSqlParameterSource("projectId", project.getId()),
+                rowMapper()
+        );
+    }
+
+    private List<Time> timeListBetween(Project project, Summary.Dates dates) {
+        return namedJdbc.query(
+                "SELECT id, type, start_time, end_time FROM time WHERE end_time IS NOT NULL " +
+                        "AND (end_time < :toDate AND start_time > :fromDate) " +
+                        "OR (end_time > :toDate AND start_time > :fromDate) " +
+                        "OR (end_time < :toDate AND start_time < :fromDate) " +
+                        "OR (end_time > :toDate AND start_time < :fromDate) " +
+                        "AND project_id = :projectId " +
+                        "ORDER BY start_time DESC, end_time DESC",
+                new MapSqlParameterSource()
+                        .addValue("fromDate", dates.getFrom())
+                        .addValue("toDate", dates.getTo())
+                        .addValue("projectId", project.getId()),
+                rowMapper()
+        );
+    }
+
+    private List<Time> timesListFromDate(Project project, Date fromTime) {
+        return namedJdbc.query(
+                "SELECT id, type, start_time, end_time FROM time WHERE project_id = :projectId AND start_time > :fromTime",
+                new MapSqlParameterSource()
+                        .addValue("projectId", project.getId())
+                        .addValue("fromTime", fromTime),
+                rowMapper()
+        );
+    }
+
+    private Optional<Time> time(Project project, int timeId) {
         return getSingleTimeFromQuery(
                 "SELECT id, type, start_time, end_time FROM time WHERE id = :id AND project_id = :projectId",
                 new MapSqlParameterSource()
