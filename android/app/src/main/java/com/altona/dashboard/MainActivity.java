@@ -18,9 +18,6 @@ import com.altona.dashboard.nav.Navigation;
 
 public class MainActivity extends AppCompatActivity {
 
-    // LOL Here
-    public static boolean TEST_BUILD = false;
-
     private Navigation navigation;
 
     @Override

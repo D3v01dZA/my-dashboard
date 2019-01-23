@@ -4,11 +4,13 @@ import android.util.Base64;
 
 import com.altona.dashboard.MainActivity;
 import com.altona.dashboard.service.ServiceResponse;
+import com.altona.dashboard.view.settings.Credentials;
 import com.altona.dashboard.view.settings.Settings;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import okhttp3.Call;
@@ -24,8 +26,7 @@ public class LoginService {
     private Settings settings;
     private OkHttpClient httpClient;
 
-    private String username;
-    private String password;
+    private Credentials credentials;
 
     public LoginService(MainActivity mainActivity, Settings settings, OkHttpClient httpClient) {
         this.mainActivity = mainActivity;
@@ -36,7 +37,7 @@ public class LoginService {
     public void tryExecute(Request.Builder builder, String subUrl, Consumer<ServiceResponse> onSuccess, Consumer<String> onFailure) {
         try {
             URL url = new URL(settings.getHost() + subUrl);
-            String auth = Base64.encodeToString((username + ":" + password).getBytes(), Base64.DEFAULT);
+            String auth = Base64.encodeToString((credentials.getUsername() + ":" + credentials.getPassword()).getBytes(), Base64.DEFAULT);
             // Base64 returns an \n at the end which my Samsung REALLY doesn't like
             while (auth.endsWith("\n")) {
                 auth = auth.substring(0, auth.length() - 1);
@@ -63,10 +64,10 @@ public class LoginService {
         }
     }
 
-    public void tryLogin(String username, String password, Runnable onSuccess, Consumer<String> onFailure) {
+    public void tryLogin(boolean remember, Credentials credentials, Runnable onSuccess, Consumer<String> onFailure) {
         try {
             URL url = new URL(settings.getHost());
-            String auth = Base64.encodeToString((username + ":" + password).getBytes(), Base64.DEFAULT);
+            String auth = Base64.encodeToString((credentials.getUsername() + ":" + credentials.getPassword()).getBytes(), Base64.DEFAULT);
             // Base64 returns an \n at the end which my Samsung REALLY doesn't like
             while (auth.endsWith("\n")) {
                 auth = auth.substring(0, auth.length() - 1);
@@ -87,29 +88,38 @@ public class LoginService {
                     if (response.code() == 200) {
                         String string = response.body().string();
                         if (string.startsWith("Root Controller")) {
-                            LoginService.this.username = username;
-                            LoginService.this.password = password;
+                            if (remember) {
+                                settings.setCredentials(credentials);
+                            }
+                            LoginService.this.credentials = credentials;
                             mainActivity.runOnUiThread(() -> onSuccess.run());
                         } else {
+                            settings.clearCredentails();
                             mainActivity.runOnUiThread(() -> onFailure.accept("Wrong value received: " + string));
                         }
                     } else {
+                        settings.clearCredentails();
                         mainActivity.runOnUiThread(() -> onFailure.accept("Wrong response code received: " + response.code()));
                     }
                 }
             });
         } catch (MalformedURLException e) {
+            settings.clearCredentails();
             mainActivity.runOnUiThread(() -> onFailure.accept("Host " + settings.getHost() + " is not valid"));
         }
     }
 
     public void logout() {
-        username = null;
-        password = null;
+        settings.clearCredentails();
+        credentials = null;
     }
 
     public boolean isLoggedIn() {
-        return username != null;
+        return credentials != null;
+    }
+
+    public Optional<Credentials> getStoredCredentials() {
+        return settings.getCredentials();
     }
 
 }

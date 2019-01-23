@@ -3,16 +3,19 @@ package com.altona.dashboard.view.settings;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import com.altona.dashboard.MainActivity;
+import com.altona.dashboard.TestSetting;
 import com.altona.dashboard.nav.Navigation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 public class Settings {
 
     private static final String HOST = "host";
+    private static final String USERNAME = "username";
+    public static final String PASSWORD = "password";
 
     private SharedPreferences sharedPreferences;
     private Navigation navigation;
@@ -25,20 +28,35 @@ public class Settings {
     }
 
     public String getHost() {
-        if (MainActivity.TEST_BUILD) {
-            return "http://192.168.1.80:8080";
-        }
-        return sharedPreferences.getString(HOST, "localhost:8080");
+        return TestSetting.CURRENT.getHost(sharedPreferences.getString(HOST, "localhost:8080"));
     }
 
     private void setHost(String host) {
-        if (MainActivity.TEST_BUILD) {
-            throw new IllegalStateException("Build is for test only");
-        }
         sharedPreferences.edit()
-                .putString(HOST, host)
+                .putString(HOST, TestSetting.CURRENT.getHostToSave(host))
                 .apply();
         navigation.logout();
+    }
+
+    public Optional<Credentials> getCredentials() {
+        if (sharedPreferences.contains(USERNAME)) {
+            return Optional.of(new Credentials(sharedPreferences.getString(USERNAME, ""), sharedPreferences.getString(PASSWORD, "")));
+        }
+        return Optional.empty();
+    }
+
+    public void setCredentials(Credentials credentials) {
+        sharedPreferences.edit()
+                .putString(USERNAME, credentials.getUsername())
+                .putString(PASSWORD, credentials.getPassword())
+                .apply();
+    }
+
+    public void clearCredentails() {
+        sharedPreferences.edit()
+                .remove(USERNAME)
+                .remove(PASSWORD)
+                .apply();
     }
 
     List<Entry> getEntries() {

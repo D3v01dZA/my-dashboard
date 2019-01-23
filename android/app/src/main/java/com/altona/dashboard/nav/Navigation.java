@@ -84,10 +84,8 @@ public class Navigation implements NavigationView.OnNavigationItemSelectedListen
     }
 
     public void logout() {
-        if (loginService.isLoggedIn()) {
-            loginService.logout();
-            enter(loginContent);
-        }
+        loginService.logout();
+        enter(loginContent);
     }
 
     private boolean enter(AppView<?> appView) {
