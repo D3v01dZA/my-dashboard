@@ -26,12 +26,16 @@ public abstract class AppView<T extends View> {
         Toast.makeText(mainActivity, message, Toast.LENGTH_SHORT).show();
     }
 
+    protected void longToast(String message) {
+        Toast.makeText(mainActivity, message, Toast.LENGTH_LONG).show();
+    }
+
     protected void hideKeyboard() {
         mainActivity.hideKeyboard();
     }
 
     protected void logoutErrorHandler(String message) {
-        toast("Error: " + message);
+        longToast("Error: " + message);
         navigation.logout();
     }
 

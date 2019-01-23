@@ -9,13 +9,15 @@ import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.logging.Logger;
 
 import okhttp3.Request;
 import okhttp3.RequestBody;
 
 public class TimeService {
 
-    private static Type PROJECT_LIST = new TypeToken<List<Project>>() {}.getType();
+    private static final Logger LOGGER = Logger.getLogger(TimeService.class.getName());
+    private static final Type PROJECT_LIST = new TypeToken<List<Project>>() {}.getType();
 
     private LoginService loginService;
 
@@ -43,6 +45,10 @@ public class TimeService {
         request(emptyPost(), projectUrl(project) + "/stop-break", JsonObject.class, onSuccess, onFailure);
     }
 
+    public void timeStatus(Project project, Consumer<TimeStatus> onSuccess, Consumer<String> onFailure) {
+        request(emptyPost(), projectUrl(project) + "/time-status", TimeStatus.class, onSuccess, onFailure);
+    }
+
     private static Request.Builder emptyPost() {
         return new Request.Builder().post(RequestBody.create(null, ""));
     }
@@ -64,8 +70,10 @@ public class TimeService {
         loginService.tryExecute(builder, subUrl, serviceResponse -> {
             int code = serviceResponse.getCode();
             if (code >= 500) {
+                LOGGER.warning(() -> "Failed to call " + subUrl + " with " + code);
                 onFailure.accept("Server " + code);
             } else if (code >= 400) {
+                LOGGER.warning(() -> "Failed to call " + subUrl + " with " + code);
                 onFailure.accept("Request " + code);
             } else {
                 try {
