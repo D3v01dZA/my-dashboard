@@ -24,4 +24,9 @@ public class ConfigurationContent extends SecureAppView<ViewGroup> {
     public void onLeave() {
 
     }
+
+    @Override
+    public void onHide() {
+
+    }
 }

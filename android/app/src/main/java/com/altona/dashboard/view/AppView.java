@@ -22,6 +22,8 @@ public abstract class AppView<T extends View> {
 
     public abstract void leave();
 
+    public abstract void hide();
+
     protected void toast(String message) {
         Toast.makeText(mainActivity, message, Toast.LENGTH_SHORT).show();
     }

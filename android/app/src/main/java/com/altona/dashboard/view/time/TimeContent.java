@@ -98,6 +98,11 @@ public class TimeContent extends SecureAppView<ViewGroup> {
         }
     }
 
+    @Override
+    public void onHide() {
+        onLeave();
+    }
+
     private void updateStatus() {
         timeService.timeStatus(currentProject(), timeStatus -> {
             setCurrentStatus(timeStatus);

@@ -25,6 +25,13 @@ public abstract class InsecureAppView<T extends View> extends AppView<T> {
         view.setVisibility(View.GONE);
     }
 
+    @Override
+    public void hide() {
+        onHide();
+    }
+
     public abstract NavigationStatus onEnter();
+
+    public abstract void onHide();
 
 }

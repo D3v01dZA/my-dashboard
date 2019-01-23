@@ -24,4 +24,9 @@ public class MainContent extends SecureAppView<ViewGroup> {
     public void onLeave() {
 
     }
+
+    @Override
+    public void onHide() {
+
+    }
 }

@@ -67,6 +67,10 @@ public class Navigation implements NavigationView.OnNavigationItemSelectedListen
         return successful;
     }
 
+    public void appHidden() {
+        current.hide();
+    }
+
     public void backPressed(Runnable delegate) {
         if (current == mainContent) {
             delegate.run();
