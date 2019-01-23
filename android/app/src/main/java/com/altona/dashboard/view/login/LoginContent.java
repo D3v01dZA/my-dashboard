@@ -32,7 +32,7 @@ public class LoginContent extends InsecureAppView<ViewGroup> {
 
     @Override
     public NavigationStatus onEnter() {
-        if (!loginService.isLoggedIn()) {
+        if (MainActivity.TEST_BUILD) {
             usernameField.setText("test");
             passwordField.setText("password");
         }

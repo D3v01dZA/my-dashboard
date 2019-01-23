@@ -3,6 +3,7 @@ package com.altona.dashboard.view.settings;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.altona.dashboard.MainActivity;
 import com.altona.dashboard.nav.Navigation;
 
 import java.util.ArrayList;
@@ -24,10 +25,16 @@ public class Settings {
     }
 
     public String getHost() {
+        if (MainActivity.TEST_BUILD) {
+            return "http://192.168.1.80:8080";
+        }
         return sharedPreferences.getString(HOST, "localhost:8080");
     }
 
     private void setHost(String host) {
+        if (MainActivity.TEST_BUILD) {
+            throw new IllegalStateException("Build is for test only");
+        }
         sharedPreferences.edit()
                 .putString(HOST, host)
                 .apply();

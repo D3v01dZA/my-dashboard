@@ -13,7 +13,6 @@ public class WorkStart {
     private Result result;
 
     @Getter
-    @NonNull
     private int timeId;
 
     public static WorkStart alreadyStarted(int timeId) {
