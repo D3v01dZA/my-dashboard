@@ -19,4 +19,9 @@ public class MainContent extends SecureAppView<ViewGroup> {
     public NavigationStatus onEnter() {
         return NavigationStatus.SUCCESS;
     }
+
+    @Override
+    public void onLeave() {
+
+    }
 }

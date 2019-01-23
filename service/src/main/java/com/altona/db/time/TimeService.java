@@ -15,7 +15,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -97,7 +96,6 @@ public class TimeService {
         return runningWorkAwareFunction(this, project,
                 runningWork -> {
                     Date now = new Date();
-                    LocalTime workTime = runningWork.time(now);
                     LocalTime breakTime = timesListFromDate(project, runningWork.getStart())
                             .stream()
                             .map(time -> {
@@ -108,6 +106,7 @@ public class TimeService {
                                     LocalTime.of(0, 0),
                                     (timeOne, timeTwo) -> timeOne.plus(timeTwo.toNanoOfDay(), ChronoUnit.NANOS)
                             );
+                    LocalTime workTime = runningWork.time(now).minus(breakTime.toNanoOfDay(), ChronoUnit.NANOS);
                     return runningBreakAwareFunction(this, project,
                             runningBreak -> TimeStatus.onBreak(workTime, breakTime),
                             () -> TimeStatus.atWork(workTime, breakTime)
