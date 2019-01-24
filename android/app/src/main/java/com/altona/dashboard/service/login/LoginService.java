@@ -12,6 +12,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -20,6 +22,8 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class LoginService {
+
+    private static final Logger LOGGER = Logger.getLogger(LoginService.class.getName());
 
     private MainActivity mainActivity;
 
@@ -46,6 +50,7 @@ public class LoginService {
                     .enqueue(new Callback() {
                         @Override
                         public void onFailure(Call call, IOException e) {
+                            LOGGER.log(Level.SEVERE, "Failed to call " + subUrl, e);
                             mainActivity.runOnUiThread(() -> onFailure.accept("Unknown IOException: " + e.getMessage()));
                         }
 
@@ -55,6 +60,7 @@ public class LoginService {
                                 ServiceResponse serviceResponse = new ServiceResponse(response.code(), response.body().string());
                                 mainActivity.runOnUiThread(() -> onSuccess.accept(serviceResponse));
                             } catch (IOException e) {
+                                LOGGER.log(Level.SEVERE, "Failed to call " + subUrl, e);
                                 mainActivity.runOnUiThread(() -> onFailure.accept("Unknown IOException: " + e.getMessage()));
                             }
                         }

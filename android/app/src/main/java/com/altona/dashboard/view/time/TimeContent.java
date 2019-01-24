@@ -7,7 +7,6 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.altona.dashboard.GsonHolder;
 import com.altona.dashboard.MainActivity;
 import com.altona.dashboard.R;
 import com.altona.dashboard.nav.Navigation;
@@ -19,15 +18,10 @@ import com.altona.dashboard.view.NavigationStatus;
 import com.altona.dashboard.view.SecureAppView;
 import com.altona.dashboard.view.util.UserInputDialog;
 
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.Timer;
 import java.util.TimerTask;
-
-import okhttp3.MediaType;
-import okhttp3.Request;
-import okhttp3.RequestBody;
 
 import static java.time.temporal.ChronoField.HOUR_OF_DAY;
 import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
@@ -42,7 +36,6 @@ public class TimeContent extends SecureAppView<ViewGroup> {
             .appendLiteral(':')
             .appendValue(SECOND_OF_MINUTE, 2)
             .toFormatter();
-    private static final LocalTime NO_TIME = LocalTime.of(0, 0);
 
     private TimeService timeService;
 
@@ -106,15 +99,14 @@ public class TimeContent extends SecureAppView<ViewGroup> {
     private void updateStatus() {
         timeService.timeStatus(currentProject(), timeStatus -> {
             setCurrentStatus(timeStatus);
-            updateWithCurrentStatus();
-            enableInteraction();
+            enableInteractionAndUpdate();
         }, this::logoutErrorHandler);
     }
 
     private void createProject() {
         UserInputDialog.open(view.getContext(), "Create a Time Project", "",
-                input -> loginService.tryExecute(
-                        new Request.Builder().post(RequestBody.create(MediaType.get("application/json"), GsonHolder.INSTANCE.toJson(new Project(-1, input)))), "/time/project",
+                input -> timeService.createProject(
+                        new Project(-1, input),
                         serviceResponse -> onEnter(),
                         failure -> navigation.enterMain()
                 ),
@@ -132,18 +124,18 @@ public class TimeContent extends SecureAppView<ViewGroup> {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                mainActivity.runOnUiThread(() -> {
-                    currentStatus.secondTick();
-                    updateWithCurrentStatus();
-                });
+                mainActivity.runOnUiThread(() -> updateWithCurrentStatus());
             }
         }, 1000, 1000);
     }
 
     private void updateWithCurrentStatus() {
-        currentStatus.getStatus().setButtons(this);
-        runningWorked.setText("Worked: " + currentStatus.getRunningWorkTotal().orElse(NO_TIME).format(TIME_FORMATTER));
-        runningBreaks.setText("Paused: " + currentStatus.getRunningBreakTotal().orElse(NO_TIME).format(TIME_FORMATTER));
+        if (currentStatus != null) { // We might rerun this one extra time on leaving
+            currentStatus.update();
+            currentStatus.getStatus().setButtons(this);
+            runningWorked.setText("Worked: " + currentStatus.getRunningWorkTotal().format(TIME_FORMATTER));
+            runningBreaks.setText("Paused: " + currentStatus.getRunningBreakTotal().format(TIME_FORMATTER));
+        }
     }
 
     private void setupButtons() {
@@ -159,7 +151,8 @@ public class TimeContent extends SecureAppView<ViewGroup> {
         pauseButton.setEnabled(false);
     }
 
-    private void enableInteraction() {
+    private void enableInteractionAndUpdate() {
+        updateWithCurrentStatus();
         projectSpinner.setEnabled(true);
         startButton.setEnabled(true);
         stopButton.setEnabled(true);
@@ -174,7 +167,7 @@ public class TimeContent extends SecureAppView<ViewGroup> {
                 jsonObject -> {
                     Status.WORK.setButtons(this);
                     currentStatus.startWork();
-                    enableInteraction();
+                    enableInteractionAndUpdate();
                 },
                 this::logoutErrorHandler
         );
@@ -188,7 +181,7 @@ public class TimeContent extends SecureAppView<ViewGroup> {
                 jsonObject -> {
                     Status.NONE.setButtons(this);
                     currentStatus.stopWork();
-                    enableInteraction();
+                    enableInteractionAndUpdate();
                 },
                 this::logoutErrorHandler
         );
@@ -203,7 +196,7 @@ public class TimeContent extends SecureAppView<ViewGroup> {
                     jsonObject -> {
                         currentStatus.startBreak();
                         Status.BREAK.setButtons(this);
-                        enableInteraction();
+                        enableInteractionAndUpdate();
                     },
                     this::logoutErrorHandler
             );
@@ -213,7 +206,7 @@ public class TimeContent extends SecureAppView<ViewGroup> {
                     jsonObject -> {
                         currentStatus.stopBreak();
                         Status.WORK.setButtons(this);
-                        enableInteraction();
+                        enableInteractionAndUpdate();
                     },
                     this::logoutErrorHandler
             );
@@ -231,12 +224,12 @@ public class TimeContent extends SecureAppView<ViewGroup> {
             }
 
             @Override
-            public boolean addToWorkOnSecondTick() {
+            public boolean updateWork() {
                 return true;
             }
 
             @Override
-            public boolean addToBreakOnSecondTick() {
+            public boolean updateBreak() {
                 return false;
             }
         },
@@ -249,12 +242,12 @@ public class TimeContent extends SecureAppView<ViewGroup> {
             }
 
             @Override
-            public boolean addToWorkOnSecondTick() {
+            public boolean updateWork() {
                 return false;
             }
 
             @Override
-            public boolean addToBreakOnSecondTick() {
+            public boolean updateBreak() {
                 return true;
             }
         },
@@ -266,21 +259,21 @@ public class TimeContent extends SecureAppView<ViewGroup> {
             }
 
             @Override
-            public boolean addToWorkOnSecondTick() {
+            public boolean updateWork() {
                 return false;
             }
 
             @Override
-            public boolean addToBreakOnSecondTick() {
+            public boolean updateBreak() {
                 return false;
             }
         };
 
         public abstract void setButtons(TimeContent timeContent);
 
-        public abstract boolean addToWorkOnSecondTick();
+        public abstract boolean updateWork();
 
-        public abstract boolean addToBreakOnSecondTick();
+        public abstract boolean updateBreak();
 
     }
 }

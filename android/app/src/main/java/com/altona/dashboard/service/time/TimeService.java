@@ -1,23 +1,25 @@
 package com.altona.dashboard.service.time;
 
-import com.altona.dashboard.GsonHolder;
+import com.altona.dashboard.ObjectMapperHolder;
 import com.altona.dashboard.service.login.LoginService;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.reflect.TypeToken;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import java.lang.reflect.Type;
+import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 
 public class TimeService {
 
     private static final Logger LOGGER = Logger.getLogger(TimeService.class.getName());
-    private static final Type PROJECT_LIST = new TypeToken<List<Project>>() {}.getType();
+    private static final TypeReference<List<Project>> PROJECT_LIST = new TypeReference<List<Project>>() {};
 
     private LoginService loginService;
 
@@ -25,24 +27,28 @@ public class TimeService {
         this.loginService = loginService;
     }
 
+    public void createProject(Project project, Consumer<Project> onSuccess, Consumer<String> onFailure) {
+        request(post(project), "/time/project", Project.class, onSuccess, onFailure);
+    }
+
     public void getProjects(Consumer<List<Project>> onSuccess, Consumer<String> onFailure) {
         request(get(), "/time/project", PROJECT_LIST, onSuccess, onFailure);
     }
 
-    public void startWork(Project project, Consumer<JsonObject> onSuccess, Consumer<String> onFailure) {
-        request(emptyPost(), projectUrl(project) + "/start-work", JsonObject.class, onSuccess, onFailure);
+    public void startWork(Project project, Consumer<ObjectNode> onSuccess, Consumer<String> onFailure) {
+        request(emptyPost(), projectUrl(project) + "/start-work", ObjectNode.class, onSuccess, onFailure);
     }
 
-    public void stopWork(Project project, Consumer<JsonObject> onSuccess, Consumer<String> onFailure) {
-        request(emptyPost(), projectUrl(project) + "/stop-work", JsonObject.class, onSuccess, onFailure);
+    public void stopWork(Project project, Consumer<ObjectNode> onSuccess, Consumer<String> onFailure) {
+        request(emptyPost(), projectUrl(project) + "/stop-work", ObjectNode.class, onSuccess, onFailure);
     }
 
-    public void startBreak(Project project, Consumer<JsonObject> onSuccess, Consumer<String> onFailure) {
-        request(emptyPost(), projectUrl(project) + "/start-break", JsonObject.class, onSuccess, onFailure);
+    public void startBreak(Project project, Consumer<ObjectNode> onSuccess, Consumer<String> onFailure) {
+        request(emptyPost(), projectUrl(project) + "/start-break", ObjectNode.class, onSuccess, onFailure);
     }
 
-    public void stopBreak(Project project, Consumer<JsonObject> onSuccess, Consumer<String> onFailure) {
-        request(emptyPost(), projectUrl(project) + "/stop-break", JsonObject.class, onSuccess, onFailure);
+    public void stopBreak(Project project, Consumer<ObjectNode> onSuccess, Consumer<String> onFailure) {
+        request(emptyPost(), projectUrl(project) + "/stop-break", ObjectNode.class, onSuccess, onFailure);
     }
 
     public void timeStatus(Project project, Consumer<TimeStatus> onSuccess, Consumer<String> onFailure) {
@@ -53,6 +59,15 @@ public class TimeService {
         return new Request.Builder().post(RequestBody.create(null, ""));
     }
 
+    private static Request.Builder post(Object body) {
+        try {
+            return new Request.Builder().post(RequestBody.create(MediaType.get("application/json"), ObjectMapperHolder.INSTANCE.writeValueAsBytes(body)));
+        } catch (JsonProcessingException e) {
+            LOGGER.log(Level.SEVERE, "Failed to serialize", e);
+            throw new IllegalStateException("Failed to serialize", e);
+        }
+    }
+
     private static Request.Builder get() {
         return new Request.Builder().get();
     }
@@ -61,29 +76,39 @@ public class TimeService {
         return "/time/project/" + project.getId();
     }
 
-    private <T> void request(Request.Builder builder, String subUrl, Class<T> clazz, Consumer<T> onSuccess, Consumer<String> onFailure) {
-        request(builder, subUrl, (Type) clazz, onSuccess, onFailure);
+    private <T> void request(Request.Builder builder, String subUrl, TypeReference<T> typeReference, Consumer<T> onSuccess, Consumer<String> onFailure) {
+        request(builder, subUrl, result -> ObjectMapperHolder.INSTANCE.readValue(result, typeReference), onSuccess, onFailure);
     }
 
-    // This T is super hacky, but is very similar in intent to findViewById(id)
-    private <T> void request(Request.Builder builder, String subUrl, Type type, Consumer<T> onSuccess, Consumer<String> onFailure) {
+    private <T> void request(Request.Builder builder, String subUrl, Class<T> clazz, Consumer<T> onSuccess, Consumer<String> onFailure) {
+        request(builder, subUrl, result -> ObjectMapperHolder.INSTANCE.readValue(result, clazz), onSuccess, onFailure);
+    }
+
+    private <T> void request(Request.Builder builder, String subUrl, ObjectMapperFunction<T> extractor, Consumer<T> onSuccess, Consumer<String> onFailure) {
         loginService.tryExecute(builder, subUrl, serviceResponse -> {
             int code = serviceResponse.getCode();
             if (code >= 500) {
-                LOGGER.warning(() -> "Failed to call " + subUrl + " with " + code);
+                LOGGER.severe(() -> "Failed to call " + subUrl + " with " + code);
                 onFailure.accept("Server " + code);
             } else if (code >= 400) {
                 LOGGER.warning(() -> "Failed to call " + subUrl + " with " + code);
                 onFailure.accept("Request " + code);
             } else {
                 try {
-                    T deserialized = GsonHolder.INSTANCE.fromJson(serviceResponse.getValue(), type);
+                    T deserialized = extractor.apply(serviceResponse.getValue());
                     onSuccess.accept(deserialized);
-                } catch (JsonParseException ex) {
-                    onFailure.accept(ex.getMessage());
+                } catch (IOException e) {
+                    LOGGER.log(Level.SEVERE, "Failed to deserialize", e);
+                    onFailure.accept(e.getMessage());
                 }
             }
         }, onFailure);
+    }
+
+    private interface ObjectMapperFunction<T> {
+
+        T apply(String value) throws IOException;
+
     }
 
 }
