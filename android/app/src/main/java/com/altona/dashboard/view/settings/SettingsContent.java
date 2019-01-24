@@ -30,6 +30,11 @@ public class SettingsContent extends InsecureAppView<ViewGroup> {
         return NavigationStatus.SUCCESS;
     }
 
+    @Override
+    public void onHide() {
+
+    }
+
     private void setupRecycler(Context context) {
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(context);
         recycler.setLayoutManager(layoutManager);

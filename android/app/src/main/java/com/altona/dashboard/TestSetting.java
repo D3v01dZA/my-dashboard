@@ -66,7 +66,7 @@ public enum TestSetting {
         }
     };
 
-    public static final TestSetting CURRENT = TEST_EMULATOR;
+    public static final TestSetting CURRENT = PHONE;
 
     public abstract String getSavedUsername();
 

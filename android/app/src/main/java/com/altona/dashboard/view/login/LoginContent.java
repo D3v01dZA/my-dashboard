@@ -43,10 +43,13 @@ public class LoginContent extends InsecureAppView<ViewGroup> {
         return NavigationStatus.SUCCESS;
     }
 
+    @Override
+    public void onHide() {
+
+    }
+
     private void setupLoginButton() {
-        button.setOnClickListener(view -> {
-            tryLogin(new Credentials(usernameField.getText().toString(), passwordField.getText().toString()));
-        });
+        button.setOnClickListener(view -> tryLogin(new Credentials(usernameField.getText().toString(), passwordField.getText().toString())));
     }
 
     private void tryLogin(Credentials credentials) {
