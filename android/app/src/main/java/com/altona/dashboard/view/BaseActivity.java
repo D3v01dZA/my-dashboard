@@ -20,11 +20,8 @@ import com.altona.dashboard.R;
 import com.altona.dashboard.Static;
 import com.altona.dashboard.service.login.Credentials;
 import com.altona.dashboard.service.login.LoginService;
-import com.altona.dashboard.view.configuration.ConfigurationActivity;
 import com.altona.dashboard.view.login.LoginActivity;
-import com.altona.dashboard.view.main.MainActivity;
 import com.altona.dashboard.view.settings.SettingsActivity;
-import com.altona.dashboard.view.time.TimeActivity;
 
 public abstract class BaseActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -72,14 +69,7 @@ public abstract class BaseActivity extends AppCompatActivity implements Navigati
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         int id = item.getItemId();
-        boolean returned = false;
-        if (id == R.id.nav_home) {
-            returned = enter(MainActivity.class);
-        } else if (id == R.id.nav_settings) {
-            returned = enter(ConfigurationActivity.class);
-        } else if (id == R.id.nav_time) {
-            returned = enter(TimeActivity.class);
-        }
+        boolean returned = enter(Static.NAV_ID_TO_CLASS.get(id));
         drawer().closeDrawer(GravityCompat.START);
         return returned;
     }
@@ -133,6 +123,10 @@ public abstract class BaseActivity extends AppCompatActivity implements Navigati
     @Override
     protected void onResume() {
         super.onResume();
+        Integer id = Static.CLASS_TO_NAV_ID.get(getClass());
+        if (id != null) {
+            navigationView().setCheckedItem(id);
+        }
         show();
     }
 
