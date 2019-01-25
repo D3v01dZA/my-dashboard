@@ -115,8 +115,8 @@ public class LoginService {
     }
 
     public void logout() {
-        viewState.setCredentials(null);
-        settings.setCredentials(null);
+        viewState.clearCredentials();
+        settings.clearCredentials();
     }
 
     public boolean isLoggedIn() {

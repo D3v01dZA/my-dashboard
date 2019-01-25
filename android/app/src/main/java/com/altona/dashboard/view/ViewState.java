@@ -27,6 +27,10 @@ public class ViewState {
         this.credentials = credentials;
     }
 
+    public void clearCredentials() {
+        this.credentials = null;
+    }
+
     public Optional<Credentials> getCredentials() {
         return Optional.ofNullable(credentials);
     }
