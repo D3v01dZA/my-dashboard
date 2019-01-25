@@ -52,22 +52,6 @@ public abstract class Static {
         throw new IllegalStateException("You really don't want to instantiate this class");
     }
 
-    public static String toJson(Object object) {
-        try {
-            return OBJECT_MAPPER.writeValueAsString(object);
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    public static <T> T fromJson(String json, Class<T> clazz) {
-        try {
-            return OBJECT_MAPPER.readValue(json, clazz);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
     private static class LocalTimeDeserializer extends JsonDeserializer<LocalTime> {
 
         @Override

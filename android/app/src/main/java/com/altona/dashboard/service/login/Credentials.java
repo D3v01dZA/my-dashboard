@@ -1,21 +1,17 @@
 package com.altona.dashboard.service.login;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import android.os.Parcel;
+import android.os.Parcelable;
 
-public class Credentials {
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
+public class Credentials implements Parcelable {
 
     private String username;
     private String password;
-
-    @JsonCreator
-    public Credentials(
-            @JsonProperty("username") String username,
-            @JsonProperty("password") String password
-    ) {
-        this.username = username;
-        this.password = password;
-    }
 
     public String getUsername() {
         return username;
@@ -24,4 +20,27 @@ public class Credentials {
     public String getPassword() {
         return password;
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(username);
+        dest.writeString(password);
+    }
+
+    public static final Creator<Credentials> CREATOR = new Creator<Credentials>() {
+        @Override
+        public Credentials createFromParcel(Parcel in) {
+            return new Credentials(in.readString(), in.readString());
+        }
+
+        @Override
+        public Credentials[] newArray(int size) {
+            return new Credentials[size];
+        }
+    };
 }

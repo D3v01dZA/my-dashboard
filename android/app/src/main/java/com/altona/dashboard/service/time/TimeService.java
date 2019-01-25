@@ -19,8 +19,7 @@ import okhttp3.RequestBody;
 public class TimeService {
 
     private static final Logger LOGGER = Logger.getLogger(TimeService.class.getName());
-    private static final TypeReference<List<Project>> PROJECT_LIST = new TypeReference<List<Project>>() {
-    };
+    private static final TypeReference<List<Project>> PROJECT_LIST = new TypeReference<List<Project>>() {};
 
     private LoginService loginService;
 

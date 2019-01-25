@@ -40,6 +40,10 @@
             android:theme="@style/AppTheme.NoActionBar"
             android:label="@string/action_time"
             android:parentActivityName=".view.main.MainActivity" />
+
+        <service
+            android:name=".view.time.TimeNotificationService"
+            android:permission="android.permission.BIND_JOB_SERVICE"/>
     </application>
 
 </manifest>

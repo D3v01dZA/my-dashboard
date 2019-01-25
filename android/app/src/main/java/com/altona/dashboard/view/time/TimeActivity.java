@@ -107,6 +107,7 @@ public class TimeActivity extends SecureAppActivity {
 
     private void setCurrentStatus(TimeStatus timeStatus) {
         this.currentStatus = timeStatus;
+        TimeNotificationService.schedule(this, timeStatus);
         updateWithCurrentStatus();
         this.timer = new Timer();
         timer.schedule(new TimerTask() {
@@ -119,8 +120,7 @@ public class TimeActivity extends SecureAppActivity {
 
     private void updateWithCurrentStatus() {
         if (currentStatus != null) { // We might rerun this one extra time on leaving
-            currentStatus.update();
-            currentStatus.getStatus().setButtons(this);
+            currentStatus.update(this);
             runningWorked().setText("Worked: " + currentStatus.getRunningWorkTotal().format(TIME_FORMATTER));
             runningBreaks().setText("Paused: " + currentStatus.getRunningBreakTotal().format(TIME_FORMATTER));
         }
@@ -153,8 +153,7 @@ public class TimeActivity extends SecureAppActivity {
         timeService().startWork(
                 project,
                 jsonObject -> {
-                    Status.WORK.setButtons(this);
-                    currentStatus.startWork();
+                    currentStatus.startWork(this);
                     enableInteractionAndUpdate();
                 },
                 this::logoutErrorHandler
@@ -167,8 +166,7 @@ public class TimeActivity extends SecureAppActivity {
         timeService().stopWork(
                 project,
                 jsonObject -> {
-                    Status.NONE.setButtons(this);
-                    currentStatus.stopWork();
+                    currentStatus.stopWork(this);
                     enableInteractionAndUpdate();
                 },
                 this::logoutErrorHandler
@@ -182,8 +180,7 @@ public class TimeActivity extends SecureAppActivity {
             timeService().startBreak(
                     project,
                     jsonObject -> {
-                        currentStatus.startBreak();
-                        Status.BREAK.setButtons(this);
+                        currentStatus.startBreak(this);
                         enableInteractionAndUpdate();
                     },
                     this::logoutErrorHandler
@@ -192,8 +189,7 @@ public class TimeActivity extends SecureAppActivity {
             timeService().stopBreak(
                     project,
                     jsonObject -> {
-                        currentStatus.stopBreak();
-                        Status.WORK.setButtons(this);
+                        currentStatus.stopBreak(this);
                         enableInteractionAndUpdate();
                     },
                     this::logoutErrorHandler
@@ -248,6 +244,11 @@ public class TimeActivity extends SecureAppActivity {
             public boolean updateBreak() {
                 return false;
             }
+
+            @Override
+            public boolean requiresNotification() {
+                return true;
+            }
         },
         BREAK {
             @Override
@@ -264,6 +265,11 @@ public class TimeActivity extends SecureAppActivity {
 
             @Override
             public boolean updateBreak() {
+                return true;
+            }
+
+            @Override
+            public boolean requiresNotification() {
                 return true;
             }
         },
@@ -283,6 +289,11 @@ public class TimeActivity extends SecureAppActivity {
             public boolean updateBreak() {
                 return false;
             }
+
+            @Override
+            public boolean requiresNotification() {
+                return false;
+            }
         };
 
         public abstract void setButtons(TimeActivity timeActivity);
@@ -290,6 +301,8 @@ public class TimeActivity extends SecureAppActivity {
         public abstract boolean updateWork();
 
         public abstract boolean updateBreak();
+
+        public abstract boolean requiresNotification();
 
     }
 }

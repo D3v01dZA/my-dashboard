@@ -1,5 +1,8 @@
 package com.altona.dashboard.view;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.altona.dashboard.service.login.Credentials;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -11,15 +14,11 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.io.IOException;
 import java.util.Optional;
 
-@JsonSerialize(using = ViewState.Serializer.class)
-public class ViewState {
-
-    public static final String CREDENTIALS = "credentials";
+public class ViewState implements Parcelable {
 
     private Credentials credentials;
 
-    @JsonCreator
-    ViewState(@JsonProperty(CREDENTIALS) Credentials credentials) {
+    ViewState(Credentials credentials) {
         this.credentials = credentials;
     }
 
@@ -35,15 +34,25 @@ public class ViewState {
         return Optional.ofNullable(credentials);
     }
 
-    public static class Serializer extends JsonSerializer<ViewState> {
-
-        @Override
-        public void serialize(ViewState value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-            gen.writeStartObject();
-            gen.writeObjectField(CREDENTIALS, value.credentials);
-            gen.writeEndObject();
-        }
-
+    @Override
+    public int describeContents() {
+        return 0;
     }
 
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeParcelable(credentials, flags);
+    }
+
+    public static final Parcelable.Creator<ViewState> CREATOR = new Creator<ViewState>() {
+        @Override
+        public ViewState createFromParcel(Parcel source) {
+            return new ViewState(source.readParcelable(getClass().getClassLoader()));
+        }
+
+        @Override
+        public ViewState[] newArray(int size) {
+            return new ViewState[size];
+        }
+    };
 }

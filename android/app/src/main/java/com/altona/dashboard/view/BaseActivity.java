@@ -25,6 +25,7 @@ import com.altona.dashboard.view.settings.SettingsActivity;
 
 public abstract class BaseActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
+    public static final String VIEW_STATE = "viewState";
     private int activityId;
     private boolean drawer;
     private ViewState viewState;
@@ -136,8 +137,8 @@ public abstract class BaseActivity extends AppCompatActivity implements Navigati
     protected ViewState viewState() {
         if (viewState == null) {
             Intent intent = getIntent();
-            if (intent.hasExtra("viewState")) {
-                viewState = Static.fromJson(intent.getStringExtra("viewState"), ViewState.class);
+            if (intent.hasExtra(VIEW_STATE)) {
+                viewState = intent.getParcelableExtra(VIEW_STATE);
             } else {
                 viewState = new ViewState(null);
             }
@@ -173,7 +174,7 @@ public abstract class BaseActivity extends AppCompatActivity implements Navigati
         if (!getClass().equals(activity)) {
             leave();
             Intent intent = new Intent(this, activity)
-                    .putExtra("viewState", Static.toJson(viewState));
+                    .putExtra(VIEW_STATE, viewState);
             if (clearHistory) {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             }
