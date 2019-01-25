@@ -53,9 +53,7 @@ public abstract class BaseActivity extends AppCompatActivity implements Navigati
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         setContentView(activityId);
 
-        if (drawer) {
-            enableDrawer();
-        }
+        enableDrawer();
 
         create();
     }
@@ -196,14 +194,17 @@ public abstract class BaseActivity extends AppCompatActivity implements Navigati
     protected abstract void show();
 
     private void enableDrawer() {
-        DrawerLayout drawer = drawer();
         Toolbar toolbar = toolbar();
         setSupportActionBar(toolbar);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
-        NavigationView navigationView = navigationView();
-        navigationView.setNavigationItemSelectedListener(this);
+
+        if (drawer) {
+            DrawerLayout drawerLayout = drawer();
+            ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+            drawerLayout.addDrawerListener(toggle);
+            toggle.syncState();
+            NavigationView navigationView = navigationView();
+            navigationView.setNavigationItemSelectedListener(this);
+        }
     }
 
     private void logout() {
