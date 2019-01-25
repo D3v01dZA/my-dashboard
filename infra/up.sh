@@ -10,14 +10,14 @@ git pull
 ./gradlew build
 cd -
 
-read db_user < db_user.txt
-read db_pass < db_pass.txt
-read store_pass < store_pass.txt
+read db_user < props/db_user.txt
+read db_pass < props/db_pass.txt
+read store_pass < props/store_pass.txt
 
 java -jar ./my-dashboard/service/build/libs/my-dashboard-0.1.0.jar \
         --server.port="${port}" \
         --security.require-ssl=true \
-        --server.ssl.key-store=keystore \
+        --server.ssl.key-store=props/keystore \
         --server.ssl.key-store-type=PKCS12 \
         --server.ssl.key-store-password="${store_pass}" \
         --server.ssl.key-alias=tomcat \
