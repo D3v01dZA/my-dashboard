@@ -10,7 +10,7 @@ import com.altona.dashboard.view.InsecureAppActivity;
 public class SettingsActivity extends InsecureAppActivity {
 
     public SettingsActivity() {
-        super(R.layout.activity_settings, true);
+        super(R.layout.activity_settings, false);
     }
 
     @Override
