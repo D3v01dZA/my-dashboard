@@ -5,6 +5,9 @@
 .idea/
 out/
 
+# Dunno
+.DS_store
+
 # Compiled class file
 *.class
 
