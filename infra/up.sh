@@ -19,7 +19,7 @@ java -jar ./my-dashboard/service/build/libs/my-dashboard-0.1.0.jar \
         --security.require-ssl=true \
         --server.ssl.key-store=keystore \
         --server.ssl.key-store-type=PKCS12 \
-        --server.ssl.key-password="${store_pass}" \
+        --server.ssl.key-store-password="${store_pass}" \
         --server.ssl.key-alias=tomcat \
         --spring.datasource.url="jdbc:postgresql://localhost:5432/${branch}" \
         --spring.datasource.username="${db_user}" \
