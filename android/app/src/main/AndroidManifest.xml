@@ -7,12 +7,12 @@
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
+        android:label="Home"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
+            android:name=".view.main.MainActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -20,6 +20,26 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".view.login.LoginActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:label="@string/app_name"/>
+        <activity
+            android:name=".view.settings.SettingsActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:label="@string/action_settings"
+            android:parentActivityName=".view.main.MainActivity" />
+        <activity
+            android:name=".view.configuration.ConfigurationActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:label="@string/action_configuration"
+            android:parentActivityName=".view.main.MainActivity" />
+        <activity
+            android:name=".view.time.TimeActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:label="@string/action_time"
+            android:parentActivityName=".view.main.MainActivity" />
     </application>
 
 </manifest>

@@ -1,17 +1,27 @@
 package com.altona.dashboard.view.time;
 
+import android.accounts.Account;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.AbstractThreadedSyncAdapter;
+import android.content.ContentProviderClient;
+import android.content.Context;
+import android.content.SyncResult;
 import android.os.Build;
+import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 
-import com.altona.dashboard.MainActivity;
+import com.altona.dashboard.view.main.MainActivity;
 import com.altona.dashboard.R;
 
-public class Notification {
+public class Notification extends AbstractThreadedSyncAdapter {
 
     private static final String TIME_CHANNEL_ID = "TIME";
     private static final int TIME_NOTIFICATION_ID = 0;
+
+    public Notification(Context context, boolean autoInitialize) {
+        super(context, autoInitialize);
+    }
 
     public static void display(MainActivity mainActivity) {
         NotificationManager notificationManager = mainActivity.getSystemService(NotificationManager.class);
@@ -31,4 +41,8 @@ public class Notification {
         notificationManager.notify(TIME_NOTIFICATION_ID, builder.build());
     }
 
+    @Override
+    public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
+
+    }
 }

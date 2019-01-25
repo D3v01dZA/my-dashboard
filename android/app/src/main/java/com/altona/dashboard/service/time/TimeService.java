@@ -1,6 +1,6 @@
 package com.altona.dashboard.service.time;
 
-import com.altona.dashboard.ObjectMapperHolder;
+import com.altona.dashboard.Static;
 import com.altona.dashboard.service.login.LoginService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -61,7 +61,7 @@ public class TimeService {
 
     private static Request.Builder post(Object body) {
         try {
-            return new Request.Builder().post(RequestBody.create(MediaType.get("application/json"), ObjectMapperHolder.INSTANCE.writeValueAsBytes(body)));
+            return new Request.Builder().post(RequestBody.create(MediaType.get("application/json"), Static.OBJECT_MAPPER.writeValueAsBytes(body)));
         } catch (JsonProcessingException e) {
             LOGGER.log(Level.SEVERE, "Failed to serialize", e);
             throw new IllegalStateException("Failed to serialize", e);
@@ -77,11 +77,11 @@ public class TimeService {
     }
 
     private <T> void request(Request.Builder builder, String subUrl, TypeReference<T> typeReference, Consumer<T> onSuccess, Consumer<String> onFailure) {
-        request(builder, subUrl, result -> ObjectMapperHolder.INSTANCE.readValue(result, typeReference), onSuccess, onFailure);
+        request(builder, subUrl, result -> Static.OBJECT_MAPPER.readValue(result, typeReference), onSuccess, onFailure);
     }
 
     private <T> void request(Request.Builder builder, String subUrl, Class<T> clazz, Consumer<T> onSuccess, Consumer<String> onFailure) {
-        request(builder, subUrl, result -> ObjectMapperHolder.INSTANCE.readValue(result, clazz), onSuccess, onFailure);
+        request(builder, subUrl, result -> Static.OBJECT_MAPPER.readValue(result, clazz), onSuccess, onFailure);
     }
 
     private <T> void request(Request.Builder builder, String subUrl, ObjectMapperFunction<T> extractor, Consumer<T> onSuccess, Consumer<String> onFailure) {

@@ -2,10 +2,11 @@ package com.altona.dashboard.service.login;
 
 import android.util.Base64;
 
-import com.altona.dashboard.MainActivity;
+import com.altona.dashboard.view.BaseActivity;
+import com.altona.dashboard.Static;
 import com.altona.dashboard.service.ServiceResponse;
-import com.altona.dashboard.view.settings.Credentials;
-import com.altona.dashboard.view.settings.Settings;
+import com.altona.dashboard.service.Settings;
+import com.altona.dashboard.view.ViewState;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -17,7 +18,6 @@ import java.util.logging.Logger;
 
 import okhttp3.Call;
 import okhttp3.Callback;
-import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -25,48 +25,47 @@ public class LoginService {
 
     private static final Logger LOGGER = Logger.getLogger(LoginService.class.getName());
 
-    private MainActivity mainActivity;
+    private BaseActivity activity;
 
     private Settings settings;
-    private OkHttpClient httpClient;
 
-    private Credentials credentials;
+    private ViewState viewState;
 
-    public LoginService(MainActivity mainActivity, Settings settings, OkHttpClient httpClient) {
-        this.mainActivity = mainActivity;
-        this.settings = settings;
-        this.httpClient = httpClient;
+    public LoginService(BaseActivity activity, ViewState viewState) {
+        this.activity = activity;
+        this.viewState = viewState;
+        this.settings = new Settings(activity);
     }
 
     public void tryExecute(Request.Builder builder, String subUrl, Consumer<ServiceResponse> onSuccess, Consumer<String> onFailure) {
         try {
             URL url = new URL(settings.getHost() + subUrl);
-            String auth = Base64.encodeToString((credentials.getUsername() + ":" + credentials.getPassword()).getBytes(), Base64.DEFAULT);
+            String auth = Base64.encodeToString((credentials().getUsername() + ":" + credentials().getPassword()).getBytes(), Base64.DEFAULT);
             // Base64 returns an \n at the end which my Samsung REALLY doesn't like
             while (auth.endsWith("\n")) {
                 auth = auth.substring(0, auth.length() - 1);
             }
-            httpClient.newCall(builder.url(url).header("Authorization", "Basic " + auth).build())
+            Static.HTTP_CLIENT.newCall(builder.url(url).header("Authorization", "Basic " + auth).build())
                     .enqueue(new Callback() {
                         @Override
                         public void onFailure(Call call, IOException e) {
                             LOGGER.log(Level.SEVERE, "Failed to call " + subUrl, e);
-                            mainActivity.runOnUiThread(() -> onFailure.accept("Unknown IOException: " + e.getMessage()));
+                            activity.runOnUiThread(() -> onFailure.accept("Unknown IOException: " + e.getMessage()));
                         }
 
                         @Override
                         public void onResponse(Call call, Response response) {
                             try {
                                 ServiceResponse serviceResponse = new ServiceResponse(response.code(), response.body().string());
-                                mainActivity.runOnUiThread(() -> onSuccess.accept(serviceResponse));
+                                activity.runOnUiThread(() -> onSuccess.accept(serviceResponse));
                             } catch (IOException e) {
                                 LOGGER.log(Level.SEVERE, "Failed to call " + subUrl, e);
-                                mainActivity.runOnUiThread(() -> onFailure.accept("Unknown IOException: " + e.getMessage()));
+                                activity.runOnUiThread(() -> onFailure.accept("Unknown IOException: " + e.getMessage()));
                             }
                         }
                     });
         } catch (MalformedURLException e) {
-            mainActivity.runOnUiThread(() -> onFailure.accept("Host " + settings.getHost() + " is not valid"));
+            activity.runOnUiThread(() -> onFailure.accept("Host " + settings.getHost() + " is not valid"));
         }
     }
 
@@ -83,10 +82,10 @@ public class LoginService {
                     .get()
                     .header("Authorization", "Basic " + auth)
                     .build();
-            httpClient.newCall(request).enqueue(new Callback() {
+            Static.HTTP_CLIENT.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
-                    mainActivity.runOnUiThread(() -> onFailure.accept("Unknown IOException: " + e.getMessage()));
+                    activity.runOnUiThread(() -> onFailure.accept("Unknown IOException: " + e.getMessage()));
                 }
 
                 @Override
@@ -97,35 +96,41 @@ public class LoginService {
                             if (remember) {
                                 settings.setCredentials(credentials);
                             }
-                            LoginService.this.credentials = credentials;
-                            mainActivity.runOnUiThread(() -> onSuccess.run());
+                            LoginService.this.viewState.setCredentials(credentials);
+                            activity.runOnUiThread(() -> onSuccess.run());
                         } else {
-                            settings.clearCredentails();
-                            mainActivity.runOnUiThread(() -> onFailure.accept("Wrong value received: " + string));
+                            settings.clearCredentials();
+                            activity.runOnUiThread(() -> onFailure.accept("Wrong value received: " + string));
                         }
                     } else {
-                        settings.clearCredentails();
-                        mainActivity.runOnUiThread(() -> onFailure.accept("Wrong response code received: " + response.code()));
+                        settings.clearCredentials();
+                        activity.runOnUiThread(() -> onFailure.accept("Wrong response code received: " + response.code()));
                     }
                 }
             });
         } catch (MalformedURLException e) {
-            settings.clearCredentails();
-            mainActivity.runOnUiThread(() -> onFailure.accept("Host " + settings.getHost() + " is not valid"));
+            settings.clearCredentials();
+            activity.runOnUiThread(() -> onFailure.accept("Host " + settings.getHost() + " is not valid"));
         }
     }
 
     public void logout() {
-        settings.clearCredentails();
-        credentials = null;
+        viewState.setCredentials(null);
     }
 
     public boolean isLoggedIn() {
-        return credentials != null;
+        return credentials() != null;
     }
 
     public Optional<Credentials> getStoredCredentials() {
+        if (viewState.getCredentials().isPresent()) {
+            return viewState.getCredentials();
+        }
         return settings.getCredentials();
+    }
+
+    private Credentials credentials() {
+        return viewState.getCredentials().orElse(null);
     }
 
 }

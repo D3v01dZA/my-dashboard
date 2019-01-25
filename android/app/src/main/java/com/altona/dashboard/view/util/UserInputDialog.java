@@ -2,7 +2,6 @@ package com.altona.dashboard.view.util;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
@@ -16,7 +15,7 @@ public class UserInputDialog {
 
     public static void open(Context context, String text, String value, Consumer<String> onOk, Runnable onCancel) {
         View view = LayoutInflater.from(context)
-                .inflate(R.layout.dialog_user_input, null);
+                .inflate(R.layout.dialog_key_value, null);
 
         TextView textView = view.findViewById(R.id.dialog_title);
         textView.setText(text);

@@ -1,6 +1,6 @@
 package com.altona.dashboard.service.time;
 
-import com.altona.dashboard.view.time.TimeContent;
+import com.altona.dashboard.view.time.TimeActivity;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -15,7 +15,7 @@ public class TimeStatus {
     private static final LocalTime NO_TIME = LocalTime.of(0, 0);
 
     @Getter
-    private TimeContent.Status status;
+    private TimeActivity.Status status;
 
     private LocalDateTime lastUpdate;
 
@@ -24,7 +24,7 @@ public class TimeStatus {
 
     @JsonCreator
     TimeStatus(
-            @JsonProperty(value = "status", required = true) TimeContent.Status status,
+            @JsonProperty(value = "status", required = true) TimeActivity.Status status,
             @JsonProperty(value = "runningWorkTotal") LocalTime runningWorkTotal,
             @JsonProperty(value = "runningBreakTotal") LocalTime runningBreakTotal
     ) {
@@ -46,7 +46,7 @@ public class TimeStatus {
     }
 
     public void startWork() {
-        status = TimeContent.Status.WORK;
+        status = TimeActivity.Status.WORK;
         if (runningWorkTotal == null) {
             runningWorkTotal = NO_TIME;
         }
@@ -56,15 +56,15 @@ public class TimeStatus {
     }
 
     public void startBreak() {
-        status = TimeContent.Status.BREAK;
+        status = TimeActivity.Status.BREAK;
     }
 
     public void stopBreak() {
-        status = TimeContent.Status.WORK;
+        status = TimeActivity.Status.WORK;
     }
 
     public void stopWork() {
-        status = TimeContent.Status.NONE;
+        status = TimeActivity.Status.NONE;
         runningWorkTotal = NO_TIME;
         runningBreakTotal = NO_TIME;
     }
