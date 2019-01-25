@@ -37,7 +37,14 @@ public class LoginService {
         this.settings = new Settings(activity);
     }
 
-    public void tryExecute(Request.Builder builder, String subUrl, Consumer<ServiceResponse> onSuccess, Consumer<String> onFailure) {
+    // Execute stuff on the background thread first
+    public <T> void tryExecute(
+            Request.Builder builder,
+            String subUrl,
+            CheckedFunction<ServiceResponse, T> onSuccessBackgroundThread,
+            Consumer<T> onSuccessUiThread,
+            Consumer<String> onFailure
+    ) {
         try {
             URL url = new URL(settings.getHost() + subUrl);
             String auth = Base64.encodeToString((credentials().getUsername() + ":" + credentials().getPassword()).getBytes(), Base64.DEFAULT);
@@ -57,7 +64,17 @@ public class LoginService {
                         public void onResponse(Call call, Response response) {
                             try {
                                 ServiceResponse serviceResponse = new ServiceResponse(response.code(), response.body().string());
-                                activity.runOnUiThread(() -> onSuccess.accept(serviceResponse));
+                                int code = serviceResponse.getCode();
+                                if (code >= 500) {
+                                    LOGGER.severe(() -> "Failed to call " + subUrl + " with " + code);
+                                    onFailure.accept("Server " + code);
+                                } else if (code >= 400) {
+                                    LOGGER.warning(() -> "Failed to call " + subUrl + " with " + code);
+                                    onFailure.accept("Request " + code);
+                                } else {
+                                    T result = onSuccessBackgroundThread.apply(serviceResponse);
+                                    activity.runOnUiThread(() -> onSuccessUiThread.accept(result));
+                                }
                             } catch (IOException e) {
                                 LOGGER.log(Level.SEVERE, "Failed to call " + subUrl, e);
                                 activity.runOnUiThread(() -> onFailure.accept("Unknown IOException: " + e.getMessage()));
@@ -69,7 +86,13 @@ public class LoginService {
         }
     }
 
-    public void tryLogin(boolean remember, Credentials credentials, Runnable onSuccess, Consumer<String> onFailure) {
+    // Executes onSuccess and onFailure directly on main thread
+    public void tryLogin(
+            boolean remember,
+            Credentials credentials,
+            Runnable onSuccess,
+            Consumer<String> onFailure
+    ) {
         try {
             URL url = new URL(settings.getHost());
             String auth = Base64.encodeToString((credentials.getUsername() + ":" + credentials.getPassword()).getBytes(), Base64.DEFAULT);
@@ -132,6 +155,12 @@ public class LoginService {
 
     private Credentials credentials() {
         return viewState.getCredentials().orElse(null);
+    }
+
+    public interface CheckedFunction<T, R> {
+
+        R apply(T t) throws IOException;
+
     }
 
 }

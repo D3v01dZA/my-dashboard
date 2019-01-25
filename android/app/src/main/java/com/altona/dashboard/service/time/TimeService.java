@@ -19,7 +19,8 @@ import okhttp3.RequestBody;
 public class TimeService {
 
     private static final Logger LOGGER = Logger.getLogger(TimeService.class.getName());
-    private static final TypeReference<List<Project>> PROJECT_LIST = new TypeReference<List<Project>>() {};
+    private static final TypeReference<List<Project>> PROJECT_LIST = new TypeReference<List<Project>>() {
+    };
 
     private LoginService loginService;
 
@@ -85,24 +86,13 @@ public class TimeService {
     }
 
     private <T> void request(Request.Builder builder, String subUrl, ObjectMapperFunction<T> extractor, Consumer<T> onSuccess, Consumer<String> onFailure) {
-        loginService.tryExecute(builder, subUrl, serviceResponse -> {
-            int code = serviceResponse.getCode();
-            if (code >= 500) {
-                LOGGER.severe(() -> "Failed to call " + subUrl + " with " + code);
-                onFailure.accept("Server " + code);
-            } else if (code >= 400) {
-                LOGGER.warning(() -> "Failed to call " + subUrl + " with " + code);
-                onFailure.accept("Request " + code);
-            } else {
-                try {
-                    T deserialized = extractor.apply(serviceResponse.getValue());
-                    onSuccess.accept(deserialized);
-                } catch (IOException e) {
-                    LOGGER.log(Level.SEVERE, "Failed to deserialize", e);
-                    onFailure.accept(e.getMessage());
-                }
-            }
-        }, onFailure);
+        loginService.tryExecute(
+                builder,
+                subUrl,
+                serviceResponse -> extractor.apply(serviceResponse.getValue()),
+                onSuccess,
+                onFailure
+        );
     }
 
     private interface ObjectMapperFunction<T> {
