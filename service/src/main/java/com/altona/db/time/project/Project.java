@@ -1,4 +1,4 @@
-package com.altona.db.time;
+package com.altona.db.time.project;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

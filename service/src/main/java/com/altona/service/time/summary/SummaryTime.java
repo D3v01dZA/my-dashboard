@@ -1,4 +1,4 @@
-package com.altona.db.time.summary;
+package com.altona.service.time.summary;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

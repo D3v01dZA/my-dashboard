@@ -1,4 +1,4 @@
-package com.altona.db.user;
+package com.altona.security;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

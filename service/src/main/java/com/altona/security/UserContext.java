@@ -1,8 +1,9 @@
-package com.altona.db.user;
+package com.altona.security;
 
-import com.altona.db.time.TimeZoneMapper;
+import com.altona.service.time.TimeZoneMapper;
 import lombok.NonNull;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.TimeZone;
@@ -24,6 +25,11 @@ public class UserContext extends User implements TimeZoneMapper {
     @Override
     public LocalDateTime mapDateTime(Date date) {
         return date.toInstant().atZone(timeZone.toZoneId()).toLocalDateTime();
+    }
+
+    @Override
+    public Date mapLocalDate(LocalDate localDate) {
+        return Date.from(localDate.atStartOfDay(timeZone.toZoneId()).toInstant());
     }
 
 }

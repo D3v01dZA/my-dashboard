@@ -1,11 +1,11 @@
 package com.altona.html;
 
-import com.altona.db.time.*;
-import com.altona.db.time.control.*;
-import com.altona.db.time.summary.Summary;
-import com.altona.db.user.User;
-import com.altona.db.user.UserContext;
-import com.altona.db.user.UserService;
+import com.altona.db.time.project.Project;
+import com.altona.service.time.*;
+import com.altona.service.time.control.*;
+import com.altona.service.time.summary.Summary;
+import com.altona.security.UserService;
+import com.altona.facade.TimeFacade;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.TimeZone;
 
 @RestController
@@ -22,15 +21,14 @@ import java.util.TimeZone;
 public class TimeController {
 
     private UserService userService;
-    private ProjectService projectService;
-    private TimeService timeService;
+    private TimeFacade timeFacade;
 
     @Transactional(readOnly = true)
     @RequestMapping(path = "/time/project", method = RequestMethod.GET, produces = "application/json")
     public List<Project> getProjects(
             Authentication authentication
     ) {
-        return projectService.getProjects(userService.getUser(authentication));
+        return timeFacade.projects(userService.getUser(authentication));
     }
 
     @Transactional(readOnly = true)
@@ -39,7 +37,7 @@ public class TimeController {
             Authentication authentication,
             @PathVariable Integer projectId
     ) {
-        return projectService.getProject(userService.getUser(authentication), projectId)
+        return timeFacade.project(userService.getUser(authentication), projectId)
                 .map(project -> new ResponseEntity<>(project, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -50,7 +48,7 @@ public class TimeController {
             Authentication authentication,
             @RequestBody Project project
     ) {
-        return projectService.createProject(userService.getUser(authentication), project);
+        return timeFacade.createProject(userService.getUser(authentication), project);
     }
 
     @Transactional
@@ -59,8 +57,7 @@ public class TimeController {
             Authentication authentication,
             @PathVariable Integer projectId
     ) {
-        return projectService.getProject(userService.getUser(authentication), projectId)
-                .map(project -> timeService.startProjectWork(project))
+        return timeFacade.startWork(userService.getUser(authentication), projectId)
                 .map(workStart -> new ResponseEntity<>(workStart, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -71,8 +68,7 @@ public class TimeController {
             Authentication authentication,
             @PathVariable Integer projectId
     ) {
-        return projectService.getProject(userService.getUser(authentication), projectId)
-                .map(project -> timeService.startProjectBreak(project))
+        return timeFacade.startBreak(userService.getUser(authentication), projectId)
                 .map(breakStart -> new ResponseEntity<>(breakStart, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -83,8 +79,7 @@ public class TimeController {
             Authentication authentication,
             @PathVariable Integer projectId
     ) {
-        return projectService.getProject(userService.getUser(authentication), projectId)
-                .map(project -> timeService.endProjectWork(project))
+        return timeFacade.endWork(userService.getUser(authentication), projectId)
                 .map(workStop -> new ResponseEntity<>(workStop, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -95,8 +90,7 @@ public class TimeController {
             Authentication authentication,
             @PathVariable Integer projectId
     ) {
-        return projectService.getProject(userService.getUser(authentication), projectId)
-                .map(project -> timeService.endProjectBreak(project))
+        return timeFacade.endBreak(userService.getUser(authentication), projectId)
                 .map(breakStop -> new ResponseEntity<>(breakStop, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -107,8 +101,7 @@ public class TimeController {
             Authentication authentication,
             @PathVariable Integer projectId
     ) {
-        return projectService.getProject(userService.getUser(authentication), projectId)
-                .map(project -> timeService.timeStatus(project))
+        return timeFacade.timeStatus(userService.getUser(authentication), projectId)
                 .map(breakStop -> new ResponseEntity<>(breakStop, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -121,9 +114,7 @@ public class TimeController {
             @PathVariable Integer projectId,
             @RequestParam Summary.Type type
     ) {
-        UserContext userContext = userService.getUserContext(authentication, timeZone);
-        return projectService.getProject(userContext, projectId)
-                .map(project -> timeService.summary(userContext, project, type))
+        return timeFacade.summary(userService.getUserContext(authentication, timeZone), projectId, type)
                 .map(timeList -> new ResponseEntity<>(timeList, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -135,24 +126,20 @@ public class TimeController {
             TimeZone timeZone,
             @PathVariable Integer projectId
     ) {
-        UserContext userContext = userService.getUserContext(authentication, timeZone);
-        return projectService.getProject(userContext, projectId)
-                .map(project -> timeService.zoneTimes(userContext, project))
+        return timeFacade.times(userService.getUserContext(authentication, timeZone), projectId)
                 .map(timeList -> new ResponseEntity<>(timeList, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @Transactional(readOnly = true)
     @RequestMapping(path = "/time/project/{projectId}/time/{timeId}", method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<Optional<ZoneTime>> getTime(
+    public ResponseEntity<ZoneTime> getTime(
             Authentication authentication,
             TimeZone timeZone,
             @PathVariable Integer projectId,
             @PathVariable Integer timeId
     ) {
-        UserContext userContext = userService.getUserContext(authentication, timeZone);
-        return projectService.getProject(userContext, projectId)
-                .map(project -> timeService.zoneTime(userContext, project, timeId))
+        return timeFacade.time(userService.getUserContext(authentication, timeZone), projectId, timeId)
                 .map(timeList -> new ResponseEntity<>(timeList, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }

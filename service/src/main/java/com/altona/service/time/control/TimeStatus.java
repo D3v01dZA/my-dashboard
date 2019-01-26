@@ -1,4 +1,4 @@
-package com.altona.db.time.control;
+package com.altona.service.time.control;
 
 import java.time.LocalTime;
 import java.util.Optional;

@@ -1,6 +1,5 @@
 package com.altona.security;
 
-import com.altona.db.user.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;

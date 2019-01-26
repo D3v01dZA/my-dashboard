@@ -1,4 +1,4 @@
-package com.altona.db.user;
+package com.altona.security;
 
 import lombok.AllArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;

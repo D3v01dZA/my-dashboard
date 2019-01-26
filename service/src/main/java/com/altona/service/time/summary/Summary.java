@@ -1,7 +1,7 @@
-package com.altona.db.time.summary;
+package com.altona.service.time.summary;
 
-import com.altona.db.time.Time;
-import com.altona.db.time.ZoneTime;
+import com.altona.db.time.time.Time;
+import com.altona.service.time.ZoneTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
