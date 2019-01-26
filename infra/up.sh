@@ -7,7 +7,7 @@ cd my-dashboard/service
 git fetch
 git checkout "${branch}"
 git pull
-./gradlew build
+./gradlew clean build
 cd -
 
 read db_user < props/db_user.txt
