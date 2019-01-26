@@ -73,7 +73,6 @@ public class LoginActivity extends InsecureAppActivity {
                 credentials,
                 () -> {
                     hideKeyboard();
-                    setCredentials(credentials);
                     toast("Login Succeeded");
                     loginButton.setEnabled(true);
                     enter(MainActivity.class, true);

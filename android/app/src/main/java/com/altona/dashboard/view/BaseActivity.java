@@ -28,7 +28,6 @@ public abstract class BaseActivity extends AppCompatActivity implements Navigati
     public static final String VIEW_STATE = "viewState";
     private int activityId;
     private boolean drawer;
-    private ViewState viewState;
 
     protected BaseActivity(int activityId, boolean drawer) {
         this.activityId = activityId;
@@ -134,18 +133,6 @@ public abstract class BaseActivity extends AppCompatActivity implements Navigati
         super.onDestroy();
     }
 
-    protected ViewState viewState() {
-        if (viewState == null) {
-            Intent intent = getIntent();
-            if (intent.hasExtra(VIEW_STATE)) {
-                viewState = intent.getParcelableExtra(VIEW_STATE);
-            } else {
-                viewState = new ViewState(null);
-            }
-        }
-        return viewState;
-    }
-
     protected DrawerLayout drawer() {
         return findViewById(R.id.drawer_layout);
     }
@@ -159,11 +146,7 @@ public abstract class BaseActivity extends AppCompatActivity implements Navigati
     }
 
     protected LoginService loginService() {
-        return new LoginService(this, viewState());
-    }
-
-    protected void setCredentials(Credentials credentials) {
-        viewState().setCredentials(credentials);
+        return new LoginService(this);
     }
 
     protected boolean enter(Class<? extends BaseActivity> activity) {
@@ -173,8 +156,7 @@ public abstract class BaseActivity extends AppCompatActivity implements Navigati
     protected boolean enter(Class<? extends BaseActivity> activity, boolean clearHistory) {
         if (!getClass().equals(activity)) {
             leave();
-            Intent intent = new Intent(this, activity)
-                    .putExtra(VIEW_STATE, viewState);
+            Intent intent = new Intent(this, activity);
             if (clearHistory) {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             }

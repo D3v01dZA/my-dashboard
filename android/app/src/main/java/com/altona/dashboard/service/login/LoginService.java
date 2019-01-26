@@ -2,15 +2,16 @@ package com.altona.dashboard.service.login;
 
 import android.util.Base64;
 
-import com.altona.dashboard.view.BaseActivity;
-import com.altona.dashboard.Static;
 import com.altona.dashboard.service.ServiceResponse;
+import com.altona.dashboard.service.Session;
 import com.altona.dashboard.service.Settings;
-import com.altona.dashboard.view.ViewState;
+import com.altona.dashboard.view.BaseActivity;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.logging.Level;
@@ -18,23 +19,31 @@ import java.util.logging.Logger;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.Cookie;
+import okhttp3.CookieJar;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class LoginService {
+public class LoginService implements CookieJar {
 
     private static final Logger LOGGER = Logger.getLogger(LoginService.class.getName());
+
+    private OkHttpClient httpClient;
 
     private BaseActivity activity;
 
     private Settings settings;
+    private Session session;
 
-    private ViewState viewState;
-
-    public LoginService(BaseActivity activity, ViewState viewState) {
+    public LoginService(BaseActivity activity) {
         this.activity = activity;
-        this.viewState = viewState;
+        this.httpClient = new OkHttpClient.Builder()
+                .cookieJar(this)
+                .build();
         this.settings = new Settings(activity);
+        this.session = new Session(activity);
     }
 
     // Execute stuff on the background thread first
@@ -47,12 +56,7 @@ public class LoginService {
     ) {
         try {
             URL url = new URL(settings.getHost() + subUrl);
-            String auth = Base64.encodeToString((credentials().getUsername() + ":" + credentials().getPassword()).getBytes(), Base64.DEFAULT);
-            // Base64 returns an \n at the end which my Samsung REALLY doesn't like
-            while (auth.endsWith("\n")) {
-                auth = auth.substring(0, auth.length() - 1);
-            }
-            Static.HTTP_CLIENT.newCall(builder.url(url).header("Authorization", "Basic " + auth).build())
+            httpClient.newCall(builder.url(url).build())
                     .enqueue(new Callback() {
                         @Override
                         public void onFailure(Call call, IOException e) {
@@ -67,10 +71,10 @@ public class LoginService {
                                 int code = serviceResponse.getCode();
                                 if (code >= 500) {
                                     LOGGER.severe(() -> "Failed to call " + subUrl + " with " + code);
-                                    onFailure.accept("Server " + code);
+                                    activity.runOnUiThread(() -> onFailure.accept("Server " + code));
                                 } else if (code >= 400) {
                                     LOGGER.warning(() -> "Failed to call " + subUrl + " with " + code);
-                                    onFailure.accept("Request " + code);
+                                    activity.runOnUiThread(() -> onFailure.accept("Request " + code));
                                 } else {
                                     T result = onSuccessBackgroundThread.apply(serviceResponse);
                                     activity.runOnUiThread(() -> onSuccessUiThread.accept(result));
@@ -105,7 +109,7 @@ public class LoginService {
                     .get()
                     .header("Authorization", "Basic " + auth)
                     .build();
-            Static.HTTP_CLIENT.newCall(request).enqueue(new Callback() {
+            httpClient.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
                     activity.runOnUiThread(() -> onFailure.accept("Unknown IOException: " + e.getMessage()));
@@ -119,7 +123,6 @@ public class LoginService {
                             if (remember) {
                                 settings.setCredentials(credentials);
                             }
-                            LoginService.this.viewState.setCredentials(credentials);
                             activity.runOnUiThread(() -> onSuccess.run());
                         } else {
                             settings.clearCredentials();
@@ -132,29 +135,37 @@ public class LoginService {
                 }
             });
         } catch (MalformedURLException e) {
-            settings.clearCredentials();
             activity.runOnUiThread(() -> onFailure.accept("Host " + settings.getHost() + " is not valid"));
         }
     }
 
     public void logout() {
-        viewState.clearCredentials();
+        session.clearCookie();
         settings.clearCredentials();
     }
 
     public boolean isLoggedIn() {
-        return credentials() != null;
+        return session.getCookie().isPresent();
     }
 
     public Optional<Credentials> getStoredCredentials() {
-        if (viewState.getCredentials().isPresent()) {
-            return viewState.getCredentials();
-        }
         return settings.getCredentials();
     }
 
-    private Credentials credentials() {
-        return viewState.getCredentials().orElse(null);
+    @Override
+    public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
+        for (Cookie cookie : cookies) {
+            if (cookie.name().equalsIgnoreCase("JSESSIONID")) {
+                session.setCookie(cookie.toString());
+            }
+        }
+    }
+
+    @Override
+    public List<Cookie> loadForRequest(HttpUrl url) {
+        return session.getCookie()
+                .map(session -> Collections.singletonList(Cookie.parse(url, session)))
+                .orElseGet(Collections::emptyList);
     }
 
     public interface CheckedFunction<T, R> {
