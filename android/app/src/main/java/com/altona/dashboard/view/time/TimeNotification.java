@@ -3,6 +3,7 @@ package com.altona.dashboard.view.time;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -23,6 +24,8 @@ public class TimeNotification extends Service {
 
     private static final int MINUTE = 1000 * 60;
     private static final String TIME_STATUS = "timeStatus";
+
+    private static final int TIME_INTENT_CODE = 123981290;
 
     public static void notify(Context context, TimeStatus timeStatus) {
         if (!timeStatus.requiresNotification()) {
@@ -75,12 +78,14 @@ public class TimeNotification extends Service {
             notificationManager.createNotificationChannel(channel);
         }
         NotificationData notificationData = timeStatus.notificationData();
+        PendingIntent time = PendingIntent.getActivity(context, TIME_INTENT_CODE, new Intent(context, TimeActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
         return new NotificationCompat.Builder(context, TIME_CHANNEL_ID)
                 .setContentTitle(notificationData.getTitle())
                 .setContentText(notificationData.getTimer())
                 .setSmallIcon(notificationData.getIcon())
                 .setOnlyAlertOnce(true)
                 .setSound(null)
+                .setContentIntent(time)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .build();
     }
