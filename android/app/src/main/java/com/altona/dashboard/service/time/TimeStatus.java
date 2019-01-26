@@ -4,36 +4,32 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.altona.dashboard.view.time.TimeActivity;
-import com.altona.dashboard.view.time.TimeNotificationService;
+import com.altona.dashboard.view.time.TimeNotification;
+import com.altona.dashboard.view.time.TimeStatusEnum;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class TimeStatus implements Parcelable {
 
     private static final LocalTime NO_TIME = LocalTime.of(0, 0);
 
-    @Getter
-    private TimeActivity.Status status;
-
+    private TimeStatusEnum status;
     private LocalDateTime lastUpdate;
-
-    @Getter
     private LocalTime runningWorkTotal;
-    @Getter
     private LocalTime runningBreakTotal;
 
     @JsonCreator
     TimeStatus(
-            @JsonProperty(value = "status", required = true) TimeActivity.Status status,
+            @JsonProperty(value = "status", required = true) TimeStatusEnum status,
             @JsonProperty(value = "runningWorkTotal") LocalTime runningWorkTotal,
             @JsonProperty(value = "runningBreakTotal") LocalTime runningBreakTotal
     ) {
@@ -50,6 +46,11 @@ public class TimeStatus implements Parcelable {
     }
 
     public void update(TimeActivity timeActivity) {
+        update();
+        status.setButtons(timeActivity, this);
+    }
+
+    public void update() {
         LocalDateTime now = LocalDateTime.now();
         if (status.updateWork()) {
             runningWorkTotal = runningWorkTotal.plus(ChronoUnit.NANOS.between(lastUpdate, now), ChronoUnit.NANOS);
@@ -58,11 +59,10 @@ public class TimeStatus implements Parcelable {
             runningBreakTotal = runningBreakTotal.plus(ChronoUnit.NANOS.between(lastUpdate, now), ChronoUnit.NANOS);
         }
         lastUpdate = now;
-        status.setButtons(timeActivity);
     }
 
     public void startWork(TimeActivity timeActivity) {
-        status = TimeActivity.Status.WORK;
+        status = TimeStatusEnum.WORK;
         if (runningWorkTotal == null) {
             runningWorkTotal = NO_TIME;
         }
@@ -73,25 +73,37 @@ public class TimeStatus implements Parcelable {
     }
 
     public void startBreak(TimeActivity timeActivity) {
-        status = TimeActivity.Status.BREAK;
+        status = TimeStatusEnum.BREAK;
         updateUiAndNotification(timeActivity);
     }
 
     public void stopBreak(TimeActivity timeActivity) {
-        status = TimeActivity.Status.WORK;
+        status = TimeStatusEnum.WORK;
         updateUiAndNotification(timeActivity);
     }
 
     public void stopWork(TimeActivity timeActivity) {
-        status = TimeActivity.Status.NONE;
+        status = TimeStatusEnum.NONE;
         runningWorkTotal = NO_TIME;
         runningBreakTotal = NO_TIME;
         updateUiAndNotification(timeActivity);
     }
 
+    public String getRunningWorkTotal(DateTimeFormatter formatter) {
+        return runningWorkTotal.format(formatter);
+    }
+
+    public String getRunningBreakTotal(DateTimeFormatter formatter) {
+        return runningBreakTotal.format(formatter);
+    }
+
+    public NotificationData notificationData() {
+        return status.notificationData(this);
+    }
+
     private void updateUiAndNotification(TimeActivity timeActivity) {
-        status.setButtons(timeActivity);
-        TimeNotificationService.schedule(timeActivity, this);
+        status.setButtons(timeActivity, this);
+        TimeNotification.notify(timeActivity, this);
     }
 
     @Override
@@ -111,7 +123,7 @@ public class TimeStatus implements Parcelable {
         @Override
         public TimeStatus createFromParcel(Parcel source) {
             return new TimeStatus(
-                    TimeActivity.Status.valueOf(source.readString()),
+                    TimeStatusEnum.valueOf(source.readString()),
                     LocalDateTime.parse(source.readString()),
                     LocalTime.parse(source.readString()),
                     LocalTime.parse(source.readString())
