@@ -44,6 +44,7 @@ public class TimeController {
 
     @Transactional
     @RequestMapping(path = "/time/project", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
+    @ResponseStatus(HttpStatus.CREATED)
     public Project createProject(
             Authentication authentication,
             @RequestBody Project project
@@ -96,14 +97,11 @@ public class TimeController {
     }
 
     @Transactional(readOnly = true)
-    @RequestMapping(path = "/time/project/{projectId}/time-status", method = RequestMethod.POST, produces = "application/json")
-    public ResponseEntity<TimeStatus> timeStatus(
-            Authentication authentication,
-            @PathVariable Integer projectId
+    @RequestMapping(path = "/time/project/time-status", method = RequestMethod.POST, produces = "application/json")
+    public TimeStatus timeStatus(
+            Authentication authentication
     ) {
-        return timeFacade.timeStatus(userService.getUser(authentication), projectId)
-                .map(breakStop -> new ResponseEntity<>(breakStop, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        return timeFacade.timeStatus(userService.getUser(authentication));
     }
 
     @Transactional

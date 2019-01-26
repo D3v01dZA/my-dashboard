@@ -11,7 +11,6 @@ import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 
 import com.altona.dashboard.service.time.NotificationData;
-import com.altona.dashboard.service.time.TimeStatus;
 
 import java.util.Objects;
 import java.util.Timer;

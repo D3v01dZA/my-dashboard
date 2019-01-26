@@ -24,12 +24,16 @@ public class TimeService {
 
     private TimeRepository timeRepository;
 
-    public WorkStart startProjectWork(Project project) {
-        return runningWorkAwareFunction(
-                project,
-                runningWork -> WorkStart.alreadyStarted(runningWork.getId()),
-                () -> WorkStart.started(timeRepository.startTime(project.getId(), Time.Type.WORK))
-        );
+    public WorkStart startProjectWork(List<Project> projects, Project project) {
+        return timeStatusInternal(projects)
+                .map(timeStatus -> WorkStart.alreadyStarted(timeStatus.getProjectId().get(), timeStatus.getTimeId().get()))
+                .orElseGet(
+                        () -> runningWorkAwareFunction(
+                                project,
+                                runningWork -> WorkStart.alreadyStarted(project.getId(), runningWork.getId()),
+                                () -> WorkStart.started(project.getId(), timeRepository.startTime(project.getId(), Time.Type.WORK))
+                        )
+                );
     }
 
     public WorkStop endProjectWork(Project project) {
@@ -72,29 +76,9 @@ public class TimeService {
         );
     }
 
-    public TimeStatus timeStatus(Project project) {
-        return runningWorkAwareFunction(
-                project,
-                runningWork -> {
-                    Date now = new Date();
-                    LocalTime breakTime = timeRepository.timesFromDate(project.getId(), runningWork.getStart())
-                            .stream()
-                            .map(time -> {
-                                Assert.isTrue(time.getType() == Time.Type.BREAK, "All times after a non-ended work should be breaks");
-                                return time.time(now);
-                            })
-                            .reduce(
-                                    LocalTime.of(0, 0),
-                                    (timeOne, timeTwo) -> timeOne.plus(timeTwo.toNanoOfDay(), ChronoUnit.NANOS)
-                            );
-                    LocalTime workTime = runningWork.time(now).minus(breakTime.toNanoOfDay(), ChronoUnit.NANOS);
-                    return runningBreakAwareFunction(project,
-                            runningBreak -> TimeStatus.onBreak(workTime, breakTime),
-                            () -> TimeStatus.atWork(workTime, breakTime)
-                    );
-                },
-                TimeStatus::none
-        );
+    public TimeStatus timeStatus(List<Project> projects) {
+        return timeStatusInternal(projects)
+                .orElseGet(TimeStatus::none);
     }
 
     public List<ZoneTime> zoneTimes(TimeZoneMapper timeZoneMapper, Project project) {
@@ -116,6 +100,37 @@ public class TimeService {
                 .map(time -> new ZoneTime(timeZoneMapper, time))
                 .collect(Collectors.toList());
         return Summary.create(zoneTimeList);
+    }
+
+    private Optional<TimeStatus> timeStatusInternal(List<Project> projects) {
+        return projects.stream()
+                .map(this::timeStatus)
+                .collect(SingleTimeStatusCollector.INSTANCE);
+    }
+
+    private TimeStatus timeStatus(Project project) {
+        return runningWorkAwareFunction(
+                project,
+                runningWork -> {
+                    Date now = new Date();
+                    LocalTime breakTime = timeRepository.timesFromDate(project.getId(), runningWork.getStart())
+                            .stream()
+                            .map(time -> {
+                                Assert.isTrue(time.getType() == Time.Type.BREAK, "All times after a non-ended work should be breaks");
+                                return time.time(now);
+                            })
+                            .reduce(
+                                    LocalTime.of(0, 0),
+                                    (timeOne, timeTwo) -> timeOne.plus(timeTwo.toNanoOfDay(), ChronoUnit.NANOS)
+                            );
+                    LocalTime workTime = runningWork.time(now).minus(breakTime.toNanoOfDay(), ChronoUnit.NANOS);
+                    return runningBreakAwareFunction(project,
+                            runningBreak -> TimeStatus.onBreak(project, runningBreak, workTime, breakTime),
+                            () -> TimeStatus.atWork(project, runningWork, workTime, breakTime)
+                    );
+                },
+                TimeStatus::none
+        );
     }
 
     private Time stopTime(Project project, Time time) {

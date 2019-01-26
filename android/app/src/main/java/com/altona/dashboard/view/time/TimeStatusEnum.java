@@ -4,7 +4,6 @@ import android.view.View;
 
 import com.altona.dashboard.R;
 import com.altona.dashboard.service.time.NotificationData;
-import com.altona.dashboard.service.time.TimeStatus;
 
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;

@@ -1,11 +1,9 @@
-package com.altona.dashboard.service.time;
+package com.altona.dashboard.view.time;
 
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.altona.dashboard.view.time.TimeActivity;
-import com.altona.dashboard.view.time.TimeNotification;
-import com.altona.dashboard.view.time.TimeStatusEnum;
+import com.altona.dashboard.service.time.NotificationData;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -23,6 +21,8 @@ public class TimeStatus implements Parcelable {
     private static final LocalTime NO_TIME = LocalTime.of(0, 0);
 
     private TimeStatusEnum status;
+    private Integer projectId;
+    private Integer timeId;
     private LocalDateTime lastUpdate;
     private LocalTime runningWorkTotal;
     private LocalTime runningBreakTotal;
@@ -30,11 +30,15 @@ public class TimeStatus implements Parcelable {
     @JsonCreator
     TimeStatus(
             @JsonProperty(value = "status", required = true) TimeStatusEnum status,
+            @JsonProperty(value = "projectId") Integer projectId,
+            @JsonProperty(value = "timeId") Integer timeId,
             @JsonProperty(value = "runningWorkTotal") LocalTime runningWorkTotal,
             @JsonProperty(value = "runningBreakTotal") LocalTime runningBreakTotal
     ) {
         this(
                 status,
+                projectId,
+                timeId,
                 LocalDateTime.now(),
                 runningWorkTotal == null ? NO_TIME : runningWorkTotal,
                 runningBreakTotal == null ? NO_TIME : runningBreakTotal
@@ -48,6 +52,9 @@ public class TimeStatus implements Parcelable {
     public void update(TimeActivity timeActivity) {
         update();
         status.setButtons(timeActivity, this);
+        if (projectId != null) {
+            Project.setCurrentProject(timeActivity, projectId);
+        }
     }
 
     public void update() {
@@ -86,6 +93,8 @@ public class TimeStatus implements Parcelable {
         status = TimeStatusEnum.NONE;
         runningWorkTotal = NO_TIME;
         runningBreakTotal = NO_TIME;
+        projectId = null;
+        timeId = null;
         updateUiAndNotification(timeActivity);
     }
 
@@ -114,6 +123,16 @@ public class TimeStatus implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(status.name());
+        if (projectId == null) {
+            dest.writeInt(-1);
+        } else {
+            dest.writeInt(projectId);
+        }
+        if (timeId == null) {
+            dest.writeInt(-1);
+        } else {
+            dest.writeInt(timeId);
+        }
         dest.writeString(lastUpdate.toString());
         dest.writeString(runningWorkTotal.toString());
         dest.writeString(runningBreakTotal.toString());
@@ -122,11 +141,19 @@ public class TimeStatus implements Parcelable {
     public static final Parcelable.Creator<TimeStatus> CREATOR = new Parcelable.Creator<TimeStatus>() {
         @Override
         public TimeStatus createFromParcel(Parcel source) {
+            TimeStatusEnum status = TimeStatusEnum.valueOf(source.readString());
+            int projectId = source.readInt();
+            int timeId = source.readInt();
+            LocalDateTime lastUpdate = LocalDateTime.parse(source.readString());
+            LocalTime runningWorkTotal = LocalTime.parse(source.readString());
+            LocalTime runningBreakTotal = LocalTime.parse(source.readString());
             return new TimeStatus(
-                    TimeStatusEnum.valueOf(source.readString()),
-                    LocalDateTime.parse(source.readString()),
-                    LocalTime.parse(source.readString()),
-                    LocalTime.parse(source.readString())
+                    status,
+                    projectId == -1 ? null : projectId,
+                    timeId == -1 ? null : projectId,
+                    lastUpdate,
+                    runningWorkTotal,
+                    runningBreakTotal
             );
         }
 

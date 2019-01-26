@@ -35,7 +35,10 @@ public class TimeFacade {
 
     public Optional<WorkStart> startWork(User user, int projectId) {
         return projectService.project(user, projectId)
-                .map(project -> timeService.startProjectWork(project));
+                .map(project -> {
+                    List<Project> projects = projectService.projects(user);
+                    return timeService.startProjectWork(projects, project);
+                });
     }
     
     public Optional<BreakStart> startBreak(User user, int projectId) {
@@ -53,9 +56,9 @@ public class TimeFacade {
                 .map(project -> timeService.endProjectBreak(project));
     }
 
-    public Optional<TimeStatus> timeStatus(User user, int projectId) {
-        return projectService.project(user, projectId)
-                .map(project -> timeService.timeStatus(project));
+    public TimeStatus timeStatus(User user) {
+        List<Project> projects = projectService.projects(user);
+        return timeService.timeStatus(projects);
     }
 
     public Optional<Summary> summary(UserContext userContext, int projectId, Summary.Type type) {

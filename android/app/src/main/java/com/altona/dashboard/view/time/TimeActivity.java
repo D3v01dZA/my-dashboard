@@ -6,18 +6,18 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.altona.dashboard.R;
-import com.altona.dashboard.service.time.Project;
 import com.altona.dashboard.service.time.TimeService;
-import com.altona.dashboard.service.time.TimeStatus;
 import com.altona.dashboard.view.SecureAppActivity;
 import com.altona.dashboard.view.util.UserInputDialog;
 
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class TimeActivity extends SecureAppActivity {
 
     private TimeStatus currentStatus;
+    private List<Project> currentProjects;
     private Timer timer;
 
     public TimeActivity() {
@@ -54,6 +54,7 @@ public class TimeActivity extends SecureAppActivity {
     protected void onShow() {
         disableInteraction();
         timeService().getProjects(projects -> {
+            currentProjects = projects;
             if (projects.size() == 0) {
                 createProject();
             } else {
@@ -64,7 +65,7 @@ public class TimeActivity extends SecureAppActivity {
     }
 
     private void updateStatus() {
-        timeService().timeStatus(currentProject(), timeStatus -> {
+        timeService().timeStatus(timeStatus -> {
             setCurrentStatus(timeStatus);
             enableInteractionAndUpdate();
         }, this::logoutErrorHandler);
@@ -89,10 +90,10 @@ public class TimeActivity extends SecureAppActivity {
     }
 
     private void setCurrentStatus(TimeStatus timeStatus) {
-        this.currentStatus = timeStatus;
+        currentStatus = timeStatus;
         TimeNotification.notify(this, timeStatus);
         updateWithCurrentStatus();
-        this.timer = new Timer();
+        timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -204,6 +205,10 @@ public class TimeActivity extends SecureAppActivity {
 
     protected Button pauseButton() {
         return findViewById(R.id.time_pause_button);
+    }
+
+    protected List<Project> currentProjects() {
+        return currentProjects;
     }
 
 }

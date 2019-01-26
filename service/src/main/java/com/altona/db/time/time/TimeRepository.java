@@ -1,5 +1,6 @@
 package com.altona.db.time.time;
 
+import org.postgresql.util.PGTimestamp;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -68,12 +69,12 @@ public class TimeRepository {
         );
     }
 
-    public List<Time> timesFromDate(int projectid, Date fromTime) {
+    public List<Time> timesFromDate(int projectId, Date fromTime) {
         return namedJdbc.query(
                 "SELECT id, type, start_time, end_time FROM time WHERE project_id = :projectId AND start_time > :fromTime",
                 new MapSqlParameterSource()
-                        .addValue("projectId", projectid)
-                        .addValue("fromTime", fromTime),
+                        .addValue("projectId", projectId)
+                        .addValue("fromTime", new java.sql.Timestamp(fromTime.getTime())),
                 TIME_ROW_MAPPER
         );
     }
@@ -88,8 +89,8 @@ public class TimeRepository {
                         "AND project_id = :projectId " +
                         "ORDER BY start_time DESC, end_time DESC",
                 new MapSqlParameterSource()
-                        .addValue("fromDate", from)
-                        .addValue("toDate", to)
+                        .addValue("fromDate", new java.sql.Timestamp(from.getTime()))
+                        .addValue("toDate", new java.sql.Timestamp(to.getTime()))
                         .addValue("projectId", projectId),
                 TIME_ROW_MAPPER
         );
@@ -98,7 +99,7 @@ public class TimeRepository {
     public int startTime(int projectId, Time.Type type) {
         return timeJdbcInsert.executeAndReturnKey(new MapSqlParameterSource()
                 .addValue("type", type.name())
-                .addValue("start_time", new Date())
+                .addValue("start_time", new java.sql.Timestamp(new Date().getTime()))
                 .addValue("project_id", projectId))
                 .intValue();
     }
@@ -107,7 +108,7 @@ public class TimeRepository {
         namedJdbc.update(
                 "UPDATE time SET end_time = :endTime WHERE id = :id",
                 new MapSqlParameterSource()
-                        .addValue("endTime", stopTime)
+                        .addValue("endTime", new java.sql.Timestamp(stopTime.getTime()))
                         .addValue("id", id)
         );
     }

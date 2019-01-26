@@ -2,6 +2,8 @@ package com.altona.dashboard.service.time;
 
 import com.altona.dashboard.Static;
 import com.altona.dashboard.service.login.LoginService;
+import com.altona.dashboard.view.time.Project;
+import com.altona.dashboard.view.time.TimeStatus;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -51,8 +53,8 @@ public class TimeService {
         request(emptyPost(), projectUrl(project) + "/stop-break", ObjectNode.class, onSuccess, onFailure);
     }
 
-    public void timeStatus(Project project, Consumer<TimeStatus> onSuccess, Consumer<String> onFailure) {
-        request(emptyPost(), projectUrl(project) + "/time-status", TimeStatus.class, onSuccess, onFailure);
+    public void timeStatus(Consumer<TimeStatus> onSuccess, Consumer<String> onFailure) {
+        request(emptyPost(), "/time/project/time-status", TimeStatus.class, onSuccess, onFailure);
     }
 
     private static Request.Builder emptyPost() {
