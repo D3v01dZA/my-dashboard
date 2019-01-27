@@ -138,7 +138,7 @@ public class TimeService {
     }
 
     private Time stopTime(Project project, Time time, Date date) {
-        timeRepository.stopTime(time.getId(), date);
+        timeRepository.stopTime(project.getId(), time.getId(), date);
         return timeRepository.time(project.getId(), time.getId()).get();
     }
 
