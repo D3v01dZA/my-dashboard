@@ -1,11 +1,14 @@
 package com.altona.html;
 
-import com.altona.db.time.project.Project;
+import com.altona.repository.time.maconomy.MaconomyMetadata;
+import com.altona.repository.time.project.Project;
 import com.altona.service.time.*;
 import com.altona.service.time.control.*;
 import com.altona.service.time.summary.Summary;
 import com.altona.security.UserService;
 import com.altona.facade.TimeFacade;
+import com.altona.service.time.summary.type.SummaryType;
+import com.altona.service.time.synchronize.SynchronizeResult;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -104,19 +107,6 @@ public class TimeController {
         return timeFacade.timeStatus(userService.getUser(authentication));
     }
 
-    @Transactional
-    @RequestMapping(path = "/time/project/{projectId}/summary", method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<Summary> getSummary(
-            Authentication authentication,
-            TimeZone timeZone,
-            @PathVariable Integer projectId,
-            @RequestParam Summary.Type type
-    ) {
-        return timeFacade.summary(userService.getUserContext(authentication, timeZone), projectId, type)
-                .map(timeList -> new ResponseEntity<>(timeList, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
     @Transactional(readOnly = true)
     @RequestMapping(path = "/time/project/{projectId}/time", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<List<ZoneTime>> getTime(
@@ -139,6 +129,32 @@ public class TimeController {
     ) {
         return timeFacade.time(userService.getUserContext(authentication, timeZone), projectId, timeId)
                 .map(timeList -> new ResponseEntity<>(timeList, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @Transactional(readOnly = true)
+    @RequestMapping(path = "/time/project/{projectId}/summary", method = RequestMethod.GET, produces = "application/json")
+    public ResponseEntity<Summary> getSummary(
+            Authentication authentication,
+            TimeZone timeZone,
+            @PathVariable Integer projectId,
+            @RequestParam SummaryType type
+    ) {
+        return timeFacade.summary(userService.getUserContext(authentication, timeZone), projectId, type.getConfiguration())
+                .map(timeList -> new ResponseEntity<>(timeList, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @Transactional(readOnly = true)
+    @RequestMapping(path = "/time/project/{projectId}/synchronize", method = RequestMethod.POST, produces = "application/json")
+    public ResponseEntity<SynchronizeResult> synchronize(
+            Authentication authentication,
+            TimeZone timeZone,
+            @PathVariable Integer projectId,
+            @RequestBody MaconomyMetadata maconomyMetadata
+    ) {
+        return timeFacade.synchronize(userService.getUserContext(authentication, timeZone), projectId, maconomyMetadata)
+                .map(synchronizeResult -> new ResponseEntity<>(synchronizeResult, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 

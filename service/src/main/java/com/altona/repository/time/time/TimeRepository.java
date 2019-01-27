@@ -1,4 +1,4 @@
-package com.altona.db.time.time;
+package com.altona.repository.time.time;
 
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.RowMapper;

@@ -1,6 +1,9 @@
 package com.altona.facade;
 
-import com.altona.db.time.project.Project;
+import com.altona.repository.time.maconomy.MaconomyMetadata;
+import com.altona.repository.time.project.Project;
+import com.altona.service.time.summary.SummaryConfiguration;
+import com.altona.service.time.synchronize.SynchronizeResult;
 import com.altona.service.time.ProjectService;
 import com.altona.service.time.TimeService;
 import com.altona.service.time.ZoneTime;
@@ -8,6 +11,7 @@ import com.altona.service.time.control.*;
 import com.altona.service.time.summary.Summary;
 import com.altona.security.User;
 import com.altona.security.UserContext;
+import com.altona.service.time.synchronize.maconomy.MaconomyService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +24,7 @@ public class TimeFacade {
     
     private ProjectService projectService;
     private TimeService timeService;
+    private MaconomyService maconomyService;
 
     public List<Project> projects(User user) {
         return projectService.projects(user);
@@ -61,11 +66,6 @@ public class TimeFacade {
         return timeService.timeStatus(projects);
     }
 
-    public Optional<Summary> summary(UserContext userContext, int projectId, Summary.Type type) {
-        return projectService.project(userContext, projectId)
-                .map(project -> timeService.summary(userContext, project, type));
-    }
-
     public Optional<List<ZoneTime>> times(UserContext userContext, int projectId) {
         return projectService.project(userContext, projectId)
                 .map(project -> timeService.zoneTimes(userContext, project));
@@ -74,6 +74,16 @@ public class TimeFacade {
     public Optional<ZoneTime> time(UserContext userContext, int projectId, int timeId) {
         return projectService.project(userContext, projectId)
                 .flatMap(project -> timeService.zoneTime(userContext, project, timeId));
+    }
+
+    public Optional<Summary> summary(UserContext userContext, int projectId, SummaryConfiguration configuration) {
+        return projectService.project(userContext, projectId)
+                .map(project -> timeService.summary(userContext, project, configuration));
+    }
+
+    public Optional<SynchronizeResult> synchronize(UserContext userContext, int projectId, MaconomyMetadata maconomyMetadata) {
+        return projectService.project(userContext, projectId)
+                .map(project -> maconomyService.synchronizeWeek(userContext, project, maconomyMetadata));
     }
     
 }

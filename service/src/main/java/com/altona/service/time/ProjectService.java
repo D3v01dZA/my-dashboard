@@ -1,7 +1,7 @@
 package com.altona.service.time;
 
-import com.altona.db.time.project.Project;
-import com.altona.db.time.project.ProjectRepository;
+import com.altona.repository.time.project.Project;
+import com.altona.repository.time.project.ProjectRepository;
 import com.altona.security.User;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;

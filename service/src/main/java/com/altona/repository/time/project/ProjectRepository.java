@@ -1,4 +1,4 @@
-package com.altona.db.time.project;
+package com.altona.repository.time.project;
 
 import com.altona.security.User;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,10 +1,12 @@
 package com.altona.service.time;
 
-import com.altona.db.time.project.Project;
-import com.altona.db.time.time.Time;
-import com.altona.db.time.time.TimeRepository;
+import com.altona.repository.time.project.Project;
+import com.altona.repository.time.time.Time;
+import com.altona.repository.time.time.TimeRepository;
 import com.altona.service.time.control.*;
 import com.altona.service.time.summary.Summary;
+import com.altona.service.time.summary.SummaryConfiguration;
+import com.altona.service.time.summary.SummaryCreator;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -93,13 +95,17 @@ public class TimeService {
                 .map(time -> new ZoneTime(timeZoneMapper, time));
     }
 
-    public Summary summary(TimeZoneMapper timeZoneMapper, Project project, Summary.Type type) {
-        Summary.Dates dates = type.getDates();
-        List<ZoneTime> zoneTimeList = timeRepository.timeListBetween(project.getId(), timeZoneMapper.mapLocalDate(dates.getFrom()), timeZoneMapper.mapLocalDate(dates.getTo()))
+    public Summary summary(TimeZoneMapper timeZoneMapper, Project project, SummaryConfiguration configuration) {
+        List<ZoneTime> zoneTimeList = timeRepository
+                .timeListBetween(
+                        project.getId(),
+                        timeZoneMapper.mapLocalDate(configuration.getFrom()),
+                        timeZoneMapper.mapLocalDate(configuration.getTo())
+                )
                 .stream()
                 .map(time -> new ZoneTime(timeZoneMapper, time))
                 .collect(Collectors.toList());
-        return Summary.create(zoneTimeList);
+        return SummaryCreator.create(configuration, zoneTimeList);
     }
 
     private Optional<TimeStatus> timeStatusInternal(List<Project> projects) {

@@ -17,14 +17,14 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> exceptionHandler(WebRequest request, Exception e) {
-        LOG.error("Request for {} failed", request.getContextPath(), e);
+        LOG.error("Request [{}] failed", request.getDescription(false), e);
         return new ResponseEntity<>("Something went wrong", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     // Holy shit never forget this thing, literally after returning something this throws that away and doesn't tell you anything
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(Exception ex, Object body, HttpHeaders headers, HttpStatus status, WebRequest request) {
-        LOG.error("Spring level exception", ex);
+        LOG.error("Request [{}] failed in Spring",request.getDescription(false), ex);
         return super.handleExceptionInternal(ex, body, headers, status, request);
     }
 }

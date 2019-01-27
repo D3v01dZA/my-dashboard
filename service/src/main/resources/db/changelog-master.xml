@@ -53,4 +53,27 @@
         <renameColumn tableName="time" oldColumnName="end" newColumnName="end_time"/>
     </changeSet>
 
+    <changeSet id="create_integration_trace" author="chris">
+        <createTable tableName="integration_trace">
+            <column name="id" type="integer" autoIncrement="true">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="time" type="timestamp with timezone">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="integer">
+                <constraints nullable="false" foreignKeyName="fk_integration_trace_user" references="users(id)"/>
+            </column>
+            <column name="project_id" type="integer">
+                <constraints nullable="false" foreignKeyName="fk__integration_trace_project" references="project(id)"/>
+            </column>
+            <column name="stage" type="varchar">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="text">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
 </databaseChangeLog>
