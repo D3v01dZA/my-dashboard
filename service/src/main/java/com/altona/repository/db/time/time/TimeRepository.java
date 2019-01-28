@@ -116,7 +116,7 @@ public class TimeRepository {
                         "OR (end_time < :toDate AND start_time < :fromDate) " +
                         "OR (end_time > :toDate AND start_time < :fromDate) " +
                         "AND project_id = :projectId " +
-                        "ORDER BY start_time DESC, end_time DESC",
+                        "ORDER BY start_time ASC, end_time ASC",
                 new MapSqlParameterSource()
                         .addValue("fromDate", from)
                         .addValue("toDate", to)

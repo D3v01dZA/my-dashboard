@@ -18,6 +18,8 @@ import java.util.stream.Collectors;
 
 public class SummaryCreator {
 
+    private static LocalTime NO_TIME = LocalTime.of(0, 0);
+
     public static Summary create(SummaryConfiguration configuration, List<ZoneTime> zoneTimes) {
         LocalDateTime now = LocalDateTime.now();
         Map<LocalDate, LocalTime> timeMap = new LinkedHashMap<>();
@@ -69,7 +71,7 @@ public class SummaryCreator {
         if (map.containsKey(onDate)) {
             map.put(onDate, type.add(map.get(onDate), difference));
         } else {
-            map.put(onDate, difference);
+            map.put(onDate, type.add(NO_TIME, difference));
         }
     }
 
