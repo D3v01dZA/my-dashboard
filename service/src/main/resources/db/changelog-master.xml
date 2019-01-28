@@ -93,7 +93,7 @@
     </changeSet>
 
     <changeSet id="add_user_salt" author="chris">
-        <sql>CREATE EXTENSION "pgcrypto";</sql>
+        <!--<sql>CREATE EXTENSION "pgcrypto";</sql>-->
         <addColumn tableName="users">
             <column name="salt" type="uuid" defaultValueComputed="gen_random_uuid()">
                 <constraints nullable="false"/>
