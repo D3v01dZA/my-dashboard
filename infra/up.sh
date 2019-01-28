@@ -2,14 +2,9 @@
 set -e
 
 branch="${1}"
-port="${2}"
 
 if [[ -z "${branch}" ]]; then
     echo "No branch specified"
-    exit 1
-fi
-if [[ -z "${port}" ]]; then
-    echo "No port specified"
     exit 1
 fi
 
