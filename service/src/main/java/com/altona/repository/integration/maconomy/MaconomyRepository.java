@@ -19,6 +19,7 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDate;
 import java.util.Objects;
 
 import static com.altona.util.ObjectMapperHelper.serialize;
@@ -33,11 +34,19 @@ public class MaconomyRepository {
     private ObjectMapper objectMapper;
     private SynchronizationTraceRepository synchronizationTraceRepository;
 
-    public Result<Get, String> getCurrentData(Encryptor encryptor, int userId, int projectId, MaconomyConfiguration maconomyConfiguration) {
+    public Result<Get, String> timeData(Encryptor encryptor, int userId, int projectId, MaconomyConfiguration maconomyConfiguration) {
+        String url = currentTimeDataUrl(maconomyConfiguration);
+        return timeData(encryptor, userId, projectId, maconomyConfiguration, url);
+    }
+
+    public Result<Get, String> timeData(Encryptor encryptor, int userId, int projectId, MaconomyConfiguration maconomyConfiguration, LocalDate date, String employee) {
+        String url = timeDataUrl(maconomyConfiguration, date, employee);
+        return timeData(encryptor, userId, projectId, maconomyConfiguration, url);
+    }
+
+    private Result<Get, String> timeData(Encryptor encryptor, int userId, int projectId, MaconomyConfiguration maconomyConfiguration, String url) {
         HttpHeaders httpHeaders = basicHeaders(maconomyConfiguration);
         HttpEntity<?> headers = new HttpEntity<>(httpHeaders);
-
-        String url = currentTimeDataUrl(maconomyConfiguration);
         try {
             ResponseEntity<JsonNode> responseEntity = restTemplate.exchange(url, HttpMethod.GET, headers, JsonNode.class);
             if (responseEntity.getStatusCode() == HttpStatus.OK) {
@@ -65,7 +74,7 @@ public class MaconomyRepository {
         }
     }
 
-    public Result<Get, String> writeCurrentData(Encryptor encryptor, int userId, int projectId, MaconomyConfiguration maconomyConfiguration, CardData cardData, TableMeta tableMeta, TimeData timeData) {
+    public Result<Get, String> writeTimeData(Encryptor encryptor, int userId, int projectId, MaconomyConfiguration maconomyConfiguration, CardData cardData, TableMeta tableMeta, TimeData timeData) {
         Post post = new Post(timeData);
         HttpHeaders httpHeaders = basicHeaders(maconomyConfiguration);
         httpHeaders.add("Maconomy-Concurrency-Control", tableMeta.getConcurrencyControl());
@@ -126,6 +135,14 @@ public class MaconomyRepository {
 
     private static String currentTimeDataUrl(MaconomyConfiguration maconomyConfiguration) {
         return maconomyConfiguration.getUrl() + "/timeregistration/data;any";
+    }
+
+    private static String timeDataUrl(MaconomyConfiguration maconomyConfiguration, LocalDate date, String user) {
+        return maconomyConfiguration.getUrl() + String.format(
+                "/timeregistration/data;any?card.datevar=%s&card.employeenumbervar=%s",
+                date,
+                user
+        );
     }
 
     private static String format() {

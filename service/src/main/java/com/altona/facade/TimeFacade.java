@@ -3,6 +3,7 @@ package com.altona.facade;
 import com.altona.repository.db.time.project.Project;
 import com.altona.repository.db.time.synchronization.Synchronization;
 import com.altona.service.time.summary.SummaryConfiguration;
+import com.altona.service.time.synchronize.SynchronizationCommand;
 import com.altona.service.time.synchronize.SynchronizationResult;
 import com.altona.service.time.ProjectService;
 import com.altona.service.time.TimeService;
@@ -100,9 +101,14 @@ public class TimeFacade {
 
     // Synchronization
 
+    @Transactional(readOnly = true)
+    public Optional<SynchronizationResult> synchronize(UserContext userContext, int projectId, int synchronizationId, SynchronizationCommand command) {
+        return projectService.project(userContext, projectId)
+                .flatMap(project -> timeSynchronizationService.synchronize(userContext, project, synchronizationId, command));
+    }
+
     @Transactional
     public Optional<Synchronization> createSynchronization(UserContext userContext, int projectId, Synchronization synchronization) {
-
         return projectService.project(userContext, projectId)
                 .map(project -> timeSynchronizationService.createSynchronization(userContext, project, synchronization));
     }

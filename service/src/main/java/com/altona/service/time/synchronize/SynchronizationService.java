@@ -7,6 +7,6 @@ public interface SynchronizationService {
 
     int getSynchronizationId();
 
-    SynchronizationResult synchronize(UserContext userContext, Project project);
+    SynchronizationResult synchronize(UserContext userContext, Project project, SynchronizationCommand command);
 
 }

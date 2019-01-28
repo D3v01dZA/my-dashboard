@@ -8,6 +8,7 @@ import com.altona.service.time.summary.Summary;
 import com.altona.security.UserService;
 import com.altona.facade.TimeFacade;
 import com.altona.service.time.summary.type.SummaryType;
+import com.altona.service.time.synchronize.SynchronizationCommand;
 import com.altona.service.time.synchronize.SynchronizationResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
@@ -141,6 +142,20 @@ public class TimeController {
     }
 
     // Synchronization
+
+    @RequestMapping(path = "/time/project/{projectId}/synchronization/{synchronizationId}/synchronize", method = RequestMethod.POST, produces = "application/json")
+    public ResponseEntity<SynchronizationResult> synchronize(
+            Authentication authentication,
+            TimeZone timeZone,
+            @PathVariable Integer projectId,
+            @PathVariable Integer synchronizationId,
+            @RequestParam(required = false) Integer periodsBack
+    ) {
+        SynchronizationCommand command = periodsBack == null ? SynchronizationCommand.current() : SynchronizationCommand.previous(periodsBack);
+        return timeFacade.synchronize(userService.getUserContext(authentication, timeZone), projectId, synchronizationId, command)
+                .map(synchronizeResult -> new ResponseEntity<>(synchronizeResult, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
 
     @RequestMapping(path = "/time/project/{projectId}/synchronization", method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<Synchronization> createSynchronization(

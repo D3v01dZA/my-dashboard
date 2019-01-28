@@ -19,4 +19,8 @@ public class Get {
         return panes.getCardRecord();
     }
 
+    public CardData getCardData() {
+        return getCardRecord().getData();
+    }
+
 }

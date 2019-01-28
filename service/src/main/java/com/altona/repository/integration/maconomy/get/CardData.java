@@ -23,7 +23,7 @@ public class CardData {
     private LocalDate periodendvar;
     private String employeenumbervar;
     private String employeenamevar;
-    private String datevar;
+    private LocalDate datevar;
     private Boolean isproxycurrentemployeevar;
     private String timesheetstatusvar;
     private String selecteddaysvar;

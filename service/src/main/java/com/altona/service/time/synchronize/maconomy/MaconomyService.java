@@ -10,9 +10,11 @@ import com.altona.service.time.TimeService;
 import com.altona.service.time.summary.Summary;
 import com.altona.service.time.summary.SummaryConfiguration;
 import com.altona.service.time.summary.TimeRounding;
+import com.altona.service.time.synchronize.SynchronizationCommand;
 import com.altona.service.time.synchronize.SynchronizationResult;
 import com.altona.service.time.synchronize.SynchronizationService;
 import com.altona.util.LocalDateIterator;
+import com.altona.util.functional.Result;
 import com.altona.util.functional.Tuple2;
 import lombok.AllArgsConstructor;
 
@@ -20,6 +22,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.function.Function;
+
+import static java.util.function.Function.identity;
 
 // This is not an @Service because it is constructed based on the user
 @AllArgsConstructor
@@ -39,25 +44,52 @@ public class MaconomyService implements SynchronizationService {
     }
 
     @Override
-    public SynchronizationResult synchronize(UserContext userContext, Project project) {
-        return maconomyRepository.getCurrentData(userContext, userContext.getId(), project.getId(), maconomyConfiguration)
+    public SynchronizationResult synchronize(UserContext userContext, Project project, SynchronizationCommand command) {
+        int periodsBack = command.getPeriodsBack();
+        // Logic isn't clean for the 0 case because of where Card information is - might do an API review to remove this special case?
+        if (periodsBack == 0) {
+            return maconomyRepository.timeData(userContext, userContext.getId(), project.getId(), maconomyConfiguration)
+                    .flatMapSuccess(currentTime -> saveTimeData(currentTime, userContext, project))
+                    .map(identity(), this::error);
+        }
+        return maconomyRepository.timeData(userContext, userContext.getId(), project.getId(), maconomyConfiguration)
+                .flatMapSuccess(currentTime -> saveTimeDataRelative(currentTime.getCardData(), userContext, project, periodsBack - 1))
+                .map(identity(), this::error);
+    }
+
+    private Result<SynchronizationResult, String> saveTimeDataRelative(CardData cardData, UserContext userContext, Project project, int periodsBack) {
+        LocalDate periodStart = cardData.getPeriodstartvar();
+        String employee = cardData.getEmployeenumbervar();
+        return maconomyRepository.timeData(userContext, userContext.getId(), project.getId(), maconomyConfiguration, periodStart.minusDays(1), employee)
                 .flatMapSuccess(currentTime -> {
-                    TableRecord tableRecord = currentTime.getTableRecord();
-                    CardRecord cardRecord = currentTime.getCardRecord();
-                    CardData cardData = cardRecord.getData();
-                    TimeData timeData = tableRecord.getData();
-                    TableMeta tableMeta = tableRecord.getMeta();
+                    if (periodsBack == 0) {
+                        return saveTimeData(currentTime, userContext, project);
+                    } else {
+                        // IntelliJ doesn't recognize it but this is recursion because we need to resolve when the next period back is each time!
+                        return saveTimeDataRelative(currentTime.getCardData(), userContext, project, periodsBack - 1);
+                    }
+                });
+    }
 
-                    SummaryConfiguration configuration = new SummaryConfiguration(cardData.getPeriodstartvar(), cardData.getPeriodendvar(), TimeRounding.NEAREST_FIFTEEN);
-                    Summary summary = timeService.summary(userContext, project, configuration);
-                    rewriteTimes(timeData, summary);
+    private Result<SynchronizationResult, String> saveTimeData(Get currentTime, UserContext userContext, Project project) {
+        TableRecord tableRecord = currentTime.getTableRecord();
+        CardRecord cardRecord = currentTime.getCardRecord();
+        CardData cardData = cardRecord.getData();
+        TimeData timeData = tableRecord.getData();
+        TableMeta tableMeta = tableRecord.getMeta();
 
-                    return maconomyRepository.writeCurrentData(userContext, userContext.getId(), project.getId(), maconomyConfiguration, cardData, tableMeta, timeData)
-                            .mapSuccess(get -> new Tuple2<>(get, summary));
-                }).map(
-                        savedTime -> SynchronizationResult.success(this, savedTime._2),
-                        error -> SynchronizationResult.failure(this, error)
+        SummaryConfiguration configuration = new SummaryConfiguration(cardData.getPeriodstartvar(), cardData.getPeriodendvar(), TimeRounding.NEAREST_FIFTEEN);
+        Summary summary = timeService.summary(userContext, project, configuration);
+        rewriteTimes(timeData, summary);
+
+        return maconomyRepository.writeTimeData(userContext, userContext.getId(), project.getId(), maconomyConfiguration, cardData, tableMeta, timeData)
+                .mapSuccess(
+                        savedTime -> SynchronizationResult.success(this, summary)
                 );
+    }
+
+    private SynchronizationResult error(String error) {
+        return SynchronizationResult.failure(this, error);
     }
 
     private static void rewriteTimes(TimeData timeData, Summary summary) {
