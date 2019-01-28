@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 branch="${1}"
 port="${2}"
@@ -12,6 +13,7 @@ if [[ -z "${port}" ]]; then
     exit 1
 fi
 
+echo "Changing to build directory"
 cd my-dashboard/service
 git fetch
 git checkout "${branch}"
@@ -19,9 +21,10 @@ git pull
 ./gradlew clean build
 cd -
 
-read db_user < props/db_user.txt
-read db_pass < props/db_pass.txt
-read store_pass < props/store_pass.txt
+cp ./my-dashboard/service/build/libs/my-dashboard-0.1.0.jar "${branch}/boot.jar"
 
-java -jar ./my-dashboard/service/build/libs/my-dashboard-0.1.0.jar --spring.config.additional-location="${branch}/application.properties" >> "${branch}/log.txt" &
-echo $! > "${branch}/pid.txt"
+echo "Changing to run directory"
+cd "${branch}"
+java -jar ./boot.jar --spring.config.additional-location="application.properties" >> "log.txt" &
+echo $! > "pid.txt"
+cd -
