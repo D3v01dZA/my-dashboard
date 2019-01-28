@@ -1,7 +1,7 @@
 package com.altona.service.time.control;
 
-import com.altona.repository.time.project.Project;
-import com.altona.repository.time.time.Time;
+import com.altona.repository.db.time.project.Project;
+import com.altona.repository.db.time.time.Time;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

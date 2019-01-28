@@ -53,8 +53,8 @@
         <renameColumn tableName="time" oldColumnName="end" newColumnName="end_time"/>
     </changeSet>
 
-    <changeSet id="create_integration_trace" author="chris">
-        <createTable tableName="integration_trace">
+    <changeSet id="create_synchronization_trace" author="chris">
+        <createTable tableName="synchronization_trace">
             <column name="id" type="integer" autoIncrement="true">
                 <constraints nullable="false" primaryKey="true"/>
             </column>
@@ -62,10 +62,10 @@
                 <constraints nullable="false"/>
             </column>
             <column name="user_id" type="integer">
-                <constraints nullable="false" foreignKeyName="fk_integration_trace_user" references="users(id)"/>
+                <constraints nullable="false" foreignKeyName="fk_synchronization_trace_user" references="users(id)"/>
             </column>
             <column name="project_id" type="integer">
-                <constraints nullable="false" foreignKeyName="fk__integration_trace_project" references="project(id)"/>
+                <constraints nullable="false" foreignKeyName="fk__synchronization_trace_project" references="project(id)"/>
             </column>
             <column name="stage" type="varchar">
                 <constraints nullable="false"/>
@@ -74,6 +74,32 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
+    </changeSet>
+
+    <changeSet id="create_synchronization" author="chris">
+        <createTable tableName="synchronization">
+            <column name="id" type="integer" autoIncrement="true">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="service" type="varchar">
+                <constraints nullable="false"/>
+            </column>
+            <column name="configuration" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="project_id" type="integer">
+                <constraints nullable="false" foreignKeyName="fk_synchronization_project" references="project(id)"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="add_user_salt" author="chris">
+        <sql>CREATE EXTENSION "pgcrypto";</sql>
+        <addColumn tableName="users">
+            <column name="salt" type="uuid" defaultValueComputed="gen_random_uuid()">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
     </changeSet>
 
 </databaseChangeLog>

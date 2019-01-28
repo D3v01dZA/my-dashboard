@@ -1,6 +1,7 @@
 package com.altona.service.time;
 
-import com.altona.repository.time.time.Time;
+import com.altona.repository.db.time.time.Time;
+import com.altona.repository.db.time.time.TimeType;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,7 +18,7 @@ public class ZoneTime {
 
     @Getter
     @NonNull
-    private Time.Type type;
+    private TimeType type;
 
     @Getter
     @NonNull

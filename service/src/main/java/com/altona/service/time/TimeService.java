@@ -1,8 +1,9 @@
 package com.altona.service.time;
 
-import com.altona.repository.time.project.Project;
-import com.altona.repository.time.time.Time;
-import com.altona.repository.time.time.TimeRepository;
+import com.altona.repository.db.time.project.Project;
+import com.altona.repository.db.time.time.Time;
+import com.altona.repository.db.time.time.TimeRepository;
+import com.altona.repository.db.time.time.TimeType;
 import com.altona.service.time.control.*;
 import com.altona.service.time.summary.Summary;
 import com.altona.service.time.summary.SummaryConfiguration;
@@ -33,7 +34,7 @@ public class TimeService {
                         () -> runningWorkAwareFunction(
                                 project,
                                 runningWork -> WorkStart.alreadyStarted(project.getId(), runningWork.getId()),
-                                () -> WorkStart.started(project.getId(), timeRepository.startTime(project.getId(), Time.Type.WORK))
+                                () -> WorkStart.started(project.getId(), timeRepository.startTime(project.getId(), TimeType.WORK))
                         )
                 );
     }
@@ -60,7 +61,7 @@ public class TimeService {
                 runningWork -> runningBreakAwareFunction(
                         project,
                         runningBreak -> BreakStart.breakAlreadyStarted(runningBreak.getId()),
-                        () -> BreakStart.started(timeRepository.startTime(project.getId(), Time.Type.BREAK))
+                        () -> BreakStart.started(timeRepository.startTime(project.getId(), TimeType.BREAK))
                 ),
                 BreakStart::workNotStarted
         );
@@ -122,7 +123,7 @@ public class TimeService {
                     LocalTime breakTime = timeRepository.timesFromDate(project.getId(), runningWork.getStart())
                             .stream()
                             .map(time -> {
-                                Assert.isTrue(time.getType() == Time.Type.BREAK, "All times after a non-ended work should be breaks");
+                                Assert.isTrue(time.getType() == TimeType.BREAK, "All times after a non-ended work should be breaks");
                                 return time.time(now);
                             })
                             .reduce(
@@ -149,14 +150,14 @@ public class TimeService {
     }
 
     private <T> T runningBreakAwareFunction(Project project, Function<Time, T> whenRunning, Supplier<T> whenNotRunning) {
-        return runningAwareFunction(Time.Type.BREAK, project, whenRunning, whenNotRunning);
+        return runningAwareFunction(TimeType.BREAK, project, whenRunning, whenNotRunning);
     }
 
     private <T> T runningWorkAwareFunction(Project project, Function<Time, T> whenRunning, Supplier<T> whenNotRunning) {
-        return runningAwareFunction(Time.Type.WORK, project, whenRunning, whenNotRunning);
+        return runningAwareFunction(TimeType.WORK, project, whenRunning, whenNotRunning);
     }
 
-    private <T> T runningAwareFunction(Time.Type type, Project project, Function<Time, T> whenRunning, Supplier<T> whenNotRunning) {
+    private <T> T runningAwareFunction(TimeType type, Project project, Function<Time, T> whenRunning, Supplier<T> whenNotRunning) {
         Optional<Time> currentlyRunningOptional = timeRepository.timeWithNullEnd(project.getId(), type);
         if (currentlyRunningOptional.isPresent()) {
             return whenRunning.apply(currentlyRunningOptional.get());

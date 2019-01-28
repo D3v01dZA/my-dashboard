@@ -19,4 +19,7 @@ public class User {
     @NonNull
     private String password;
 
+    @Getter
+    private String salt;
+
 }

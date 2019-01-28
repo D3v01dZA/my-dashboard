@@ -1,6 +1,6 @@
 package com.altona.service.time.summary;
 
-import com.altona.repository.time.time.Time;
+import com.altona.repository.db.time.time.TimeType;
 import com.altona.service.time.ZoneTime;
 import org.springframework.util.Assert;
 
@@ -50,7 +50,7 @@ public class SummaryCreator {
     }
 
 
-    private static void addTimes(Map<LocalDate, LocalTime> map, LocalDate lowerDate, LocalDate upperDate, LocalDateTime fromDate, LocalDateTime toDate, Time.Type type) {
+    private static void addTimes(Map<LocalDate, LocalTime> map, LocalDate lowerDate, LocalDate upperDate, LocalDateTime fromDate, LocalDateTime toDate, TimeType type) {
         Assert.isTrue(fromDate.isBefore(toDate), "Somehow ended up with a from date less than the to date");
         // Add the first dates values
         addTime(map, lowerDate, fromDate, lowerDate.plusDays(1).atStartOfDay(), type);
@@ -64,7 +64,7 @@ public class SummaryCreator {
         addTime(map, upperDate, upperDate.atStartOfDay(), toDate, type);
     }
 
-    private static void addTime(Map<LocalDate, LocalTime> map, LocalDate onDate, LocalDateTime fromDate, LocalDateTime toDate, Time.Type type) {
+    private static void addTime(Map<LocalDate, LocalTime> map, LocalDate onDate, LocalDateTime fromDate, LocalDateTime toDate, TimeType type) {
         LocalTime difference = LocalTime.ofNanoOfDay(ChronoUnit.NANOS.between(fromDate, toDate));
         if (map.containsKey(onDate)) {
             map.put(onDate, type.add(map.get(onDate), difference));

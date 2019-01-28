@@ -1,47 +1,63 @@
 package com.altona.service.time.synchronize.maconomy;
 
-import com.altona.repository.time.maconomy.MaconomyMetadata;
-import com.altona.repository.time.maconomy.MaconomyRepository;
-import com.altona.repository.time.maconomy.TimeData;
-import com.altona.repository.time.maconomy.get.*;
-import com.altona.repository.time.project.Project;
+import com.altona.repository.integration.maconomy.MaconomyConfiguration;
+import com.altona.repository.integration.maconomy.MaconomyRepository;
+import com.altona.repository.integration.maconomy.TimeData;
+import com.altona.repository.integration.maconomy.get.*;
+import com.altona.repository.db.time.project.Project;
 import com.altona.security.UserContext;
 import com.altona.service.time.TimeService;
 import com.altona.service.time.summary.Summary;
 import com.altona.service.time.summary.SummaryConfiguration;
 import com.altona.service.time.summary.TimeRounding;
-import com.altona.service.time.synchronize.SynchronizeResult;
+import com.altona.service.time.synchronize.SynchronizationResult;
+import com.altona.service.time.synchronize.SynchronizationService;
 import com.altona.util.LocalDateIterator;
+import com.altona.util.functional.Tuple2;
 import lombok.AllArgsConstructor;
-import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-@Service
+// This is not an @Service because it is constructed based on the user
 @AllArgsConstructor
-public class MaconomyService {
+public class MaconomyService implements SynchronizationService {
 
+    // Application Beans
     private TimeService timeService;
     private MaconomyRepository maconomyRepository;
 
-    public SynchronizeResult synchronizeWeek(UserContext userContext, Project project, MaconomyMetadata maconomyMetadata) {
-        Get currentTime = maconomyRepository.getCurrentData(userContext.getId(), project.getId(), maconomyMetadata);
-        TableRecord tableRecord = currentTime.getTableRecord();
-        CardRecord cardRecord = currentTime.getCardRecord();
-        CardData cardData = cardRecord.getData();
-        TimeData timeData = tableRecord.getData();
-        TableMeta tableMeta = tableRecord.getMeta();
+    // Configuration
+    private int synchronizationServiceId;
+    private MaconomyConfiguration maconomyConfiguration;
 
-        SummaryConfiguration configuration = new SummaryConfiguration(cardData.getPeriodstartvar(), cardData.getPeriodendvar(), TimeRounding.NEAREST_FIFTEEN);
-        Summary summary = timeService.summary(userContext, project, configuration);
-        rewriteTimes(timeData, summary);
+    @Override
+    public int getSynchronizationId() {
+        return synchronizationServiceId;
+    }
 
-        Get rewrittenTime = maconomyRepository.writeCurrentData(userContext.getId(), project.getId(), maconomyMetadata, cardData, tableMeta, timeData);
+    @Override
+    public SynchronizationResult synchronize(UserContext userContext, Project project) {
+        return maconomyRepository.getCurrentData(userContext, userContext.getId(), project.getId(), maconomyConfiguration)
+                .flatMapSuccess(currentTime -> {
+                    TableRecord tableRecord = currentTime.getTableRecord();
+                    CardRecord cardRecord = currentTime.getCardRecord();
+                    CardData cardData = cardRecord.getData();
+                    TimeData timeData = tableRecord.getData();
+                    TableMeta tableMeta = tableRecord.getMeta();
 
-        return new SynchronizeResult(false);
+                    SummaryConfiguration configuration = new SummaryConfiguration(cardData.getPeriodstartvar(), cardData.getPeriodendvar(), TimeRounding.NEAREST_FIFTEEN);
+                    Summary summary = timeService.summary(userContext, project, configuration);
+                    rewriteTimes(timeData, summary);
+
+                    return maconomyRepository.writeCurrentData(userContext, userContext.getId(), project.getId(), maconomyConfiguration, cardData, tableMeta, timeData)
+                            .mapSuccess(get -> new Tuple2<>(get, summary));
+                }).map(
+                        savedTime -> SynchronizationResult.success(this, savedTime._2),
+                        error -> SynchronizationResult.failure(this, error)
+                );
     }
 
     private static void rewriteTimes(TimeData timeData, Summary summary) {
