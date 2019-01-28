@@ -84,27 +84,27 @@ public class TimeService {
                 .orElseGet(TimeStatus::none);
     }
 
-    public List<ZoneTime> zoneTimes(TimeZoneMapper timeZoneMapper, Project project) {
+    public List<ZoneTime> zoneTimes(TimeConfig timeConfig, Project project) {
         return timeRepository.timeList(project.getId())
                 .stream()
-                .map(time -> new ZoneTime(timeZoneMapper, time))
+                .map(time -> new ZoneTime(timeConfig, time))
                 .collect(Collectors.toList());
     }
 
-    public Optional<ZoneTime> zoneTime(TimeZoneMapper timeZoneMapper, Project project, int timeId) {
+    public Optional<ZoneTime> zoneTime(TimeConfig timeConfig, Project project, int timeId) {
         return timeRepository.time(project.getId(), timeId)
-                .map(time -> new ZoneTime(timeZoneMapper, time));
+                .map(time -> new ZoneTime(timeConfig, time));
     }
 
-    public Summary summary(TimeZoneMapper timeZoneMapper, Project project, SummaryConfiguration configuration) {
+    public Summary summary(TimeConfig timeConfig, Project project, SummaryConfiguration configuration) {
         List<ZoneTime> zoneTimeList = timeRepository
                 .timeListBetween(
                         project.getId(),
-                        timeZoneMapper.mapLocalDate(configuration.getFrom()),
-                        timeZoneMapper.mapLocalDate(configuration.getTo())
+                        timeConfig.mapLocalDate(configuration.getFrom()),
+                        timeConfig.mapLocalDate(configuration.getTo())
                 )
                 .stream()
-                .map(time -> new ZoneTime(timeZoneMapper, time))
+                .map(time -> new ZoneTime(timeConfig, time))
                 .collect(Collectors.toList());
         return SummaryCreator.create(configuration, zoneTimeList);
     }

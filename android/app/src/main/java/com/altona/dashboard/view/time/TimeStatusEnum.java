@@ -17,7 +17,7 @@ public enum TimeStatusEnum {
     WORK {
         @Override
         public void setButtons(TimeActivity timeActivity, TimeStatus timeStatus) {
-            timeActivity.startButton().setVisibility(View.GONE);
+            timeActivity.primaryButtonContainer().setVisibility(View.GONE);
             timeActivity.secondaryButtonContainer().setVisibility(View.VISIBLE);
             timeActivity.pauseButton().setText("Pause");
             timeActivity.runningWorked().setText("Worked: " + timeStatus.getRunningWorkTotal(LONG_TIME_FORMATTER));
@@ -47,7 +47,7 @@ public enum TimeStatusEnum {
     BREAK {
         @Override
         public void setButtons(TimeActivity timeActivity, TimeStatus timeStatus) {
-            timeActivity.startButton().setVisibility(View.GONE);
+            timeActivity.primaryButtonContainer().setVisibility(View.GONE);
             timeActivity.secondaryButtonContainer().setVisibility(View.VISIBLE);
             timeActivity.pauseButton().setText("Resume");
             timeActivity.runningWorked().setText("Worked: " + timeStatus.getRunningWorkTotal(LONG_TIME_FORMATTER));
@@ -77,7 +77,7 @@ public enum TimeStatusEnum {
     NONE {
         @Override
         public void setButtons(TimeActivity timeActivity, TimeStatus timeStatus) {
-            timeActivity.startButton().setVisibility(View.VISIBLE);
+            timeActivity.primaryButtonContainer().setVisibility(View.VISIBLE);
             timeActivity.secondaryButtonContainer().setVisibility(View.GONE);
             timeActivity.runningWorked().setText("Worked: " + timeStatus.getRunningWorkTotal(LONG_TIME_FORMATTER));
             timeActivity.runningBreaks().setText("Paused: " + timeStatus.getRunningBreakTotal(LONG_TIME_FORMATTER));

@@ -1,21 +1,24 @@
 package com.altona.security;
 
-import com.altona.service.time.TimeZoneMapper;
+import com.altona.service.time.TimeConfig;
 import lombok.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Objects;
 import java.util.TimeZone;
 
-public class UserContext extends User implements TimeZoneMapper, Encryptor {
+public class UserContext extends User implements TimeConfig, Encryptor {
 
     private TimeZone timeZone;
     private TextEncryptor encryptor;
+
+    private Date now = new Date();
 
     UserContext(User user, @NonNull Authentication authentication, @NonNull TimeZone timeZone) {
         super(user.getId(), user.getUsername(), user.getPassword(), user.getSalt());
@@ -25,6 +28,16 @@ public class UserContext extends User implements TimeZoneMapper, Encryptor {
             throw new IllegalStateException("I'm supposed to have access to the credentials");
         }
         this.encryptor = Encryptors.delux((String) credentials, getSalt().replace("-", ""));
+    }
+
+    @Override
+    public LocalDate today() {
+        return mapDateTime(now).toLocalDate();
+    }
+
+    @Override
+    public LocalDate firstDayOfWeek() {
+        return today().with(DayOfWeek.MONDAY);
     }
 
     @Override

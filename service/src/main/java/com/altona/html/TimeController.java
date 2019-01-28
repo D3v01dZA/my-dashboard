@@ -3,6 +3,7 @@ package com.altona.html;
 import com.altona.facade.TimeFacade;
 import com.altona.repository.db.time.project.Project;
 import com.altona.repository.db.time.synchronization.Synchronization;
+import com.altona.security.UserContext;
 import com.altona.security.UserService;
 import com.altona.service.time.ZoneTime;
 import com.altona.service.time.control.*;
@@ -135,7 +136,8 @@ public class TimeController {
             @PathVariable Integer projectId,
             @RequestParam SummaryType type
     ) {
-        return timeFacade.summary(userService.getUserContext(authentication, timeZone), projectId, type.getConfiguration())
+        UserContext userContext = userService.getUserContext(authentication, timeZone);
+        return timeFacade.summary(userContext, projectId, type.getConfiguration(userContext))
                 .map(timeList -> new ResponseEntity<>(timeList, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }

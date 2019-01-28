@@ -191,6 +191,10 @@ public class TimeActivity extends SecureAppActivity {
         return findViewById(R.id.time_project_spinner);
     }
 
+    protected LinearLayout primaryButtonContainer() {
+        return findViewById(R.id.time_primary_buttons);
+    }
+
     protected Button startButton() {
         return findViewById(R.id.time_start_button);
     }

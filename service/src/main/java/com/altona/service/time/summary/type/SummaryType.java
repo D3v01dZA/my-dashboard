@@ -1,25 +1,23 @@
 package com.altona.service.time.summary.type;
 
+import com.altona.service.time.TimeConfig;
 import com.altona.service.time.summary.SummaryConfiguration;
 import com.altona.service.time.summary.TimeRounding;
 
-import java.time.LocalDate;
-
 public enum SummaryType {
-    DAY {
+
+    CURRENT_DAY {
         @Override
-        public SummaryConfiguration getConfiguration() {
-            LocalDate now = LocalDate.now();
-            return new SummaryConfiguration(now, now, TimeRounding.NONE);
+        public SummaryConfiguration getConfiguration(TimeConfig timeConfig) {
+            return new SummaryConfiguration(timeConfig.today(), timeConfig.today(), TimeRounding.NONE);
         }
     },
-    WEEK {
+    CURRENT_WEEK {
         @Override
-        public SummaryConfiguration getConfiguration() {
-            LocalDate now = LocalDate.now();
-            return new SummaryConfiguration(now.minusDays(7), now, TimeRounding.NONE);
+        public SummaryConfiguration getConfiguration(TimeConfig timeConfig) {
+            return new SummaryConfiguration(timeConfig.firstDayOfWeek(), timeConfig.today(), TimeRounding.NONE);
         }
     };
 
-    public abstract SummaryConfiguration getConfiguration();
+    public abstract SummaryConfiguration getConfiguration(TimeConfig timeConfig);
 }

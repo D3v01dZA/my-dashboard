@@ -91,6 +91,13 @@
                     android:layout_height="1dp"
                     android:background="?android:attr/listDivider" />
 
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/time_primary_buttons"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
                 <Button
                     android:id="@+id/time_start_button"
                     android:layout_width="match_parent"

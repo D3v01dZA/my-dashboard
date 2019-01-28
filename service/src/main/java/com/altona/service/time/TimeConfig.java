@@ -4,7 +4,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 
-public interface TimeZoneMapper {
+public interface TimeConfig {
+
+    LocalDate today();
+
+    LocalDate firstDayOfWeek();
 
     LocalDateTime mapDateTime(Date date);
 
