@@ -1,12 +1,12 @@
 package com.altona.html;
 
+import com.altona.facade.TimeFacade;
 import com.altona.repository.db.time.project.Project;
 import com.altona.repository.db.time.synchronization.Synchronization;
-import com.altona.service.time.*;
+import com.altona.security.UserService;
+import com.altona.service.time.ZoneTime;
 import com.altona.service.time.control.*;
 import com.altona.service.time.summary.Summary;
-import com.altona.security.UserService;
-import com.altona.facade.TimeFacade;
 import com.altona.service.time.summary.type.SummaryType;
 import com.altona.service.time.synchronize.SynchronizationCommand;
 import com.altona.service.time.synchronize.SynchronizationResult;
@@ -15,7 +15,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

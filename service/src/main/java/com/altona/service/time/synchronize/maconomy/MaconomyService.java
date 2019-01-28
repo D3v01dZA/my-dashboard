@@ -1,10 +1,10 @@
 package com.altona.service.time.synchronize.maconomy;
 
+import com.altona.repository.db.time.project.Project;
 import com.altona.repository.integration.maconomy.MaconomyConfiguration;
 import com.altona.repository.integration.maconomy.MaconomyRepository;
 import com.altona.repository.integration.maconomy.TimeData;
 import com.altona.repository.integration.maconomy.get.*;
-import com.altona.repository.db.time.project.Project;
 import com.altona.security.UserContext;
 import com.altona.service.time.TimeService;
 import com.altona.service.time.summary.Summary;
@@ -15,14 +15,12 @@ import com.altona.service.time.synchronize.SynchronizationResult;
 import com.altona.service.time.synchronize.SynchronizationService;
 import com.altona.util.LocalDateIterator;
 import com.altona.util.functional.Result;
-import com.altona.util.functional.Tuple2;
 import lombok.AllArgsConstructor;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.function.Function;
 
 import static java.util.function.Function.identity;
 

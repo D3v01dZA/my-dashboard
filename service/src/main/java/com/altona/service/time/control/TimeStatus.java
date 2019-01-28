@@ -14,7 +14,7 @@ import java.util.Optional;
 public class TimeStatus {
 
     public static TimeStatus none() {
-        return new TimeStatus(Status.NONE, null, null,null, null);
+        return new TimeStatus(Status.NONE, null, null, null, null);
     }
 
     public static TimeStatus atWork(Project project, Time time, LocalTime runningWorkTotal, LocalTime runningBreakTotal) {

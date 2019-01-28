@@ -74,7 +74,7 @@ public class SummaryCreator {
     }
 
     private static Predicate<LocalDate> betweenInclusive(LocalDate from, LocalDate to) {
-        return date -> date.isEqual(from) || date.isEqual (to) || (date.isAfter(from) && date.isBefore(to));
+        return date -> date.isEqual(from) || date.isEqual(to) || (date.isAfter(from) && date.isBefore(to));
     }
 
 }

@@ -15,7 +15,7 @@ apply plugin: 'io.spring.dependency-management'
 
 bootJar {
     baseName = 'my-dashboard'
-    version =  '0.1.0'
+    version = '0.1.0'
 }
 
 repositories {
@@ -31,6 +31,6 @@ dependencies {
     compile("org.springframework.boot:spring-boot-starter-security:${bootVersion}")
     compile("org.liquibase:liquibase-core:3.6.2")
     compile("org.postgresql:postgresql:42.2.5")
-    
+
     compileOnly("org.projectlombok:lombok:1.18.4")
 }

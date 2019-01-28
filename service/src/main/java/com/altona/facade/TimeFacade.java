@@ -2,18 +2,17 @@ package com.altona.facade;
 
 import com.altona.repository.db.time.project.Project;
 import com.altona.repository.db.time.synchronization.Synchronization;
-import com.altona.service.time.summary.SummaryConfiguration;
-import com.altona.service.time.synchronize.SynchronizationCommand;
-import com.altona.service.time.synchronize.SynchronizationResult;
+import com.altona.security.User;
+import com.altona.security.UserContext;
 import com.altona.service.time.ProjectService;
 import com.altona.service.time.TimeService;
 import com.altona.service.time.ZoneTime;
 import com.altona.service.time.control.*;
 import com.altona.service.time.summary.Summary;
-import com.altona.security.User;
-import com.altona.security.UserContext;
+import com.altona.service.time.summary.SummaryConfiguration;
+import com.altona.service.time.synchronize.SynchronizationCommand;
+import com.altona.service.time.synchronize.SynchronizationResult;
 import com.altona.service.time.synchronize.TimeSynchronizationService;
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +23,7 @@ import java.util.Optional;
 @Service
 @AllArgsConstructor
 public class TimeFacade {
-    
+
     private ProjectService projectService;
     private TimeService timeService;
     private TimeSynchronizationService timeSynchronizationService;
@@ -118,5 +117,5 @@ public class TimeFacade {
         return projectService.project(userContext, projectId)
                 .map(project -> timeSynchronizationService.synchronize(userContext, project));
     }
-    
+
 }

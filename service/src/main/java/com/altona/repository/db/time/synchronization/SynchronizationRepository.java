@@ -54,11 +54,11 @@ public class SynchronizationRepository {
     public Optional<Synchronization> synchronization(Encryptor encryptor, int projectId, int id) {
         try {
             return Optional.of(namedJdbc.queryForObject(
-                "SELECT id, service, configuration FROM synchronization WHERE project_id = :projectId and id = :id",
-                new MapSqlParameterSource()
-                        .addValue("projectId", projectId)
-                        .addValue("id", id),
-                rowMapper(encryptor, objectMapper)
+                    "SELECT id, service, configuration FROM synchronization WHERE project_id = :projectId and id = :id",
+                    new MapSqlParameterSource()
+                            .addValue("projectId", projectId)
+                            .addValue("id", id),
+                    rowMapper(encryptor, objectMapper)
             ));
         } catch (IncorrectResultSizeDataAccessException ex) {
             if (ex.getActualSize() == 0) {

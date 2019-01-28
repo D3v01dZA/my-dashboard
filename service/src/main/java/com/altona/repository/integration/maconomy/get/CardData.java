@@ -265,5 +265,5 @@ public class CardData {
     private Integer oldcopyfromyearvar;
     private Integer oldcopyfromweekvar;
     private Integer numberoflinesvar;
-    
+
 }

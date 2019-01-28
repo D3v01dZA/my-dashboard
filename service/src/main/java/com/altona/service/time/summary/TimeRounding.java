@@ -4,8 +4,6 @@ import java.time.LocalTime;
 
 public interface TimeRounding {
 
-    LocalTime round(LocalTime time);
-
     TimeRounding NONE = time -> time;
 
     TimeRounding NEAREST_FIFTEEN = time -> {
@@ -30,5 +28,7 @@ public interface TimeRounding {
         }
         return LocalTime.of(time.getHour(), nearestMinute, 0, 0);
     };
+
+    LocalTime round(LocalTime time);
 
 }

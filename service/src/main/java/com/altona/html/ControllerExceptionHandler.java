@@ -13,7 +13,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @RestControllerAdvice
 public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
 
-    private static  Logger LOG = LoggerFactory.getLogger(ControllerExceptionHandler.class);
+    private static Logger LOG = LoggerFactory.getLogger(ControllerExceptionHandler.class);
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> exceptionHandler(WebRequest request, Exception e) {
@@ -24,7 +24,7 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
     // Holy shit never forget this thing, literally after returning something this throws that away and doesn't tell you anything
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(Exception ex, Object body, HttpHeaders headers, HttpStatus status, WebRequest request) {
-        LOG.error("Request [{}] failed in Spring",request.getDescription(false), ex);
+        LOG.error("Request [{}] failed in Spring", request.getDescription(false), ex);
         return super.handleExceptionInternal(ex, body, headers, status, request);
     }
 }

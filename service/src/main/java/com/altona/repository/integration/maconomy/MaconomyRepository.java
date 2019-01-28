@@ -1,10 +1,10 @@
 package com.altona.repository.integration.maconomy;
 
-import com.altona.repository.integration.maconomy.create.Post;
-import com.altona.repository.integration.maconomy.get.Get;
-import com.altona.repository.integration.maconomy.get.CardData;
-import com.altona.repository.integration.maconomy.get.TableMeta;
 import com.altona.repository.db.time.trace.SynchronizationTraceRepository;
+import com.altona.repository.integration.maconomy.create.Post;
+import com.altona.repository.integration.maconomy.get.CardData;
+import com.altona.repository.integration.maconomy.get.Get;
+import com.altona.repository.integration.maconomy.get.TableMeta;
 import com.altona.security.Encryptor;
 import com.altona.util.functional.Result;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -27,7 +27,7 @@ import static com.altona.util.ObjectMapperHelper.serialize;
 @Repository
 @AllArgsConstructor
 public class MaconomyRepository {
-    
+
     private static Logger LOGGER = LoggerFactory.getLogger(MaconomyRepository.class);
 
     private RestTemplate restTemplate;
@@ -52,7 +52,7 @@ public class MaconomyRepository {
             if (responseEntity.getStatusCode() == HttpStatus.OK) {
                 try {
                     JsonNode body = Objects.requireNonNull(responseEntity.getBody());
-                    synchronizationTraceRepository.trace(encryptor,userId, projectId, "GET_TIME_DATA", body);
+                    synchronizationTraceRepository.trace(encryptor, userId, projectId, "GET_TIME_DATA", body);
                     return Result.success(objectMapper.treeToValue(body, Get.class));
                 } catch (JsonProcessingException e) {
                     String message = "Couldn't deserialize when requesting current data";

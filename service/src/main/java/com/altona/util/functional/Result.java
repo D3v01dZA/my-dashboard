@@ -20,7 +20,7 @@ public class Result<T, E> {
     private E error;
 
     public <R> Result<R, E> mapSuccess(
-            Function<? super T,? extends R> whenSuccess
+            Function<? super T, ? extends R> whenSuccess
     ) {
         return Result.success(whenSuccess.apply(success));
     }
