@@ -14,6 +14,7 @@ import java.time.temporal.ChronoUnit;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class TimeStatus implements Parcelable {
@@ -24,7 +25,9 @@ public class TimeStatus implements Parcelable {
     private Integer projectId;
     private Integer timeId;
     private LocalDateTime lastUpdate;
+    @Getter
     private LocalTime runningWorkTotal;
+    @Getter
     private LocalTime runningBreakTotal;
 
     @JsonCreator
@@ -107,6 +110,7 @@ public class TimeStatus implements Parcelable {
     }
 
     public NotificationData notificationData() {
+        update();
         return status.notificationData(this);
     }
 

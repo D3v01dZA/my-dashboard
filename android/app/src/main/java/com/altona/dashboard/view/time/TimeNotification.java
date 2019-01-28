@@ -13,16 +13,19 @@ import android.support.v4.app.NotificationCompat;
 
 import com.altona.dashboard.service.time.NotificationData;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
+import java.util.Date;
 import java.util.Objects;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class TimeNotification extends Service {
 
     private static final String TIME_CHANNEL_ID = "timeChannel";
     private static final int TIME_NOTIFICATION_ID = 879878979;
 
-    private static final int MINUTE = 1000 * 60;
     private static final String TIME_STATUS = "timeStatus";
 
     private static final int TIME_INTENT_CODE = 123981290;
@@ -37,8 +40,6 @@ public class TimeNotification extends Service {
         }
     }
 
-    private Timer timer = new Timer();
-
     @Override
     public IBinder onBind(Intent intent) {
         return null;
@@ -48,21 +49,11 @@ public class TimeNotification extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         TimeStatus timeStatus = Objects.requireNonNull(Objects.requireNonNull(intent.getExtras()).getParcelable(TIME_STATUS));
         startForeground(TIME_NOTIFICATION_ID, showNotification(getApplicationContext(), timeStatus));
-        timer.cancel();
-        timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                timeStatus.update();
-                startForeground(TIME_NOTIFICATION_ID, showNotification(getApplicationContext(), timeStatus));
-            }
-        }, 0, MINUTE);
         return START_STICKY;
     }
 
     @Override
     public void onDestroy() {
-        timer.cancel();
         super.onDestroy();
     }
 
@@ -78,15 +69,19 @@ public class TimeNotification extends Service {
             notificationManager.createNotificationChannel(channel);
         }
         NotificationData notificationData = timeStatus.notificationData();
+        long current = new Date().getTime();
+        long back = ChronoUnit.MILLIS.between(LocalTime.of(0, 0), notificationData.getTime());
         PendingIntent time = PendingIntent.getActivity(context, TIME_INTENT_CODE, new Intent(context, TimeActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
         return new NotificationCompat.Builder(context, TIME_CHANNEL_ID)
                 .setContentTitle(notificationData.getTitle())
-                .setContentText(notificationData.getTimer())
+                .setContentText(notificationData.getSubTitle())
                 .setSmallIcon(notificationData.getIcon())
                 .setOnlyAlertOnce(true)
                 .setSound(null)
                 .setContentIntent(time)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setShowWhen(true)
+                .setWhen(current - back)
                 .build();
     }
 }

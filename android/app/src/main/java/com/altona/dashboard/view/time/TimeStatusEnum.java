@@ -41,7 +41,7 @@ public enum TimeStatusEnum {
 
         @Override
         public NotificationData notificationData(TimeStatus timeStatus) {
-            return new NotificationData(R.drawable.ic_play, "Work", timeStatus.getRunningWorkTotal(SHORT_TIME_FORMATTER));
+            return new NotificationData(R.drawable.ic_play, "Time Tracker", "Work", timeStatus.getRunningWorkTotal());
         }
     },
     BREAK {
@@ -71,7 +71,7 @@ public enum TimeStatusEnum {
 
         @Override
         public NotificationData notificationData(TimeStatus timeStatus) {
-            return new NotificationData(R.drawable.ic_pause, "Break", timeStatus.getRunningBreakTotal(SHORT_TIME_FORMATTER));
+            return new NotificationData(R.drawable.ic_pause, "Time Tracker", "Break", timeStatus.getRunningBreakTotal());
         }
     },
     NONE {
