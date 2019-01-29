@@ -123,6 +123,7 @@ public enum TimeStatusEnum {
         for (int i = 0; i < projects.size(); i++) {
             if (projects.get(i).getId() == projectId) {
                 timeActivity.projectSpinner().setSelection(i);
+                return;
             }
         }
         throw new IllegalStateException("Couldn't find project id " + projectId + " + in " + projects);
