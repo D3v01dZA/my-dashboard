@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -19,11 +18,6 @@ public class ProjectFacade {
     @Transactional(readOnly = true)
     public List<Project> projects(User user) {
         return projectService.projects(user);
-    }
-
-    @Transactional(readOnly = true)
-    public Optional<Project> project(User user, int projectId) {
-        return projectService.project(user, projectId);
     }
 
     @Transactional

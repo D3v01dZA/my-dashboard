@@ -20,12 +20,6 @@ public class SynchronizationFacade {
     private ProjectService projectService;
     private SynchronizationService synchronizationService;
 
-    @Transactional(readOnly = true)
-    public Optional<SynchronizeResult> synchronize(UserContext userContext, int projectId, int synchronizationId, SynchronizeCommand command) {
-        return projectService.project(userContext, projectId)
-                .flatMap(project -> synchronizationService.synchronize(userContext, project, synchronizationId, command));
-    }
-
     @Transactional
     public Optional<Synchronization> createSynchronization(UserContext userContext, int projectId, Synchronization synchronization) {
         return projectService.project(userContext, projectId)
@@ -36,6 +30,12 @@ public class SynchronizationFacade {
     public Optional<List<SynchronizeResult>> synchronize(UserContext userContext, int projectId) {
         return projectService.project(userContext, projectId)
                 .map(project -> synchronizationService.synchronize(userContext, project));
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<SynchronizeResult> synchronize(UserContext userContext, int projectId, int synchronizationId, SynchronizeCommand command) {
+        return projectService.project(userContext, projectId)
+                .flatMap(project -> synchronizationService.synchronize(userContext, project, synchronizationId, command));
     }
 
 }

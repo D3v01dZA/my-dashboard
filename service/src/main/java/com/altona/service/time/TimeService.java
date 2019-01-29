@@ -9,6 +9,7 @@ import com.altona.service.time.summary.Summary;
 import com.altona.service.time.summary.SummaryConfiguration;
 import com.altona.service.time.summary.SummaryCreator;
 import com.altona.service.time.summary.SummaryFailure;
+import com.altona.service.time.view.TimeCombination;
 import com.altona.util.functional.Result;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,7 +22,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -86,29 +86,14 @@ public class TimeService {
                 .orElseGet(TimeStatus::none);
     }
 
-    public List<ZoneTime> zoneTimes(TimeConfig timeConfig, Project project) {
-        return timeRepository.timeList(project.getId())
-                .stream()
-                .map(time -> new ZoneTime(timeConfig, time))
-                .collect(Collectors.toList());
-    }
-
-    public Optional<ZoneTime> zoneTime(TimeConfig timeConfig, Project project, int timeId) {
-        return timeRepository.time(project.getId(), timeId)
-                .map(time -> new ZoneTime(timeConfig, time));
-    }
-
     public Result<Summary, SummaryFailure> summary(TimeConfig timeConfig, Project project, SummaryConfiguration configuration) {
-        List<ZoneTime> zoneTimeList = timeRepository
+        List<Time> times = timeRepository
                 .timeListBetween(
                         project.getId(),
                         timeConfig.unlocalize(configuration.getFrom()),
                         timeConfig.unlocalize(configuration.getTo())
-                )
-                .stream()
-                .map(time -> new ZoneTime(timeConfig, time))
-                .collect(Collectors.toList());
-        return SummaryCreator.create(configuration, zoneTimeList);
+                );
+        return new SummaryCreator(timeConfig, configuration).create(TimeCombination.createCombinations(times));
     }
 
     private Optional<TimeStatus> timeStatusInternal(List<Project> projects) {

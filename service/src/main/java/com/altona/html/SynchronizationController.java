@@ -23,20 +23,6 @@ public class SynchronizationController {
     private ObjectMapper objectMapper;
     private SynchronizationFacade synchronizationFacade;
 
-    @RequestMapping(path = "/time/project/{projectId}/synchronization/{synchronizationId}/synchronize", method = RequestMethod.POST, produces = "application/json")
-    public ResponseEntity<SynchronizeResult> synchronize(
-            Authentication authentication,
-            TimeZone timeZone,
-            @PathVariable Integer projectId,
-            @PathVariable Integer synchronizationId,
-            @RequestParam(required = false) Integer periodsBack
-    ) {
-        SynchronizeCommand command = periodsBack == null ? SynchronizeCommand.current() : SynchronizeCommand.previous(periodsBack);
-        return synchronizationFacade.synchronize(userService.getUserContext(authentication, timeZone), projectId, synchronizationId, command)
-                .map(synchronizeResult -> new ResponseEntity<>(synchronizeResult, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
     @RequestMapping(path = "/time/project/{projectId}/synchronization", method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<Synchronization> createSynchronization(
             Authentication authentication,
@@ -63,5 +49,19 @@ public class SynchronizationController {
                 .map(synchronizeResult -> new ResponseEntity<>(synchronizeResult, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
+    @RequestMapping(path = "/time/project/{projectId}/synchronization/{synchronizationId}/synchronize", method = RequestMethod.POST, produces = "application/json")
+    public ResponseEntity<SynchronizeResult> synchronize(
+            Authentication authentication,
+            TimeZone timeZone,
+            @PathVariable Integer projectId,
+            @PathVariable Integer synchronizationId,
+            @RequestParam(required = false) Integer periodsBack
+    ) {
+        SynchronizeCommand command = periodsBack == null ? SynchronizeCommand.current() : SynchronizeCommand.previous(periodsBack);
+        return synchronizationFacade.synchronize(userService.getUserContext(authentication, timeZone), projectId, synchronizationId, command)
+                .map(synchronizeResult -> new ResponseEntity<>(synchronizeResult, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
 
 }

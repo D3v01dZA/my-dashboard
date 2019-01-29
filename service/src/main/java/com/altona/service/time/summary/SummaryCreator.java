@@ -1,12 +1,12 @@
 package com.altona.service.time.summary;
 
-import com.altona.repository.db.time.time.TimeType;
-import com.altona.service.time.ZoneTime;
+import com.altona.service.time.view.TimeCombination;
+import com.altona.service.time.TimeConfig;
 import com.altona.util.functional.Result;
-import org.springframework.util.Assert;
+import lombok.AllArgsConstructor;
+import lombok.NonNull;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -14,35 +14,45 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+@AllArgsConstructor
 public class SummaryCreator {
 
     private static LocalTime NO_TIME = LocalTime.of(0, 0);
 
-    public static Result<Summary, SummaryFailure> create(SummaryConfiguration configuration, List<ZoneTime> zoneTimes) {
-        Map<LocalDate, LocalTime> timeMap = new LinkedHashMap<>();
-        for (ZoneTime zoneTime : zoneTimes) {
-            LocalDateTime fromDateTime = zoneTime.getStart();
-            Optional<LocalDateTime> end = zoneTime.getEnd();
-            if (!end.isPresent()) {
-                if (configuration.getNotStoppedAction() == NotStoppedAction.FAIL) {
+    @NonNull
+    private TimeConfig timeConfig;
+
+    @NonNull
+    private SummaryConfiguration summaryConfiguration;
+
+    public Result<Summary, SummaryFailure> create(List<TimeCombination> timeCombinations) {
+        Date now = new Date();
+        Map<LocalDate, LocalTime> timeMap = new HashMap<>();
+        for (TimeCombination timeCombination : timeCombinations) {
+            if (!timeCombination.isStopped()) {
+                if (summaryConfiguration.getNotStoppedAction() == NotStoppedAction.FAIL) {
                     return Result.error(SummaryFailure.CURRENTLY_RUNNING_TIME);
-                } else if (configuration.getNotStoppedAction() == NotStoppedAction.INCLUDE) {
-                    LocalDateTime toDateTime = configuration.getLocalizedUserNow();
-                    addTime(timeMap, fromDateTime, toDateTime, zoneTime);
+                } else if (summaryConfiguration.getNotStoppedAction() == NotStoppedAction.INCLUDE) {
+                    Optional<SummaryFailure> failure = addTime(timeMap, timeCombination, now);
+                    if (failure.isPresent()) {
+                        return Result.error(failure.get());
+                    }
                 }
             } else {
-                LocalDateTime toDateTime = end.get();
-                addTime(timeMap, fromDateTime, toDateTime, zoneTime);
+                Optional<SummaryFailure> failure = addTime(timeMap, timeCombination, now);
+                if (failure.isPresent()) {
+                    return Result.error(failure.get());
+                }
             }
         }
 
-        LocalDate from = configuration.getFrom();
-        LocalDate to = configuration.getTo();
+        LocalDate from = summaryConfiguration.getFrom();
+        LocalDate to = summaryConfiguration.getTo();
         Predicate<LocalDate> between = betweenInclusive(from, to);
         LinkedHashMap<LocalDate, SummaryTime> summaryTimes = timeMap.entrySet().stream()
                 .filter(entry -> between.test(entry.getKey()))
                 .sorted(Comparator.comparing(Map.Entry::getKey))
-                .map(entry -> new SummaryTime(entry.getKey(), configuration.getRounding().round(entry.getValue())))
+                .map(entry -> new SummaryTime(entry.getKey(), summaryConfiguration.getRounding().round(entry.getValue())))
                 .collect(Collectors.toMap(
                         SummaryTime::getDate,
                         Function.identity(),
@@ -52,37 +62,18 @@ public class SummaryCreator {
         return Result.success(new Summary(from, to, summaryTimes));
     }
 
-    private static void addTime(Map<LocalDate, LocalTime> timeMap, LocalDateTime fromDateTime, LocalDateTime toDateTime, ZoneTime zoneTime) {
-        LocalDate fromDate = fromDateTime.toLocalDate();
-        LocalDate toDate = toDateTime.toLocalDate();
+    private Optional<SummaryFailure> addTime(Map<LocalDate, LocalTime> map, TimeCombination time, Date now) {
+        LocalDate fromDate = timeConfig.localize(time.getStart()).toLocalDate();
+        LocalDate toDate = timeConfig.localize(time.getEnd(now)).toLocalDate();
         if (fromDate.equals(toDate)) {
-            addTime(timeMap, fromDate, fromDateTime, toDateTime, zoneTime.getType());
+            LocalTime currentTime = map.get(fromDate);
+            if (currentTime == null) {
+                currentTime = NO_TIME;
+            }
+            map.put(fromDate, currentTime.plus(time.time(now).toNanoOfDay(), ChronoUnit.NANOS));
+            return Optional.empty();
         } else {
-            addTimes(timeMap, fromDate, toDate, fromDateTime, toDateTime, zoneTime.getType());
-        }
-    }
-
-
-    private static void addTimes(Map<LocalDate, LocalTime> map, LocalDate lowerDate, LocalDate upperDate, LocalDateTime fromDate, LocalDateTime toDate, TimeType type) {
-        Assert.isTrue(fromDate.isBefore(toDate), "Somehow ended up with a from date less than the to date");
-        // Add the first dates values
-        addTime(map, lowerDate, fromDate, lowerDate.plusDays(1).atStartOfDay(), type);
-        // Add the middle dates values
-        LocalDate currentDate = lowerDate.plusDays(1);
-        while (!currentDate.equals(upperDate)) {
-            addTime(map, currentDate, lowerDate.atStartOfDay(), lowerDate.plusDays(1).atStartOfDay(), type);
-            currentDate = currentDate.plusDays(1);
-        }
-        // Add the last dates values
-        addTime(map, upperDate, upperDate.atStartOfDay(), toDate, type);
-    }
-
-    private static void addTime(Map<LocalDate, LocalTime> map, LocalDate onDate, LocalDateTime fromDate, LocalDateTime toDate, TimeType type) {
-        LocalTime difference = LocalTime.ofNanoOfDay(ChronoUnit.NANOS.between(fromDate, toDate));
-        if (map.containsKey(onDate)) {
-            map.put(onDate, type.add(map.get(onDate), difference));
-        } else {
-            map.put(onDate, type.add(NO_TIME, difference));
+            return Optional.of(SummaryFailure.TIME_CROSSING_DAYS);
         }
     }
 

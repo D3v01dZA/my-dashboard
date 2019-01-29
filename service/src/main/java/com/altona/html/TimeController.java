@@ -3,17 +3,14 @@ package com.altona.html;
 import com.altona.facade.TimeFacade;
 import com.altona.security.UserContext;
 import com.altona.security.UserService;
-import com.altona.service.time.ZoneTime;
 import com.altona.service.time.control.*;
 import com.altona.service.time.summary.type.SummaryType;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.TimeZone;
 
 @RestController
@@ -22,7 +19,6 @@ public class TimeController {
 
     private UserService userService;
     private TimeFacade timeFacade;
-    private ObjectMapper objectMapper;
 
     @RequestMapping(path = "/time/project/{projectId}/start-work", method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<WorkStart> startWork(
@@ -69,29 +65,6 @@ public class TimeController {
             Authentication authentication
     ) {
         return timeFacade.timeStatus(userService.getUser(authentication));
-    }
-
-    @RequestMapping(path = "/time/project/{projectId}/time", method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<List<ZoneTime>> getTime(
-            Authentication authentication,
-            TimeZone timeZone,
-            @PathVariable Integer projectId
-    ) {
-        return timeFacade.times(userService.getUserContext(authentication, timeZone), projectId)
-                .map(timeList -> new ResponseEntity<>(timeList, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
-    @RequestMapping(path = "/time/project/{projectId}/time/{timeId}", method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<ZoneTime> getTime(
-            Authentication authentication,
-            TimeZone timeZone,
-            @PathVariable Integer projectId,
-            @PathVariable Integer timeId
-    ) {
-        return timeFacade.time(userService.getUserContext(authentication, timeZone), projectId, timeId)
-                .map(timeList -> new ResponseEntity<>(timeList, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @RequestMapping(path = "/time/project/{projectId}/summary", method = RequestMethod.GET, produces = "application/json")

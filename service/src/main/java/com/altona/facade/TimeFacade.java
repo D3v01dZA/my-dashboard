@@ -5,7 +5,6 @@ import com.altona.security.User;
 import com.altona.security.UserContext;
 import com.altona.service.time.ProjectService;
 import com.altona.service.time.TimeService;
-import com.altona.service.time.ZoneTime;
 import com.altona.service.time.control.*;
 import com.altona.service.time.summary.Summary;
 import com.altona.service.time.summary.SummaryConfiguration;
@@ -56,18 +55,6 @@ public class TimeFacade {
     public TimeStatus timeStatus(User user) {
         List<Project> projects = projectService.projects(user);
         return timeService.timeStatus(projects);
-    }
-
-    @Transactional(readOnly = true)
-    public Optional<List<ZoneTime>> times(UserContext userContext, int projectId) {
-        return projectService.project(userContext, projectId)
-                .map(project -> timeService.zoneTimes(userContext, project));
-    }
-
-    @Transactional(readOnly = true)
-    public Optional<ZoneTime> time(UserContext userContext, int projectId, int timeId) {
-        return projectService.project(userContext, projectId)
-                .flatMap(project -> timeService.zoneTime(userContext, project, timeId));
     }
 
     @Transactional(readOnly = true)
