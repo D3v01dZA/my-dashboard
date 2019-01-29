@@ -48,8 +48,6 @@ public class SettingsActivity extends InsecureAppActivity {
         UsableRecycler<RecyclerSettingRow> recycler = recycler();
         List<RecyclerSettingRow> recyclerSettingRows = new ArrayList<>();
         recyclerSettingRows.add(new RecyclerSettingRow("Host", settings.getHost(), settings::setHost));
-        recyclerSettingRows.add(new RecyclerSettingRow("Host", settings.getHost(), settings::setHost));
-        recyclerSettingRows.add(new RecyclerSettingRow("Host", settings.getHost(), settings::setHost));
 
         recycler.setup(
                 R.layout.basic_row,
