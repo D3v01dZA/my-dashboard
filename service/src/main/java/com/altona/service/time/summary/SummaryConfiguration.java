@@ -6,7 +6,6 @@ import lombok.NonNull;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Getter
 @AllArgsConstructor
@@ -23,5 +22,8 @@ public class SummaryConfiguration {
 
     @NonNull
     private TimeRounding rounding;
+
+    @NonNull
+    private NotStoppedAction notStoppedAction;
 
 }

@@ -8,6 +8,7 @@ import com.altona.service.time.control.*;
 import com.altona.service.time.summary.Summary;
 import com.altona.service.time.summary.SummaryConfiguration;
 import com.altona.service.time.summary.SummaryCreator;
+import com.altona.util.functional.Result;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -96,7 +97,7 @@ public class TimeService {
                 .map(time -> new ZoneTime(timeConfig, time));
     }
 
-    public Summary summary(TimeConfig timeConfig, Project project, SummaryConfiguration configuration) {
+    public Result<Summary, String> summary(TimeConfig timeConfig, Project project, SummaryConfiguration configuration) {
         List<ZoneTime> zoneTimeList = timeRepository
                 .timeListBetween(
                         project.getId(),

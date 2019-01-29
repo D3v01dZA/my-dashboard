@@ -2,16 +2,14 @@ package com.altona.service.time.summary;
 
 import com.altona.repository.db.time.time.TimeType;
 import com.altona.service.time.ZoneTime;
+import com.altona.util.functional.Result;
 import org.springframework.util.Assert;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -20,17 +18,21 @@ public class SummaryCreator {
 
     private static LocalTime NO_TIME = LocalTime.of(0, 0);
 
-    public static Summary create(SummaryConfiguration configuration, List<ZoneTime> zoneTimes) {
+    public static Result<Summary, String> create(SummaryConfiguration configuration, List<ZoneTime> zoneTimes) {
         Map<LocalDate, LocalTime> timeMap = new LinkedHashMap<>();
         for (ZoneTime zoneTime : zoneTimes) {
             LocalDateTime fromDateTime = zoneTime.getStart();
-            LocalDateTime toDateTime = zoneTime.getEnd().orElse(configuration.getLocalizedUserNow());
-            LocalDate fromDate = fromDateTime.toLocalDate();
-            LocalDate toDate = toDateTime.toLocalDate();
-            if (fromDate.equals(toDate)) {
-                addTime(timeMap, fromDate, fromDateTime, toDateTime, zoneTime.getType());
+            Optional<LocalDateTime> end = zoneTime.getEnd();
+            if (!end.isPresent()) {
+                if (configuration.getNotStoppedAction() == NotStoppedAction.FAIL) {
+                    return Result.error("A currently running time was found for this summary");
+                } else if (configuration.getNotStoppedAction() == NotStoppedAction.INCLUDE) {
+                    LocalDateTime toDateTime = configuration.getLocalizedUserNow();
+                    addTime(timeMap, fromDateTime, toDateTime, zoneTime);
+                }
             } else {
-                addTimes(timeMap, fromDate, toDate, fromDateTime, toDateTime, zoneTime.getType());
+                LocalDateTime toDateTime = end.get();
+                addTime(timeMap, fromDateTime, toDateTime, zoneTime);
             }
         }
 
@@ -47,7 +49,17 @@ public class SummaryCreator {
                         (one, two) -> { throw new IllegalStateException("Should be impossible but " + one + " and " + two + " are identical"); },
                         LinkedHashMap::new
                 ));
-        return new Summary(from, to, summaryTimes);
+        return Result.success(new Summary(from, to, summaryTimes));
+    }
+
+    private static void addTime(Map<LocalDate, LocalTime> timeMap, LocalDateTime fromDateTime, LocalDateTime toDateTime, ZoneTime zoneTime) {
+        LocalDate fromDate = fromDateTime.toLocalDate();
+        LocalDate toDate = toDateTime.toLocalDate();
+        if (fromDate.equals(toDate)) {
+            addTime(timeMap, fromDate, fromDateTime, toDateTime, zoneTime.getType());
+        } else {
+            addTimes(timeMap, fromDate, toDate, fromDateTime, toDateTime, zoneTime.getType());
+        }
     }
 
 

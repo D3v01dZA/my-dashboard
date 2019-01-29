@@ -130,7 +130,7 @@ public class TimeController {
     }
 
     @RequestMapping(path = "/time/project/{projectId}/summary", method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<Summary> getSummary(
+    public ResponseEntity<Object> getSummary(
             Authentication authentication,
             TimeZone timeZone,
             @PathVariable Integer projectId,
@@ -138,7 +138,10 @@ public class TimeController {
     ) {
         UserContext userContext = userService.getUserContext(authentication, timeZone);
         return timeFacade.summary(userContext, projectId, type.getConfiguration(userContext))
-                .map(timeList -> new ResponseEntity<>(timeList, HttpStatus.OK))
+                .map(summaryResult -> summaryResult.map(
+                        summary -> new ResponseEntity<Object>(summary, HttpStatus.OK),
+                        error -> new ResponseEntity<Object>(error, HttpStatus.CONFLICT)
+                ))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 

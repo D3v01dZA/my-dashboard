@@ -10,6 +10,7 @@ import com.altona.service.time.TimeService;
 import com.altona.service.time.summary.Summary;
 import com.altona.service.time.summary.SummaryConfiguration;
 import com.altona.service.time.summary.TimeRounding;
+import com.altona.service.time.summary.NotStoppedAction;
 import com.altona.service.time.synchronize.SynchronizationCommand;
 import com.altona.service.time.synchronize.SynchronizationResult;
 import com.altona.service.time.synchronize.SynchronizationService;
@@ -71,20 +72,25 @@ public class MaconomyService implements SynchronizationService {
     }
 
     private Result<SynchronizationResult, String> saveTimeData(Get currentTime, UserContext userContext, Project project) {
+        CardData cardData = currentTime.getCardRecord().getData();
+        SummaryConfiguration configuration = new SummaryConfiguration(
+                userContext.localize(new Date()),
+                cardData.getPeriodstartvar(),
+                cardData.getPeriodendvar(),
+                TimeRounding.NEAREST_FIFTEEN,
+                NotStoppedAction.FAIL
+        );
+
+        return timeService.summary(userContext, project, configuration)
+                .flatMapSuccess(summary -> saveTimeDataWithSummary(currentTime, summary, cardData, userContext, project));
+    }
+
+    private Result<SynchronizationResult, String> saveTimeDataWithSummary(Get currentTime, Summary summary, CardData cardData, UserContext userContext, Project project) {
         TableRecord tableRecord = currentTime.getTableRecord();
-        CardRecord cardRecord = currentTime.getCardRecord();
-        CardData cardData = cardRecord.getData();
         TimeData timeData = tableRecord.getData();
-        TableMeta tableMeta = tableRecord.getMeta();
-
-        SummaryConfiguration configuration = new SummaryConfiguration(userContext.localize(new Date()), cardData.getPeriodstartvar(), cardData.getPeriodendvar(), TimeRounding.NEAREST_FIFTEEN);
-        Summary summary = timeService.summary(userContext, project, configuration);
         rewriteTimes(timeData, summary);
-
-        return maconomyRepository.writeTimeData(userContext, userContext.getId(), project.getId(), maconomyConfiguration, cardData, tableMeta, timeData)
-                .mapSuccess(
-                        savedTime -> SynchronizationResult.success(this, summary)
-                );
+        return maconomyRepository.writeTimeData(userContext, userContext.getId(), project.getId(), maconomyConfiguration, cardData, tableRecord.getMeta(), timeData)
+                .mapSuccess(savedTimeData -> SynchronizationResult.success(this, summary));
     }
 
     private SynchronizationResult error(String error) {
