@@ -11,9 +11,9 @@ import com.altona.service.time.summary.Summary;
 import com.altona.service.time.summary.SummaryConfiguration;
 import com.altona.service.time.summary.TimeRounding;
 import com.altona.service.time.summary.NotStoppedAction;
-import com.altona.service.time.synchronize.SynchronizationCommand;
-import com.altona.service.time.synchronize.SynchronizationResult;
-import com.altona.service.time.synchronize.SynchronizationService;
+import com.altona.service.time.synchronize.SynchronizeCommand;
+import com.altona.service.time.synchronize.SynchronizeResult;
+import com.altona.service.time.synchronize.Synchronizer;
 import com.altona.util.LocalDateIterator;
 import com.altona.util.functional.Result;
 import lombok.AllArgsConstructor;
@@ -28,7 +28,7 @@ import static java.util.function.Function.identity;
 
 // This is not an @Service because it is constructed based on the user
 @AllArgsConstructor
-public class MaconomyService implements SynchronizationService {
+public class MaconomySynchronizer implements Synchronizer {
 
     // Application Beans
     private TimeService timeService;
@@ -44,7 +44,7 @@ public class MaconomyService implements SynchronizationService {
     }
 
     @Override
-    public SynchronizationResult synchronize(UserContext userContext, Project project, SynchronizationCommand command) {
+    public SynchronizeResult synchronize(UserContext userContext, Project project, SynchronizeCommand command) {
         int periodsBack = command.getPeriodsBack();
         // Logic isn't clean for the 0 case because of where Card information is - might do an API review to remove this special case?
         if (periodsBack == 0) {
@@ -57,7 +57,7 @@ public class MaconomyService implements SynchronizationService {
                 .map(identity(), this::error);
     }
 
-    private Result<SynchronizationResult, String> saveTimeDataRelative(CardData cardData, UserContext userContext, Project project, int periodsBack) {
+    private Result<SynchronizeResult, String> saveTimeDataRelative(CardData cardData, UserContext userContext, Project project, int periodsBack) {
         LocalDate periodStart = cardData.getPeriodstartvar();
         String employee = cardData.getEmployeenumbervar();
         return maconomyRepository.timeData(userContext, userContext.getId(), project.getId(), maconomyConfiguration, periodStart.minusDays(1), employee)
@@ -71,7 +71,7 @@ public class MaconomyService implements SynchronizationService {
                 });
     }
 
-    private Result<SynchronizationResult, String> saveTimeData(Get currentTime, UserContext userContext, Project project) {
+    private Result<SynchronizeResult, String> saveTimeData(Get currentTime, UserContext userContext, Project project) {
         CardData cardData = currentTime.getCardRecord().getData();
         SummaryConfiguration configuration = new SummaryConfiguration(
                 userContext.localize(new Date()),
@@ -85,16 +85,16 @@ public class MaconomyService implements SynchronizationService {
                 .flatMapSuccess(summary -> saveTimeDataWithSummary(currentTime, summary, cardData, userContext, project));
     }
 
-    private Result<SynchronizationResult, String> saveTimeDataWithSummary(Get currentTime, Summary summary, CardData cardData, UserContext userContext, Project project) {
+    private Result<SynchronizeResult, String> saveTimeDataWithSummary(Get currentTime, Summary summary, CardData cardData, UserContext userContext, Project project) {
         TableRecord tableRecord = currentTime.getTableRecord();
         TimeData timeData = tableRecord.getData();
         rewriteTimes(timeData, summary);
         return maconomyRepository.writeTimeData(userContext, userContext.getId(), project.getId(), maconomyConfiguration, cardData, tableRecord.getMeta(), timeData)
-                .mapSuccess(savedTimeData -> SynchronizationResult.success(this, summary));
+                .mapSuccess(savedTimeData -> SynchronizeResult.success(this, summary));
     }
 
-    private SynchronizationResult error(String error) {
-        return SynchronizationResult.failure(this, error);
+    private SynchronizeResult error(String error) {
+        return SynchronizeResult.failure(this, error);
     }
 
     private static void rewriteTimes(TimeData timeData, Summary summary) {

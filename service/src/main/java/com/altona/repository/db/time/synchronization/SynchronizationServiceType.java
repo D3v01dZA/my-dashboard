@@ -3,9 +3,9 @@ package com.altona.repository.db.time.synchronization;
 import com.altona.repository.integration.maconomy.MaconomyConfiguration;
 import com.altona.repository.integration.maconomy.MaconomyRepository;
 import com.altona.service.time.TimeService;
-import com.altona.service.time.synchronize.SynchronizationError;
-import com.altona.service.time.synchronize.SynchronizationService;
-import com.altona.service.time.synchronize.maconomy.MaconomyService;
+import com.altona.service.time.synchronize.SynchronizeError;
+import com.altona.service.time.synchronize.Synchronizer;
+import com.altona.service.time.synchronize.maconomy.MaconomySynchronizer;
 import com.altona.util.functional.Result;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,12 +33,12 @@ public enum SynchronizationServiceType {
         }
 
         @Override
-        public Result<SynchronizationService, SynchronizationError> createService(ApplicationContext applicationContext, Synchronization synchronization) {
+        public Result<Synchronizer, SynchronizeError> createService(ApplicationContext applicationContext, Synchronization synchronization) {
             ObjectMapper objectMapper = applicationContext.getBean(ObjectMapper.class);
             try {
                 MaconomyConfiguration maconomyConfiguration = objectMapper.treeToValue(synchronization.getConfiguration(), MaconomyConfiguration.class);
                 return Result.success(
-                        new MaconomyService(
+                        new MaconomySynchronizer(
                                 applicationContext.getBean(TimeService.class),
                                 applicationContext.getBean(MaconomyRepository.class),
                                 synchronization.getId(),
@@ -47,7 +47,7 @@ public enum SynchronizationServiceType {
                 );
             } catch (IOException e) {
                 LOGGER.warn("Invalid Configuration", e);
-                return Result.error(new SynchronizationError(synchronization.getId(), "Could not read saved maconomy configuration"));
+                return Result.error(new SynchronizeError(synchronization.getId(), "Could not read saved maconomy configuration"));
             }
         }
     };
@@ -56,6 +56,6 @@ public enum SynchronizationServiceType {
 
     public abstract boolean hasValidConfiguration(ObjectMapper objectMapper, Synchronization synchronization);
 
-    public abstract Result<SynchronizationService, SynchronizationError> createService(ApplicationContext applicationContext, Synchronization synchronization);
+    public abstract Result<Synchronizer, SynchronizeError> createService(ApplicationContext applicationContext, Synchronization synchronization);
 
 }

@@ -1,7 +1,6 @@
 package com.altona.facade;
 
 import com.altona.repository.db.time.project.Project;
-import com.altona.repository.db.time.synchronization.Synchronization;
 import com.altona.security.User;
 import com.altona.security.UserContext;
 import com.altona.service.time.ProjectService;
@@ -10,9 +9,6 @@ import com.altona.service.time.ZoneTime;
 import com.altona.service.time.control.*;
 import com.altona.service.time.summary.Summary;
 import com.altona.service.time.summary.SummaryConfiguration;
-import com.altona.service.time.synchronize.SynchronizationCommand;
-import com.altona.service.time.synchronize.SynchronizationResult;
-import com.altona.service.time.synchronize.TimeSynchronizationService;
 import com.altona.util.functional.Result;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,26 +23,6 @@ public class TimeFacade {
 
     private ProjectService projectService;
     private TimeService timeService;
-    private TimeSynchronizationService timeSynchronizationService;
-
-    // Projects
-
-    @Transactional(readOnly = true)
-    public List<Project> projects(User user) {
-        return projectService.projects(user);
-    }
-
-    @Transactional(readOnly = true)
-    public Optional<Project> project(User user, int projectId) {
-        return projectService.project(user, projectId);
-    }
-
-    @Transactional
-    public Project createProject(User user, Project project) {
-        return projectService.createProject(user, project);
-    }
-
-    // Time
 
     @Transactional
     public Optional<WorkStart> startWork(User user, int projectId) {
@@ -97,26 +73,6 @@ public class TimeFacade {
     public Optional<Result<Summary, String>> summary(UserContext userContext, int projectId, SummaryConfiguration configuration) {
         return projectService.project(userContext, projectId)
                 .map(project -> timeService.summary(userContext, project, configuration));
-    }
-
-    // Synchronization
-
-    @Transactional(readOnly = true)
-    public Optional<SynchronizationResult> synchronize(UserContext userContext, int projectId, int synchronizationId, SynchronizationCommand command) {
-        return projectService.project(userContext, projectId)
-                .flatMap(project -> timeSynchronizationService.synchronize(userContext, project, synchronizationId, command));
-    }
-
-    @Transactional
-    public Optional<Synchronization> createSynchronization(UserContext userContext, int projectId, Synchronization synchronization) {
-        return projectService.project(userContext, projectId)
-                .map(project -> timeSynchronizationService.createSynchronization(userContext, project, synchronization));
-    }
-
-    @Transactional(readOnly = true)
-    public Optional<List<SynchronizationResult>> synchronize(UserContext userContext, int projectId) {
-        return projectService.project(userContext, projectId)
-                .map(project -> timeSynchronizationService.synchronize(userContext, project));
     }
 
 }

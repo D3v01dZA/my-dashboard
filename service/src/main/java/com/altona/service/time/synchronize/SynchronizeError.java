@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class SynchronizationError {
+public class SynchronizeError {
 
     private int synchronizationId;
     private String detail;

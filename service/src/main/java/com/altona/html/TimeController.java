@@ -1,16 +1,11 @@
 package com.altona.html;
 
 import com.altona.facade.TimeFacade;
-import com.altona.repository.db.time.project.Project;
-import com.altona.repository.db.time.synchronization.Synchronization;
 import com.altona.security.UserContext;
 import com.altona.security.UserService;
 import com.altona.service.time.ZoneTime;
 import com.altona.service.time.control.*;
-import com.altona.service.time.summary.Summary;
 import com.altona.service.time.summary.type.SummaryType;
-import com.altona.service.time.synchronize.SynchronizationCommand;
-import com.altona.service.time.synchronize.SynchronizationResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -28,36 +23,6 @@ public class TimeController {
     private UserService userService;
     private TimeFacade timeFacade;
     private ObjectMapper objectMapper;
-
-    // Project
-
-    @RequestMapping(path = "/time/project", method = RequestMethod.GET, produces = "application/json")
-    public List<Project> getProjects(
-            Authentication authentication
-    ) {
-        return timeFacade.projects(userService.getUser(authentication));
-    }
-
-    @RequestMapping(path = "/time/project/{projectId}", method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<Project> getProject(
-            Authentication authentication,
-            @PathVariable Integer projectId
-    ) {
-        return timeFacade.project(userService.getUser(authentication), projectId)
-                .map(project -> new ResponseEntity<>(project, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
-    @RequestMapping(path = "/time/project", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
-    @ResponseStatus(HttpStatus.CREATED)
-    public Project createProject(
-            Authentication authentication,
-            @RequestBody Project project
-    ) {
-        return timeFacade.createProject(userService.getUser(authentication), project);
-    }
-
-    // Time
 
     @RequestMapping(path = "/time/project/{projectId}/start-work", method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<WorkStart> startWork(
@@ -142,49 +107,6 @@ public class TimeController {
                         summary -> new ResponseEntity<Object>(summary, HttpStatus.OK),
                         error -> new ResponseEntity<Object>(error, HttpStatus.CONFLICT)
                 ))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
-    // Synchronization
-
-    @RequestMapping(path = "/time/project/{projectId}/synchronization/{synchronizationId}/synchronize", method = RequestMethod.POST, produces = "application/json")
-    public ResponseEntity<SynchronizationResult> synchronize(
-            Authentication authentication,
-            TimeZone timeZone,
-            @PathVariable Integer projectId,
-            @PathVariable Integer synchronizationId,
-            @RequestParam(required = false) Integer periodsBack
-    ) {
-        SynchronizationCommand command = periodsBack == null ? SynchronizationCommand.current() : SynchronizationCommand.previous(periodsBack);
-        return timeFacade.synchronize(userService.getUserContext(authentication, timeZone), projectId, synchronizationId, command)
-                .map(synchronizeResult -> new ResponseEntity<>(synchronizeResult, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
-    @RequestMapping(path = "/time/project/{projectId}/synchronization", method = RequestMethod.POST, produces = "application/json")
-    public ResponseEntity<Synchronization> createSynchronization(
-            Authentication authentication,
-            TimeZone timeZone,
-            @PathVariable Integer projectId,
-            @RequestBody Synchronization synchronization
-    ) {
-        if (!synchronization.hasValidConfiguration(objectMapper)) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-        return timeFacade.createSynchronization(userService.getUserContext(authentication, timeZone), projectId, synchronization)
-                .map(created -> new ResponseEntity<>(created, HttpStatus.CREATED))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
-
-    @RequestMapping(path = "/time/project/{projectId}/synchronize", method = RequestMethod.POST, produces = "application/json")
-    public ResponseEntity<List<SynchronizationResult>> synchronize(
-            Authentication authentication,
-            TimeZone timeZone,
-            @PathVariable Integer projectId
-    ) {
-        return timeFacade.synchronize(userService.getUserContext(authentication, timeZone), projectId)
-                .map(synchronizeResult -> new ResponseEntity<>(synchronizeResult, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 

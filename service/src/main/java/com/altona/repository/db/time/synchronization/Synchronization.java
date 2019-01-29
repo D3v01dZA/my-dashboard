@@ -1,7 +1,7 @@
 package com.altona.repository.db.time.synchronization;
 
-import com.altona.service.time.synchronize.SynchronizationError;
-import com.altona.service.time.synchronize.SynchronizationService;
+import com.altona.service.time.synchronize.SynchronizeError;
+import com.altona.service.time.synchronize.Synchronizer;
 import com.altona.util.functional.Result;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,7 +31,7 @@ public class Synchronization {
         return service.hasValidConfiguration(objectMapper, this);
     }
 
-    public Result<SynchronizationService, SynchronizationError> createService(ApplicationContext applicationContext) {
+    public Result<Synchronizer, SynchronizeError> createService(ApplicationContext applicationContext) {
         return service.createService(applicationContext, this);
     }
 
