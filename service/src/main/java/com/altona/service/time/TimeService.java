@@ -100,8 +100,8 @@ public class TimeService {
         List<ZoneTime> zoneTimeList = timeRepository
                 .timeListBetween(
                         project.getId(),
-                        timeConfig.mapLocalDate(configuration.getFrom()),
-                        timeConfig.mapLocalDate(configuration.getTo())
+                        timeConfig.unlocalize(configuration.getFrom()),
+                        timeConfig.unlocalize(configuration.getTo())
                 )
                 .stream()
                 .map(time -> new ZoneTime(timeConfig, time))

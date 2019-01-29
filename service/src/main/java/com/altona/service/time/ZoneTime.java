@@ -27,7 +27,7 @@ public class ZoneTime {
     private LocalDateTime end;
 
     ZoneTime(TimeConfig timeConfig, Time time) {
-        this(time.getId(), time.getType(), timeConfig.mapDateTime(time.getStart()), time.getEnd().map(timeConfig::mapDateTime).orElse(null));
+        this(time.getId(), time.getType(), timeConfig.localize(time.getStart()), time.getEnd().map(timeConfig::localize).orElse(null));
     }
 
     public Optional<LocalDateTime> getEnd() {

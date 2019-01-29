@@ -21,11 +21,10 @@ public class SummaryCreator {
     private static LocalTime NO_TIME = LocalTime.of(0, 0);
 
     public static Summary create(SummaryConfiguration configuration, List<ZoneTime> zoneTimes) {
-        LocalDateTime now = LocalDateTime.now();
         Map<LocalDate, LocalTime> timeMap = new LinkedHashMap<>();
         for (ZoneTime zoneTime : zoneTimes) {
             LocalDateTime fromDateTime = zoneTime.getStart();
-            LocalDateTime toDateTime = zoneTime.getEnd().orElse(now);
+            LocalDateTime toDateTime = zoneTime.getEnd().orElse(configuration.getLocalizedUserNow());
             LocalDate fromDate = fromDateTime.toLocalDate();
             LocalDate toDate = toDateTime.toLocalDate();
             if (fromDate.equals(toDate)) {

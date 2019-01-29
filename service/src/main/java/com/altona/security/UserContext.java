@@ -32,7 +32,7 @@ public class UserContext extends User implements TimeConfig, Encryptor {
 
     @Override
     public LocalDate today() {
-        return mapDateTime(now).toLocalDate();
+        return localize(now).toLocalDate();
     }
 
     @Override
@@ -41,12 +41,12 @@ public class UserContext extends User implements TimeConfig, Encryptor {
     }
 
     @Override
-    public LocalDateTime mapDateTime(Date date) {
+    public LocalDateTime localize(Date date) {
         return date.toInstant().atZone(timeZone.toZoneId()).toLocalDateTime();
     }
 
     @Override
-    public Date mapLocalDate(LocalDate localDate) {
+    public Date unlocalize(LocalDate localDate) {
         return Date.from(localDate.atStartOfDay(timeZone.toZoneId()).toInstant());
     }
 

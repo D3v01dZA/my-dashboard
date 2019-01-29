@@ -10,8 +10,8 @@ public interface TimeConfig {
 
     LocalDate firstDayOfWeek();
 
-    LocalDateTime mapDateTime(Date date);
+    LocalDateTime localize(Date date);
 
-    Date mapLocalDate(LocalDate localDate);
+    Date unlocalize(LocalDate localDate);
 
 }

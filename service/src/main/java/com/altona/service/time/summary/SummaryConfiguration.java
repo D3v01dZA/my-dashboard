@@ -5,10 +5,15 @@ import lombok.Getter;
 import lombok.NonNull;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Date;
 
 @Getter
 @AllArgsConstructor
 public class SummaryConfiguration {
+
+    @NonNull
+    private LocalDateTime localizedUserNow;
 
     @NonNull
     private LocalDate from;

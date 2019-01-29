@@ -110,11 +110,13 @@ public class TimeRepository {
 
     public List<Time> timeListBetween(int projectId, Date from, Date to) {
         return namedJdbc.query(
-                "SELECT id, type, start_time, end_time FROM time WHERE end_time IS NOT NULL " +
-                        "AND (end_time < :toDate AND start_time > :fromDate) " +
-                        "OR (end_time > :toDate AND start_time > :fromDate) " +
-                        "OR (end_time < :toDate AND start_time < :fromDate) " +
-                        "OR (end_time > :toDate AND start_time < :fromDate) " +
+                "SELECT id, type, start_time, end_time FROM time WHERE " +
+                        "(" +
+                        "   (end_time IS NULL AND (start_time > :fromDate OR start_time < :toDate))" +
+                        "   OR (end_time < :toDate AND start_time > :fromDate) " +
+                        "   OR (start_time < :fromDate AND end_time > :fromDate) " +
+                        "   OR (end_time < :toDate AND end_time > :toDate) " +
+                        ") " +
                         "AND project_id = :projectId " +
                         "ORDER BY start_time ASC, end_time ASC",
                 new MapSqlParameterSource()

@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Date;
 
 import static java.util.function.Function.identity;
 
@@ -76,7 +77,7 @@ public class MaconomyService implements SynchronizationService {
         TimeData timeData = tableRecord.getData();
         TableMeta tableMeta = tableRecord.getMeta();
 
-        SummaryConfiguration configuration = new SummaryConfiguration(cardData.getPeriodstartvar(), cardData.getPeriodendvar(), TimeRounding.NEAREST_FIFTEEN);
+        SummaryConfiguration configuration = new SummaryConfiguration(userContext.localize(new Date()), cardData.getPeriodstartvar(), cardData.getPeriodendvar(), TimeRounding.NEAREST_FIFTEEN);
         Summary summary = timeService.summary(userContext, project, configuration);
         rewriteTimes(timeData, summary);
 
