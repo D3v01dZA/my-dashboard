@@ -32,7 +32,7 @@
             android:layout_height="1dp"
             android:background="?android:attr/listDivider" />
 
-        <android.support.v7.widget.RecyclerView
+        <com.altona.dashboard.component.UsableRecycler
             android:id="@+id/recycler_view_settings"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
