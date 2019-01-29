@@ -27,6 +27,23 @@ public class UsableRecycler<T> extends RecyclerView {
     public void setup(
             int rowLayout,
             List<T> items,
+            UsableRowRenderer<T> rowRenderer
+    ) {
+        setup(rowLayout, items, rowRenderer, (view, timeSummaryEntry) -> { }, (view, timeSummaryEntry) -> { });
+    }
+
+    public void setup(
+            int rowLayout,
+            List<T> items,
+            UsableRowRenderer<T> rowRenderer,
+            UsableClickHandler<T> rowClickHandler
+    ) {
+        setup(rowLayout, items, rowRenderer, rowClickHandler, (view, timeSummaryEntry) -> { });
+    }
+
+    public void setup(
+            int rowLayout,
+            List<T> items,
             UsableRowRenderer<T> rowRenderer,
             UsableClickHandler<T> rowClickHandler,
             UsableClickHandler<T> rowLongClickHandler

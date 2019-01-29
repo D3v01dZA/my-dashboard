@@ -17,11 +17,6 @@ public abstract class InsecureAppActivity extends BaseActivity {
     }
 
     @Override
-    public final void leave() {
-        onLeave();
-    }
-
-    @Override
     public final void hide() {
         onHide();
     }
@@ -34,8 +29,6 @@ public abstract class InsecureAppActivity extends BaseActivity {
     protected abstract void onCreate();
 
     protected abstract void onEnter();
-
-    protected abstract void onLeave();
 
     protected abstract void onHide();
 

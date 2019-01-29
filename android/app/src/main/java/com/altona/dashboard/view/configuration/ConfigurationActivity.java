@@ -20,11 +20,6 @@ public class ConfigurationActivity extends SecureAppActivity {
     }
 
     @Override
-    public void onLeave() {
-
-    }
-
-    @Override
     public void onHide() {
 
     }

@@ -30,11 +30,6 @@ public class SettingsActivity extends InsecureAppActivity {
     }
 
     @Override
-    protected void onLeave() {
-
-    }
-
-    @Override
     public void onHide() {
 
     }
@@ -57,11 +52,10 @@ public class SettingsActivity extends InsecureAppActivity {
         recyclerSettingRows.add(new RecyclerSettingRow("Host", settings.getHost(), settings::setHost));
 
         recycler.setup(
-                R.layout.setting_row,
+                R.layout.basic_row,
                 recyclerSettingRows,
                 this::renderRow,
-                this::handleClick,
-                (recyclerSettingRow, changeNotifier) -> {}
+                this::handleClick
         );
     }
 

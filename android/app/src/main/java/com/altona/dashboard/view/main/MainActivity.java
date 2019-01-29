@@ -20,11 +20,6 @@ public class MainActivity extends SecureAppActivity {
     }
 
     @Override
-    public void onLeave() {
-
-    }
-
-    @Override
     public void onHide() {
 
     }

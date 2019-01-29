@@ -2,13 +2,13 @@ package com.altona.dashboard.service.time;
 
 import com.altona.dashboard.Static;
 import com.altona.dashboard.service.login.LoginService;
-import com.altona.dashboard.view.time.Project;
-import com.altona.dashboard.view.time.TimeStatus;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.logging.Level;
@@ -18,7 +18,25 @@ import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 
+import static java.time.temporal.ChronoField.HOUR_OF_DAY;
+import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
+import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
+
 public class TimeService {
+
+    public static final DateTimeFormatter LONG_TIME_FORMATTER = new DateTimeFormatterBuilder()
+            .appendValue(HOUR_OF_DAY, 2)
+            .appendLiteral(':')
+            .appendValue(MINUTE_OF_HOUR, 2)
+            .appendLiteral(':')
+            .appendValue(SECOND_OF_MINUTE, 2)
+            .toFormatter();
+
+    public static final DateTimeFormatter SHORT_TIME_FORMATTER = new DateTimeFormatterBuilder()
+            .appendValue(HOUR_OF_DAY, 2)
+            .appendLiteral(':')
+            .appendValue(MINUTE_OF_HOUR, 2)
+            .toFormatter();
 
     private static final Logger LOGGER = Logger.getLogger(TimeService.class.getName());
     private static final TypeReference<List<Project>> PROJECT_LIST = new TypeReference<List<Project>>() {};
@@ -55,6 +73,10 @@ public class TimeService {
 
     public void timeStatus(Consumer<TimeStatus> onSuccess, Consumer<String> onFailure) {
         request(emptyPost(), "/time/project/time-status", TimeStatus.class, onSuccess, onFailure);
+    }
+
+    public void weekSummary(Project project, Consumer<TimeSummary> onSuccess, Consumer<String> onFailure) {
+        request(get(), projectUrl(project) + "/summary?type=CURRENT_WEEK", TimeSummary.class, onSuccess, onFailure);
     }
 
     private static Request.Builder emptyPost() {

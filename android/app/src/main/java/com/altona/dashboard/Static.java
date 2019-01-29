@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.HashMap;
@@ -29,6 +30,7 @@ public abstract class Static {
         OBJECT_MAPPER = new ObjectMapper();
         SimpleModule simpleModule = new SimpleModule();
         simpleModule.addDeserializer(LocalTime.class, new LocalTimeDeserializer());
+        simpleModule.addDeserializer(LocalDate.class, new LocalDateDeserializer());
         OBJECT_MAPPER.registerModule(simpleModule);
 
         NAV_ID_TO_CLASS = new SparseArray<>(3);
@@ -48,6 +50,18 @@ public abstract class Static {
         public LocalTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
             try {
                 return LocalTime.parse(p.getValueAsString());
+            } catch (DateTimeParseException e) {
+                throw new JsonParseException(p, p.getValueAsString() + " is not formatted correctly", e);
+            }
+        }
+    }
+
+    private static class LocalDateDeserializer extends JsonDeserializer<LocalDate> {
+
+        @Override
+        public LocalDate deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+            try {
+                return LocalDate.parse(p.getValueAsString());
             } catch (DateTimeParseException e) {
                 throw new JsonParseException(p, p.getValueAsString() + " is not formatted correctly", e);
             }

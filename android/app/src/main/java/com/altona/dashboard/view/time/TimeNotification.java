@@ -12,12 +12,10 @@ import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 
 import com.altona.dashboard.service.time.NotificationData;
+import com.altona.dashboard.service.time.TimeStatus;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.Date;
 import java.util.Objects;
 

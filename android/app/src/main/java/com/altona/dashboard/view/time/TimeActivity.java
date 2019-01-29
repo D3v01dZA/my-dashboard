@@ -1,18 +1,29 @@
 package com.altona.dashboard.view.time;
 
+import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.altona.dashboard.R;
+import com.altona.dashboard.component.UsableRecycler;
+import com.altona.dashboard.service.time.Project;
 import com.altona.dashboard.service.time.TimeService;
+import com.altona.dashboard.service.time.TimeStatus;
+import com.altona.dashboard.service.time.TimeSummary;
+import com.altona.dashboard.service.time.TimeSummaryEntry;
 import com.altona.dashboard.view.SecureAppActivity;
+import com.altona.dashboard.view.settings.RecyclerSettingRow;
 import com.altona.dashboard.view.util.UserInputDialog;
 
+import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import static com.altona.dashboard.service.time.TimeService.SHORT_TIME_FORMATTER;
 
 public class TimeActivity extends SecureAppActivity {
 
@@ -35,7 +46,7 @@ public class TimeActivity extends SecureAppActivity {
     }
 
     @Override
-    public void onLeave() {
+    public void onHide() {
         if (currentStatus != null) {
             currentStatus = null;
         }
@@ -43,11 +54,6 @@ public class TimeActivity extends SecureAppActivity {
             timer.cancel();
             timer = null;
         }
-    }
-
-    @Override
-    public void onHide() {
-        onLeave();
     }
 
     @Override
@@ -65,10 +71,35 @@ public class TimeActivity extends SecureAppActivity {
     }
 
     private void updateStatus() {
-        timeService().timeStatus(timeStatus -> {
-            setCurrentStatus(timeStatus);
-            enableInteractionAndUpdate();
-        }, this::logoutErrorHandler);
+        timeService().timeStatus(
+                timeStatus -> {
+                    setCurrentStatus(timeStatus);
+                    updateWeek();
+                },
+                this::logoutErrorHandler
+        );
+    }
+
+    private void updateWeek() {
+        timeService().weekSummary(
+                currentProject(),
+                this::setupRecycler,
+                this::logoutErrorHandler
+        );
+    }
+
+    private void setupRecycler(TimeSummary timeSummary) {
+        recycler().setup(
+                R.layout.basic_row,
+                timeSummary.getTimes(),
+                this::renderRow
+        );
+        enableInteractionAndUpdate();
+    }
+
+    private void renderRow(View view, TimeSummaryEntry timeSummaryEntry) {
+        view.<TextView>findViewById(R.id.setting_name).setText(timeSummaryEntry.getDate().toString());
+        view.<TextView>findViewById(R.id.setting_value).setText(timeSummaryEntry.getTime().format(SHORT_TIME_FORMATTER));
     }
 
     private void createProject() {
@@ -78,7 +109,7 @@ public class TimeActivity extends SecureAppActivity {
                         serviceResponse -> onEnter(),
                         this::logoutErrorHandler
                 ),
-                () -> {});
+                () -> { });
     }
 
     private TimeService timeService() {
@@ -209,6 +240,10 @@ public class TimeActivity extends SecureAppActivity {
 
     protected Button pauseButton() {
         return findViewById(R.id.time_pause_button);
+    }
+
+    protected UsableRecycler<TimeSummaryEntry> recycler() {
+        return findViewById(R.id.recycler_view_time);
     }
 
     protected List<Project> currentProjects() {

@@ -31,11 +31,6 @@ public class LoginActivity extends InsecureAppActivity {
     }
 
     @Override
-    protected void onLeave() {
-
-    }
-
-    @Override
     public void onHide() {
 
     }

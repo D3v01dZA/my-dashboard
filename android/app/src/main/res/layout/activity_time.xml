@@ -31,9 +31,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:visibility="visible"
-                android:paddingVertical="@dimen/row_padding_vertical"
                 android:paddingHorizontal="@dimen/activity_horizontal_margin"
+                android:paddingVertical="@dimen/row_padding_vertical"
+                android:visibility="visible"
                 android:weightSum="2">
 
                 <TextView
@@ -80,7 +80,8 @@
             <LinearLayout
                 android:id="@+id/time_primary_buttons"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:paddingVertical="@dimen/row_padding_vertical">
 
                 <Button
                     android:id="@+id/time_start_button"
@@ -95,6 +96,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
+                android:paddingVertical="@dimen/row_padding_vertical"
                 android:visibility="gone"
                 android:weightSum="2">
 
@@ -111,6 +113,27 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Pause" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingVertical="@dimen/row_padding_vertical"
+                android:orientation="vertical">
+
+                <View
+                    android:id="@+id/view2"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="?android:attr/listDivider" />
+
+                <com.altona.dashboard.component.UsableRecycler
+                    android:id="@+id/recycler_view_time"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scrollbars="vertical"
+                    tools:layout_editor_absoluteX="0dp"
+                    tools:layout_editor_absoluteY="128dp" />
             </LinearLayout>
 
         </LinearLayout>

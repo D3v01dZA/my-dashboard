@@ -155,7 +155,6 @@ public abstract class BaseActivity extends AppCompatActivity implements Navigati
 
     protected boolean enter(Class<? extends BaseActivity> activity, boolean clearHistory) {
         if (!getClass().equals(activity)) {
-            leave();
             Intent intent = new Intent(this, activity);
             if (clearHistory) {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -169,8 +168,6 @@ public abstract class BaseActivity extends AppCompatActivity implements Navigati
     protected abstract void create();
 
     protected abstract void enter();
-
-    protected abstract void leave();
 
     protected abstract void hide();
 

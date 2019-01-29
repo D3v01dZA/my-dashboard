@@ -1,9 +1,11 @@
-package com.altona.dashboard.view.time;
+package com.altona.dashboard.service.time;
 
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.altona.dashboard.service.time.NotificationData;
+import com.altona.dashboard.view.time.TimeActivity;
+import com.altona.dashboard.view.time.TimeNotification;
+import com.altona.dashboard.view.time.TimeStatusEnum;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -56,7 +58,7 @@ public class TimeStatus implements Parcelable {
         update();
         status.setButtons(timeActivity, this);
         if (projectId != null) {
-            Project.setCurrentProject(timeActivity, projectId);
+            status.setCurrentProject(timeActivity, projectId);
         }
     }
 

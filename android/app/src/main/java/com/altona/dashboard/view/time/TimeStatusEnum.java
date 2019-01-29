@@ -4,10 +4,14 @@ import android.view.View;
 
 import com.altona.dashboard.R;
 import com.altona.dashboard.service.time.NotificationData;
+import com.altona.dashboard.service.time.Project;
+import com.altona.dashboard.service.time.TimeStatus;
 
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
+import java.util.List;
 
+import static com.altona.dashboard.service.time.TimeService.LONG_TIME_FORMATTER;
 import static java.time.temporal.ChronoField.HOUR_OF_DAY;
 import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
 import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
@@ -104,20 +108,6 @@ public enum TimeStatusEnum {
         }
     };
 
-    private static final DateTimeFormatter LONG_TIME_FORMATTER = new DateTimeFormatterBuilder()
-            .appendValue(HOUR_OF_DAY, 2)
-            .appendLiteral(':')
-            .appendValue(MINUTE_OF_HOUR, 2)
-            .appendLiteral(':')
-            .appendValue(SECOND_OF_MINUTE, 2)
-            .toFormatter();
-
-    private static final DateTimeFormatter SHORT_TIME_FORMATTER = new DateTimeFormatterBuilder()
-            .appendValue(HOUR_OF_DAY, 2)
-            .appendLiteral(':')
-            .appendValue(MINUTE_OF_HOUR, 2)
-            .toFormatter();
-
     public abstract void setButtons(TimeActivity timeActivity, TimeStatus timeStatus);
 
     public abstract boolean updateWork();
@@ -127,5 +117,15 @@ public enum TimeStatusEnum {
     public abstract boolean requiresNotification();
     
     public abstract NotificationData notificationData(TimeStatus timeStatus);
+
+    public void setCurrentProject(TimeActivity timeActivity, int projectId) {
+        List<Project> projects = timeActivity.currentProjects();
+        for (int i = 0; i < projects.size(); i++) {
+            if (projects.get(i).getId() == projectId) {
+                timeActivity.projectSpinner().setSelection(i);
+            }
+        }
+        throw new IllegalStateException("Couldn't find project id " + projectId + " + in " + projects);
+    }
 
 }
