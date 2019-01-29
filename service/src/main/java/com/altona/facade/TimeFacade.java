@@ -9,6 +9,7 @@ import com.altona.service.time.ZoneTime;
 import com.altona.service.time.control.*;
 import com.altona.service.time.summary.Summary;
 import com.altona.service.time.summary.SummaryConfiguration;
+import com.altona.service.time.summary.SummaryFailure;
 import com.altona.util.functional.Result;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -70,7 +71,7 @@ public class TimeFacade {
     }
 
     @Transactional(readOnly = true)
-    public Optional<Result<Summary, String>> summary(UserContext userContext, int projectId, SummaryConfiguration configuration) {
+    public Optional<Result<Summary, SummaryFailure>> summary(UserContext userContext, int projectId, SummaryConfiguration configuration) {
         return projectService.project(userContext, projectId)
                 .map(project -> timeService.summary(userContext, project, configuration));
     }

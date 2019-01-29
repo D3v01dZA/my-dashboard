@@ -18,14 +18,14 @@ public class SummaryCreator {
 
     private static LocalTime NO_TIME = LocalTime.of(0, 0);
 
-    public static Result<Summary, String> create(SummaryConfiguration configuration, List<ZoneTime> zoneTimes) {
+    public static Result<Summary, SummaryFailure> create(SummaryConfiguration configuration, List<ZoneTime> zoneTimes) {
         Map<LocalDate, LocalTime> timeMap = new LinkedHashMap<>();
         for (ZoneTime zoneTime : zoneTimes) {
             LocalDateTime fromDateTime = zoneTime.getStart();
             Optional<LocalDateTime> end = zoneTime.getEnd();
             if (!end.isPresent()) {
                 if (configuration.getNotStoppedAction() == NotStoppedAction.FAIL) {
-                    return Result.error("A currently running time was found for this summary");
+                    return Result.error(SummaryFailure.CURRENTLY_RUNNING_TIME);
                 } else if (configuration.getNotStoppedAction() == NotStoppedAction.INCLUDE) {
                     LocalDateTime toDateTime = configuration.getLocalizedUserNow();
                     addTime(timeMap, fromDateTime, toDateTime, zoneTime);

@@ -7,10 +7,7 @@ import com.altona.repository.integration.maconomy.TimeData;
 import com.altona.repository.integration.maconomy.get.*;
 import com.altona.security.UserContext;
 import com.altona.service.time.TimeService;
-import com.altona.service.time.summary.Summary;
-import com.altona.service.time.summary.SummaryConfiguration;
-import com.altona.service.time.summary.TimeRounding;
-import com.altona.service.time.summary.NotStoppedAction;
+import com.altona.service.time.summary.*;
 import com.altona.service.time.synchronize.SynchronizeCommand;
 import com.altona.service.time.synchronize.SynchronizeResult;
 import com.altona.service.time.synchronize.Synchronizer;
@@ -82,6 +79,7 @@ public class MaconomySynchronizer implements Synchronizer {
         );
 
         return timeService.summary(userContext, project, configuration)
+                .mapError(SummaryFailure::getMessage)
                 .flatMapSuccess(summary -> saveTimeDataWithSummary(currentTime, summary, cardData, userContext, project));
     }
 
