@@ -1,6 +1,6 @@
 package com.altona.security;
 
-import com.altona.service.time.TimeConfig;
+import com.altona.service.time.util.TimeConfig;
 import lombok.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.encrypt.Encryptors;

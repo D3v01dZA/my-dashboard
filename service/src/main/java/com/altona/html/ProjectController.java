@@ -1,7 +1,7 @@
 package com.altona.html;
 
 import com.altona.facade.ProjectFacade;
-import com.altona.repository.db.time.project.Project;
+import com.altona.service.project.model.Project;
 import com.altona.security.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;

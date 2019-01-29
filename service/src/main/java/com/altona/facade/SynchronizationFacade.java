@@ -1,11 +1,11 @@
 package com.altona.facade;
 
-import com.altona.repository.db.time.synchronization.Synchronization;
+import com.altona.service.synchronization.model.Synchronization;
 import com.altona.security.UserContext;
-import com.altona.service.time.ProjectService;
-import com.altona.service.time.synchronize.SynchronizeCommand;
-import com.altona.service.time.synchronize.SynchronizeResult;
-import com.altona.service.time.synchronize.SynchronizationService;
+import com.altona.service.project.ProjectService;
+import com.altona.service.synchronization.model.SynchronizeCommand;
+import com.altona.service.synchronization.model.SynchronizeResult;
+import com.altona.service.synchronization.SynchronizationService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

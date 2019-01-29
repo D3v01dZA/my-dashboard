@@ -1,8 +1,8 @@
 package com.altona.facade;
 
-import com.altona.repository.db.time.project.Project;
+import com.altona.service.project.model.Project;
 import com.altona.security.User;
-import com.altona.service.time.ProjectService;
+import com.altona.service.project.ProjectService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

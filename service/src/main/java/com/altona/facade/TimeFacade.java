@@ -1,15 +1,15 @@
 package com.altona.facade;
 
-import com.altona.repository.db.time.project.Project;
+import com.altona.service.project.model.Project;
 import com.altona.security.User;
 import com.altona.security.UserContext;
-import com.altona.service.time.ProjectService;
+import com.altona.service.project.ProjectService;
 import com.altona.service.time.TimeService;
-import com.altona.service.time.control.*;
-import com.altona.service.time.summary.Summary;
-import com.altona.service.time.summary.SummaryConfiguration;
-import com.altona.service.time.summary.SummaryFailure;
-import com.altona.util.functional.Result;
+import com.altona.service.time.model.control.*;
+import com.altona.service.time.model.summary.Summary;
+import com.altona.service.time.model.summary.SummaryConfiguration;
+import com.altona.service.time.model.summary.SummaryFailure;
+import com.altona.util.Result;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

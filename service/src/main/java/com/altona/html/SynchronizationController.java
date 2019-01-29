@@ -1,10 +1,10 @@
 package com.altona.html;
 
 import com.altona.facade.SynchronizationFacade;
-import com.altona.repository.db.time.synchronization.Synchronization;
+import com.altona.service.synchronization.model.Synchronization;
 import com.altona.security.UserService;
-import com.altona.service.time.synchronize.SynchronizeCommand;
-import com.altona.service.time.synchronize.SynchronizeResult;
+import com.altona.service.synchronization.model.SynchronizeCommand;
+import com.altona.service.synchronization.model.SynchronizeResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
