@@ -158,6 +158,8 @@ public abstract class BaseActivity extends AppCompatActivity implements Navigati
             Intent intent = new Intent(this, activity);
             if (clearHistory) {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            } else {
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             }
             startActivity(intent);
             return true;

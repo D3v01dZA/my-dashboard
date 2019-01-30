@@ -69,7 +69,10 @@ public class TimeNotification extends Service {
         NotificationData notificationData = timeStatus.notificationData();
         long current = new Date().getTime();
         long back = ChronoUnit.MILLIS.between(LocalTime.of(0, 0), notificationData.getTime());
-        PendingIntent time = PendingIntent.getActivity(context, TIME_INTENT_CODE, new Intent(context, TimeActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent intent = new Intent(context, TimeActivity.class);
+        // TODO: This is supposed to clear the navigation stack but its not working
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent time = PendingIntent.getActivity(context, TIME_INTENT_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         return new NotificationCompat.Builder(context, TIME_CHANNEL_ID)
                 .setContentTitle(notificationData.getTitle())
                 .setContentText(notificationData.getSubTitle())
