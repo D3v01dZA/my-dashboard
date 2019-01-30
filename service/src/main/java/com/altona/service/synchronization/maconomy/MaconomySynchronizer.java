@@ -16,9 +16,9 @@ import lombok.AllArgsConstructor;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Date;
 
 import static java.util.function.Function.identity;
 
@@ -70,7 +70,7 @@ public class MaconomySynchronizer implements Synchronizer {
     private Result<SynchronizeResult, String> saveTimeData(Get currentTime, UserContext userContext, Project project) {
         CardData cardData = currentTime.getCardRecord().getData();
         SummaryConfiguration configuration = new SummaryConfiguration(
-                userContext.localize(new Date()),
+                userContext.localize(Instant.now()),
                 cardData.getPeriodstartvar(),
                 cardData.getPeriodendvar(),
                 TimeRounding.NEAREST_FIFTEEN,

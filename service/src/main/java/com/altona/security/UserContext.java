@@ -7,9 +7,9 @@ import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 import java.time.DayOfWeek;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.Objects;
 import java.util.TimeZone;
 
@@ -18,7 +18,7 @@ public class UserContext extends User implements TimeConfig, Encryptor {
     private TimeZone timeZone;
     private TextEncryptor encryptor;
 
-    private Date now = new Date();
+    private Instant now = Instant.now();
 
     UserContext(User user, @NonNull Authentication authentication, @NonNull TimeZone timeZone) {
         super(user.getId(), user.getUsername(), user.getPassword(), user.getSalt());
@@ -41,13 +41,13 @@ public class UserContext extends User implements TimeConfig, Encryptor {
     }
 
     @Override
-    public LocalDateTime localize(Date date) {
-        return date.toInstant().atZone(timeZone.toZoneId()).toLocalDateTime();
+    public LocalDateTime localize(Instant instant) {
+        return instant.atZone(timeZone.toZoneId()).toLocalDateTime();
     }
 
     @Override
-    public Date unlocalize(LocalDate localDate) {
-        return Date.from(localDate.atStartOfDay(timeZone.toZoneId()).toInstant());
+    public Instant unlocalize(LocalDate localDate) {
+        return localDate.atStartOfDay(timeZone.toZoneId()).toInstant();
     }
 
     @Override

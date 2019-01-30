@@ -1,8 +1,8 @@
 package com.altona.service.time.util;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 public interface TimeConfig {
 
@@ -10,8 +10,8 @@ public interface TimeConfig {
 
     LocalDate firstDayOfWeek();
 
-    LocalDateTime localize(Date date);
+    LocalDateTime localize(Instant instant);
 
-    Date unlocalize(LocalDate localDate);
+    Instant unlocalize(LocalDate localDate);
 
 }
