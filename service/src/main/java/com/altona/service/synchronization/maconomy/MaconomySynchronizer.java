@@ -16,6 +16,7 @@ import lombok.AllArgsConstructor;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Date;
@@ -158,35 +159,33 @@ public class MaconomySynchronizer implements Synchronizer {
     }
 
     private static void rewriteTimes(TimeData timeData, Summary summary) {
-        int current = 0;
         LocalDate fromDate = summary.getFromDate();
         LocalDate toDate = summary.getToDate();
         for (LocalDate date : LocalDateIterator.inclusive(fromDate, toDate)) {
-            if (current == 0) {
+            if (date.getDayOfWeek() == DayOfWeek.MONDAY) {
                 summary.getActualTime(date)
                         .ifPresent(time -> timeData.setNumberday1(asDecimal(time)));
-            } else if (current == 1) {
+            } else if (date.getDayOfWeek() == DayOfWeek.TUESDAY) {
                 summary.getActualTime(date)
                         .ifPresent(time -> timeData.setNumberday2(asDecimal(time)));
-            } else if (current == 2) {
+            } else if (date.getDayOfWeek() == DayOfWeek.WEDNESDAY) {
                 summary.getActualTime(date)
                         .ifPresent(time -> timeData.setNumberday3(asDecimal(time)));
-            } else if (current == 3) {
+            } else if (date.getDayOfWeek() == DayOfWeek.THURSDAY) {
                 summary.getActualTime(date)
                         .ifPresent(time -> timeData.setNumberday4(asDecimal(time)));
-            } else if (current == 4) {
+            } else if (date.getDayOfWeek() == DayOfWeek.FRIDAY) {
                 summary.getActualTime(date)
                         .ifPresent(time -> timeData.setNumberday5(asDecimal(time)));
-            } else if (current == 5) {
+            } else if (date.getDayOfWeek() == DayOfWeek.SATURDAY) {
                 summary.getActualTime(date)
                         .ifPresent(time -> timeData.setNumberday6(asDecimal(time)));
-            } else if (current == 6) {
+            } else if (date.getDayOfWeek() == DayOfWeek.SUNDAY) {
                 summary.getActualTime(date)
                         .ifPresent(time -> timeData.setNumberday7(asDecimal(time)));
             } else {
                 throw new IllegalStateException("Summary came with more than 7 dates between " + fromDate + " and " + toDate);
             }
-            current++;
         }
     }
 
