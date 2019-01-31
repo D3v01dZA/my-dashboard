@@ -1,5 +1,6 @@
 package com.altona.service.synchronization.model;
 
+import com.altona.service.synchronization.SynchronizeRequest;
 import com.altona.service.synchronization.maconomy.model.MaconomyConfiguration;
 import com.altona.service.synchronization.maconomy.MaconomyRepository;
 import com.altona.service.synchronization.Synchronizer;
@@ -32,16 +33,17 @@ public enum SynchronizationServiceType {
         }
 
         @Override
-        public Result<Synchronizer, SynchronizeError> createService(ApplicationContext applicationContext, Synchronization synchronization) {
+        public Result<Synchronizer, SynchronizeError> createService(ApplicationContext applicationContext, Synchronization synchronization, SynchronizeRequest request) {
             ObjectMapper objectMapper = applicationContext.getBean(ObjectMapper.class);
             try {
-                MaconomyConfiguration maconomyConfiguration = objectMapper.treeToValue(synchronization.getConfiguration(), MaconomyConfiguration.class);
+                MaconomyConfiguration configuration = objectMapper.treeToValue(synchronization.getConfiguration(), MaconomyConfiguration.class);
                 return Result.success(
                         new MaconomySynchronizer(
                                 applicationContext.getBean(TimeService.class),
                                 applicationContext.getBean(MaconomyRepository.class),
                                 synchronization.getId(),
-                                maconomyConfiguration
+                                request,
+                                configuration
                         )
                 );
             } catch (IOException e) {
@@ -55,6 +57,6 @@ public enum SynchronizationServiceType {
 
     public abstract boolean hasValidConfiguration(ObjectMapper objectMapper, Synchronization synchronization);
 
-    public abstract Result<Synchronizer, SynchronizeError> createService(ApplicationContext applicationContext, Synchronization synchronization);
+    public abstract Result<Synchronizer, SynchronizeError> createService(ApplicationContext applicationContext, Synchronization synchronization, SynchronizeRequest request);
 
 }

@@ -101,4 +101,23 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="add_sync_attempt_id" author="chris">
+        <delete tableName="synchronization_trace"/> <!-- #BakulDrop -->
+        <addColumn tableName="synchronization_trace">
+            <column name="attempt_id" type="varchar">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="add_synchronization_id" author="chris">
+        <delete tableName="synchronization_trace"/> <!-- #BakulDrop -->
+        <addColumn tableName="synchronization_trace">
+            <column name="synchronization_id" type="integer">
+                <constraints nullable="false" foreignKeyName="fk_trace_synchronization" references="synchronization(id)"/>
+            </column>
+        </addColumn>
+        <dropColumn tableName="synchronization_trace" columnName="user_id"/>
+    </changeSet>
+
 </databaseChangeLog>

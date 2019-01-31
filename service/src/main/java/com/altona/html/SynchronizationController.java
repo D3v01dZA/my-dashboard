@@ -49,6 +49,7 @@ public class SynchronizationController {
                 .map(synchronizeResult -> new ResponseEntity<>(synchronizeResult, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
+
     @RequestMapping(path = "/time/project/{projectId}/synchronization/{synchronizationId}/synchronize", method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<SynchronizeResult> synchronize(
             Authentication authentication,

@@ -1,6 +1,5 @@
 package com.altona.service.synchronization;
 
-import com.altona.security.Encryptor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -29,23 +28,25 @@ public class SynchronizationTraceRepository {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void trace(Encryptor encryptor, int userId, int projectId, String stage, Object value) {
+    public void trace(SynchronizeRequest request, String stage, Object value) {
         synchronizationTraceJdbcInsert.execute(new MapSqlParameterSource()
-                .addValue("user_id", userId)
-                .addValue("project_id", projectId)
+                .addValue("project_id", request.getProject().getId())
+                .addValue("synchronization_id", request.getSynchronizationId())
+                .addValue("attempt_id", request.getAttemptId())
                 .addValue("time", new Date())
                 .addValue("stage", stage)
-                .addValue("value", encryptor.encrypt(serialize(objectMapper, value))));
+                .addValue("value", request.encrypt(serialize(objectMapper, value))));
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void trace(Encryptor encryptor, int userId, int projectId, String stage, String value) {
+    public void trace(SynchronizeRequest request, String stage, String value) {
         synchronizationTraceJdbcInsert.execute(new MapSqlParameterSource()
-                .addValue("user_id", userId)
-                .addValue("project_id", projectId)
+                .addValue("project_id", request.getProject().getId())
+                .addValue("synchronization_id", request.getSynchronizationId())
+                .addValue("attempt_id", request.getAttemptId())
                 .addValue("time", new Date())
                 .addValue("stage", stage)
-                .addValue("value", encryptor.encrypt(value)));
+                .addValue("value", request.encrypt(value)));
     }
 
 }

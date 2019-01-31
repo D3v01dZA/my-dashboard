@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.List;
+
 @Getter
 @AllArgsConstructor
 @JsonIgnoreProperties
@@ -11,8 +13,8 @@ public class Get {
 
     private Panes panes;
 
-    public TableRecord getTableRecord() {
-        return panes.getTableRecord();
+    public List<TableRecord> getTableRecords() {
+        return panes.getTableRecords();
     }
 
     public CardRecord getCardRecord() {

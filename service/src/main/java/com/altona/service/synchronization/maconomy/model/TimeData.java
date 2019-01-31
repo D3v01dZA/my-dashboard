@@ -10,11 +10,24 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class TimeData {
 
-    private String employeenumber;
-    private Integer linenumber;
-    private String periodstart;
+    // Project Data
+    @Setter
+    private String customernumbervar;
+    @Setter
+    private String customernamevar;
+    @Setter
     private String jobnumber;
-    private String activitynumber;
+
+    // Job Data
+
+    @Setter
+    private String taskname;
+    @Setter
+    private String tasktextvar;
+    @Setter
+    private String jobnamevar;
+
+    // Time Data
     @Setter
     private BigDecimal numberday1;
     @Setter
@@ -29,6 +42,12 @@ public class TimeData {
     private BigDecimal numberday6;
     @Setter
     private BigDecimal numberday7;
+
+    private String linedetailstypevar;
+    private String employeenumber;
+    private Integer linenumber;
+    private String periodstart;
+    private String activitynumber;
     private String entrytext;
     private String activitytype;
     private Integer numberday1transferred;
@@ -44,7 +63,6 @@ public class TimeData {
     private String specification1name;
     private String specification2name;
     private String specification3name;
-    private String taskname;
     private Integer timeactivity1number;
     private Integer timeactivity2number;
     private Integer timeactivity3number;
@@ -163,11 +181,7 @@ public class TimeData {
     private String localspec10name;
     private Integer purchaseordernumber;
     private Integer purchaseorderlinenumber;
-    private String jobnamevar;
-    private String customernumbervar;
-    private String customernamevar;
     private String activitytextvar;
-    private String tasktextvar;
     private String taskpathvar;
     private String linecompanynamevar;
     private String locationdescriptionvar;
@@ -238,8 +252,6 @@ public class TimeData {
     private String tooltiptasklinebreakvar;
     private String tooltipactivityvar;
     private String tooltipconclusionvar;
-    private String linedetailsvar;
-    private String linedetailstypevar;
     private Boolean usesdailydescriptionsvar;
     private String customerlevelnamevar;
     private String level1customernumbervar;

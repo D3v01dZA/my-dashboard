@@ -1,4 +1,4 @@
-package com.altona.service.synchronization.maconomy.model.create;
+package com.altona.service.synchronization.maconomy.model.init;
 
 import com.altona.service.synchronization.maconomy.model.TimeData;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -8,7 +8,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Post {
+public class Init {
 
     private TimeData data;
 

@@ -1,13 +1,14 @@
 package com.altona.service.synchronization.maconomy;
 
+import com.altona.service.synchronization.SynchronizeRequest;
 import com.altona.service.synchronization.maconomy.model.MaconomyConfiguration;
 import com.altona.service.synchronization.maconomy.model.TimeData;
 import com.altona.service.synchronization.SynchronizationTraceRepository;
-import com.altona.service.synchronization.maconomy.model.create.Post;
-import com.altona.service.synchronization.maconomy.model.get.CardData;
+import com.altona.service.synchronization.maconomy.model.root.Root;
 import com.altona.service.synchronization.maconomy.model.get.Get;
-import com.altona.service.synchronization.maconomy.model.get.TableMeta;
-import com.altona.security.Encryptor;
+import com.altona.service.synchronization.maconomy.model.init.Init;
+import com.altona.service.synchronization.maconomy.model.searchjob.Job;
+import com.altona.service.synchronization.maconomy.model.searchproject.Project;
 import com.altona.util.Result;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -25,6 +26,8 @@ import java.time.LocalDate;
 import java.util.Objects;
 
 import static com.altona.util.ObjectMapperHelper.serialize;
+import static org.springframework.http.HttpMethod.GET;
+import static org.springframework.http.HttpMethod.POST;
 
 @Repository
 @AllArgsConstructor
@@ -36,120 +39,185 @@ public class MaconomyRepository {
     private ObjectMapper objectMapper;
     private SynchronizationTraceRepository synchronizationTraceRepository;
 
-    public Result<Get, String> timeData(Encryptor encryptor, int userId, int projectId, MaconomyConfiguration maconomyConfiguration) {
-        String url = currentTimeDataUrl(maconomyConfiguration);
-        return timeData(encryptor, userId, projectId, maconomyConfiguration, url);
+    public Result<Get, String> timeData(SynchronizeRequest request, MaconomyConfiguration configuration) {
+        String url = currentTimeDataUrl(configuration);
+        return timeData(request, configuration, url);
     }
 
-    public Result<Get, String> timeData(Encryptor encryptor, int userId, int projectId, MaconomyConfiguration maconomyConfiguration, LocalDate date, String employee) {
-        String url = timeDataUrl(maconomyConfiguration, date, employee);
-        return timeData(encryptor, userId, projectId, maconomyConfiguration, url);
+    public Result<Get, String> timeData(
+            SynchronizeRequest request,
+            MaconomyConfiguration configuration,
+            LocalDate date,
+            String employee
+    ) {
+        String url = timeDataUrl(configuration, date, employee);
+        return timeData(request, configuration, url);
     }
 
-    private Result<Get, String> timeData(Encryptor encryptor, int userId, int projectId, MaconomyConfiguration maconomyConfiguration, String url) {
-        HttpHeaders httpHeaders = basicHeaders(maconomyConfiguration);
-        HttpEntity<?> headers = new HttpEntity<>(httpHeaders);
-        try {
-            ResponseEntity<JsonNode> responseEntity = restTemplate.exchange(url, HttpMethod.GET, headers, JsonNode.class);
-            if (responseEntity.getStatusCode() == HttpStatus.OK) {
-                try {
-                    JsonNode body = Objects.requireNonNull(responseEntity.getBody());
-                    synchronizationTraceRepository.trace(encryptor, userId, projectId, "GET_TIME_DATA", body);
-                    return Result.success(objectMapper.treeToValue(body, Get.class));
-                } catch (JsonProcessingException e) {
-                    String message = "Couldn't deserialize when requesting current data";
-                    LOGGER.error(message, e);
-                    return Result.error(message);
-                }
-            }
-            String message = "Wrong response code received when requesting current data " + responseEntity.getStatusCode();
-            LOGGER.error(message);
-            return Result.error(message);
-        } catch (HttpStatusCodeException e) {
-            String message = "Requesting current data failed at url " + url + " with code " + e.getStatusCode() + " and body " + e.getResponseBodyAsString();
-            LOGGER.error(message, e);
-            return Result.error(message);
-        } catch (RestClientException e) {
-            String message = "Requesting current data failed at url " + url;
-            LOGGER.error(message, e);
-            return Result.error(message);
-        }
+    public Result<Init, String> initTimeData(
+            SynchronizeRequest request,
+            MaconomyConfiguration configuration,
+            LocalDate date,
+            String employee,
+            String concurrencyControl
+    ) {
+        HttpHeaders httpHeaders = basicHeaders(configuration);
+        httpHeaders.add("Maconomy-Concurrency-Control", concurrencyControl);
+        HttpEntity<?> entity = new HttpEntity<>(httpHeaders);
+        String url = initTimeDataUrl(configuration, date, employee);
+        return executeRequest(request, url, entity, POST, Init.class, "Init ");
     }
 
-    public Result<Get, String> writeTimeData(Encryptor encryptor, int userId, int projectId, MaconomyConfiguration maconomyConfiguration, CardData cardData, TableMeta tableMeta, TimeData timeData) {
-        Post post = new Post(timeData);
-        HttpHeaders httpHeaders = basicHeaders(maconomyConfiguration);
-        httpHeaders.add("Maconomy-Concurrency-Control", tableMeta.getConcurrencyControl());
-        httpHeaders.add("Content-Type", "application/json");
+    public Result<Project, String> searchProjectData(
+            SynchronizeRequest request,
+            MaconomyConfiguration configuration,
+            TimeData timeData
+    ) {
+        HttpHeaders httpHeaders = basicHeaders(configuration);
 
-        String postData = serialize(objectMapper, post);
-        synchronizationTraceRepository.trace(encryptor, userId, projectId, "POST_TIME_DATA_REQUEST", postData);
+        String search = "Search Projects";
+        String postData = serialize(objectMapper, new Root(timeData));
+        synchronizationTraceRepository.trace(request, search + " Request", postData);
 
         HttpEntity<String> entity = new HttpEntity<>(postData, httpHeaders);
-        String url = updateTimeDataUrl(maconomyConfiguration, cardData, tableMeta);
+        String url = searchProjects(configuration);
+        return executeRequest(request, url, entity, POST, Project.class, search);
+    }
+
+    public Result<Job, String> searchJobData(
+            SynchronizeRequest request,
+            MaconomyConfiguration configuration,
+            TimeData timeData
+    ) {
+        HttpHeaders httpHeaders = basicHeaders(configuration);
+
+        String search = "Search Jobs";
+        String postData = serialize(objectMapper, new Root(timeData));
+        synchronizationTraceRepository.trace(request, search + " Request", postData);
+
+        HttpEntity<String> entity = new HttpEntity<>(postData, httpHeaders);
+        String url = searchJobs(configuration);
+        return executeRequest(request, url, entity, POST, Job.class, search);
+    }
+
+    public Result<Get, String> writeTimeData(
+            SynchronizeRequest request,
+            MaconomyConfiguration configuration,
+            LocalDate date,
+            String employee,
+            String concurrencyControl,
+            int rowNumber,
+            TimeData timeData
+    ) {
+        HttpHeaders httpHeaders = basicHeaders(configuration);
+        httpHeaders.add("Maconomy-Concurrency-Control", concurrencyControl);
+
+        String what = "Update Time Data";
+        String postData = serialize(objectMapper, new Root(timeData));
+        synchronizationTraceRepository.trace(request, what + " Request", postData);
+
+        HttpEntity<String> entity = new HttpEntity<>(postData, httpHeaders);
+        String url = updateTimeDataUrl(configuration, date, employee, rowNumber);
+        return executeRequest(request, url, entity, POST, Get.class, what);
+    }
+
+    public Result<Get, String> writeNewTimeData(
+            SynchronizeRequest request,
+            MaconomyConfiguration configuration,
+            LocalDate date,
+            String employee,
+            String concurrencyControl,
+            TimeData timeData
+    ) {
+        HttpHeaders httpHeaders = basicHeaders(configuration);
+        httpHeaders.add("Maconomy-Concurrency-Control", concurrencyControl);
+
+        String what = "New Time Data";
+        String postData = serialize(objectMapper, new Root(timeData));
+        synchronizationTraceRepository.trace(request, what + " Request", postData);
+
+        HttpEntity<String> entity = new HttpEntity<>(postData, httpHeaders);
+        String url = writeNewTimeDataUrl(configuration, date, employee);
+        return executeRequest(request, url, entity, POST, Get.class, what);
+    }
+
+    private Result<Get, String> timeData(SynchronizeRequest request, MaconomyConfiguration configuration, String url) {
+        HttpHeaders httpHeaders = basicHeaders(configuration);
+        HttpEntity<?> headers = new HttpEntity<>(httpHeaders);
+        return executeRequest(request, url, headers, GET, Get.class, "Current Time Data");
+    }
+
+    private <T> Result<T, String> executeRequest(SynchronizeRequest request, String url, HttpEntity<?> entity, HttpMethod method, Class<T> clazz, String what) {
         try {
-            ResponseEntity<JsonNode> responseEntity = restTemplate.exchange(url, HttpMethod.POST, entity, JsonNode.class);
+            ResponseEntity<JsonNode> responseEntity = restTemplate.exchange(url, method, entity, JsonNode.class);
             if (responseEntity.getStatusCode() == HttpStatus.OK) {
                 try {
                     JsonNode body = Objects.requireNonNull(responseEntity.getBody());
-                    synchronizationTraceRepository.trace(encryptor, userId, projectId, "POST_TIME_DATA_RESPONSE", body);
-                    return Result.success(objectMapper.treeToValue(body, Get.class));
+                    synchronizationTraceRepository.trace(request, what, body);
+                    return Result.success(objectMapper.treeToValue(body, clazz));
                 } catch (JsonProcessingException e) {
-                    String message = "Couldn't deserialize when updating data";
+                    String message = "Couldn't deserialize when " + what;
                     LOGGER.error(message, e);
                     return Result.error(message);
                 }
             }
-            String message = "Response code received when updating data " + responseEntity.getStatusCode();
+            String message = "Wrong response code received when " + what + " " + responseEntity.getStatusCode();
             LOGGER.error(message);
             return Result.error(message);
         } catch (HttpStatusCodeException e) {
-            String message = "Updating data failed at url " + url + " with code " + e.getStatusCode() + " and body " + e.getResponseBodyAsString();
+            String message = what + " failed at url " + url + " with code " + e.getStatusCode() + " and body " + e.getResponseBodyAsString();
             LOGGER.error(message, e);
             return Result.error(message);
         } catch (RestClientException e) {
-            String message = "Updating data failed at url " + url;
+            String message = what + " failed at url " + url;
             LOGGER.error(message, e);
             return Result.error(message);
         }
     }
 
-    private static HttpHeaders basicHeaders(MaconomyConfiguration maconomyConfiguration) {
+    private static HttpHeaders basicHeaders(MaconomyConfiguration configuration) {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Accept", "application/json");
-        httpHeaders.add("Authorization", authorizationHeader(maconomyConfiguration));
-        httpHeaders.add("Maconomy-Format", format());
+        httpHeaders.add("Authorization", authorizationHeader(configuration));
+        httpHeaders.add("Maconomy-Format", "date-format=\"M/d/yy\";time-format=\"HH:mm\";thousand-separator=\",\";decimal-separator=\".\";number-of-decimals=2");
+        httpHeaders.add("Content-Type", "application/json");
         return httpHeaders;
     }
 
-    private static String authorizationHeader(MaconomyConfiguration maconomyConfiguration) {
-        return "Basic " + maconomyConfiguration.getAuthorization();
+    private static String authorizationHeader(MaconomyConfiguration configuration) {
+        return "Basic " + configuration.getAuthorization();
     }
 
-    private static String updateTimeDataUrl(MaconomyConfiguration maconomyConfiguration, CardData cardData, TableMeta tableMeta) {
-        return maconomyConfiguration.getUrl() + String.format(
-                "/timeregistration/data;any/table/%s?card.datevar=%s&card.employeenumbervar=%s",
-                tableMeta.getRowNumber(),
-                cardData.getDatevar(),
-                cardData.getEmployeenumbervar()
-        );
+    private static String currentTimeDataUrl(MaconomyConfiguration configuration) {
+        return configuration.getUrl() + "/timeregistration/data;any";
     }
 
-    private static String currentTimeDataUrl(MaconomyConfiguration maconomyConfiguration) {
-        return maconomyConfiguration.getUrl() + "/timeregistration/data;any";
+    private static String timeDataUrl(MaconomyConfiguration configuration, LocalDate date, String user) {
+        return configuration.getUrl() + "/timeregistration/data;any?" + query(date, user);
     }
 
-    private static String timeDataUrl(MaconomyConfiguration maconomyConfiguration, LocalDate date, String user) {
-        return maconomyConfiguration.getUrl() + String.format(
-                "/timeregistration/data;any?card.datevar=%s&card.employeenumbervar=%s",
-                date,
-                user
-        );
+    private static String initTimeDataUrl(MaconomyConfiguration configuration, LocalDate date, String user) {
+        return configuration.getUrl() + "/timeregistration/data;any/table/init?" + query(date, user);
     }
 
-    private static String format() {
-        // Dunno where these apply, they seem to ignore them mostly
-        return "date-format=\"M/d/yy\";time-format=\"HH:mm\";thousand-separator=\",\";decimal-separator=\".\";number-of-decimals=2";
+    private static String searchProjects(MaconomyConfiguration configuration) {
+        return configuration.getUrl() + "/timeregistration/data/table/search;foreignkey=jobnumber_jobheader?fields=jobnumber,jobname,customernumber,name1";
+    }
+
+    private static String searchJobs(MaconomyConfiguration configuration) {
+        return configuration.getUrl() + "/timeregistration/data/table/search;foreignkey=taskname_tasklistline?fields=taskname,description";
+    }
+
+    private static String writeNewTimeDataUrl(MaconomyConfiguration configuration, LocalDate date, String user) {
+        return configuration.getUrl() + String.format("/timeregistration/data;any/table?%s", query(date, user));
+    }
+
+    private static String updateTimeDataUrl(MaconomyConfiguration configuration, LocalDate date, String user, int rowNumber) {
+        return configuration.getUrl() + String.format("/timeregistration/data;any/table/%s?%s", rowNumber, query(date, user));
+    }
+
+    private static String query(LocalDate date, String user) {
+        return String.format("card.datevar=%s&card.employeenumbervar=%s", date, user);
     }
 
 }

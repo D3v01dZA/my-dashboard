@@ -19,6 +19,14 @@ public class MaconomyConfiguration {
     @NonNull
     private String password;
 
+    @Getter
+    @NonNull
+    private String projectId;
+
+    @Getter
+    @NonNull
+    private String projectTaskId;
+
     public String getAuthorization() {
         return Base64.getEncoder().encodeToString((username + ":" + password).getBytes());
     }

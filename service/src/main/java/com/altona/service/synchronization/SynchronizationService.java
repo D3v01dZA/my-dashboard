@@ -29,25 +29,26 @@ public class SynchronizationService {
     }
 
     public Optional<SynchronizeResult> synchronize(UserContext userContext, Project project, int synchronizationId, SynchronizeCommand command) {
+        SynchronizeRequest request = new SynchronizeRequest(synchronizationId, userContext, project, command);
         return synchronizationRepository.synchronization(userContext, project.getId(), synchronizationId)
-                .map(this::createService)
-                .map(synchronizationResult -> synchronize(userContext, project, command, synchronizationResult));
+                .map(synchronization -> createService(synchronization, request))
+                .map(this::synchronize);
     }
 
     public List<SynchronizeResult> synchronize(UserContext userContext, Project project) {
         return synchronizationRepository.synchronizations(userContext, project.getId()).stream()
-                .map(this::createService)
-                .map(synchronizationServiceResult -> synchronize(userContext, project, SynchronizeCommand.current(), synchronizationServiceResult))
+                .map(synchronization -> createService(synchronization, new SynchronizeRequest(synchronization.getId(), userContext, project, SynchronizeCommand.current())))
+                .map(this::synchronize)
                 .collect(Collectors.toList());
     }
 
-    private Result<Synchronizer, SynchronizeError> createService(Synchronization synchronization) {
-        return synchronization.createService(applicationContext);
+    private Result<Synchronizer, SynchronizeError> createService(Synchronization synchronization, SynchronizeRequest request) {
+        return synchronization.createService(applicationContext, request);
     }
 
-    private SynchronizeResult synchronize(UserContext userContext, Project project, SynchronizeCommand command, Result<Synchronizer, SynchronizeError> synchronizationResult) {
+    private SynchronizeResult synchronize(Result<Synchronizer, SynchronizeError> synchronizationResult) {
         return synchronizationResult.map(
-                synchronizationService -> synchronizationService.synchronize(userContext, project, command),
+                Synchronizer::synchronize,
                 SynchronizeResult::failure
         );
     }
