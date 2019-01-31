@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.sql.DataSource;
-import java.time.Instant;
+import java.util.Date;
 
 import static com.altona.util.ObjectMapperHelper.serialize;
 
@@ -33,7 +33,7 @@ public class SynchronizationTraceRepository {
         synchronizationTraceJdbcInsert.execute(new MapSqlParameterSource()
                 .addValue("user_id", userId)
                 .addValue("project_id", projectId)
-                .addValue("time", Instant.now())
+                .addValue("time", new Date())
                 .addValue("stage", stage)
                 .addValue("value", encryptor.encrypt(serialize(objectMapper, value))));
     }
@@ -43,7 +43,7 @@ public class SynchronizationTraceRepository {
         synchronizationTraceJdbcInsert.execute(new MapSqlParameterSource()
                 .addValue("user_id", userId)
                 .addValue("project_id", projectId)
-                .addValue("time", Instant.now())
+                .addValue("time", new Date())
                 .addValue("stage", stage)
                 .addValue("value", encryptor.encrypt(value)));
     }

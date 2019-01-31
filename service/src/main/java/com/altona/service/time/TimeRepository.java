@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 import javax.sql.DataSource;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,7 +31,7 @@ public class TimeRepository {
      */
     private static final int MINIMUM_LENGTH = 22;
     private static final int EXPECTED_LENGTH = 26;
-    private static Instant padMissingZeroMillis(String date) {
+    private static Date padMissingZeroMillis(String date) {
         try {
             char padding = '0';
             if (date.length() < MINIMUM_LENGTH) {
@@ -47,7 +47,7 @@ public class TimeRepository {
                 date = lhs + padding + rhs;
                 padding = '0';
             }
-            return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSX").parse(date).toInstant();
+            return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSX").parse(date);
         } catch (ParseException e) {
             throw new IllegalStateException(e);
         }
@@ -74,6 +74,14 @@ public class TimeRepository {
                 .usingGeneratedKeyColumns("id");
     }
 
+    public List<Time> timeList(int projectId) {
+        return namedJdbc.query(
+                "SELECT id, type, start_time, end_time FROM time WHERE project_id = :projectId",
+                new MapSqlParameterSource("projectId", projectId),
+                TIME_ROW_MAPPER
+        );
+    }
+
     public Optional<Time> time(int projectId, int timeId) {
         return getSingleTimeFromQuery(
                 "SELECT id, type, start_time, end_time FROM time WHERE id = :id AND project_id = :projectId",
@@ -92,7 +100,7 @@ public class TimeRepository {
         );
     }
 
-    public List<Time> timesFromDate(int projectId, Instant fromTime) {
+    public List<Time> timesFromDate(int projectId, Date fromTime) {
         return namedJdbc.query(
                 "SELECT id, type, start_time, end_time FROM time WHERE project_id = :projectId AND start_time > :fromTime",
                 new MapSqlParameterSource()
@@ -102,7 +110,7 @@ public class TimeRepository {
         );
     }
 
-    public List<Time> timeListBetween(int projectId, Instant from, Instant to) {
+    public List<Time> timeListBetween(int projectId, Date from, Date to) {
         return namedJdbc.query(
                 "SELECT id, type, start_time, end_time FROM time WHERE " +
                         "(" +
@@ -124,12 +132,12 @@ public class TimeRepository {
     public int startTime(int projectId, TimeType type) {
         return timeJdbcInsert.executeAndReturnKey(new MapSqlParameterSource()
                 .addValue("type", type.name())
-                .addValue("start_time", Instant.now())
+                .addValue("start_time", new Date())
                 .addValue("project_id", projectId))
                 .intValue();
     }
 
-    public void stopTime(int projectId, int id, Instant stopTime) {
+    public void stopTime(int projectId, int id, Date stopTime) {
         namedJdbc.update(
                 "UPDATE time SET end_time = :endTime WHERE id = :id AND project_id = :projectId",
                 new MapSqlParameterSource()

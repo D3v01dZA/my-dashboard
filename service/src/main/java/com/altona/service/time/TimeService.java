@@ -16,9 +16,9 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
-import java.time.Instant;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -46,7 +46,7 @@ public class TimeService {
         return runningWorkAwareFunction(
                 project,
                 runningWork -> {
-                    Instant now = Instant.now();
+                    Date now = new Date();
                     Time endedWork = stopTime(project, runningWork, now);
                     return runningBreakAwareFunction(
                             project,
@@ -107,7 +107,7 @@ public class TimeService {
         return runningWorkAwareFunction(
                 project,
                 runningWork -> {
-                    Instant now = Instant.now();
+                    Date now = new Date();
                     LocalTime breakTime = timeRepository.timesFromDate(project.getId(), runningWork.getStart())
                             .stream()
                             .map(time -> {
@@ -129,10 +129,10 @@ public class TimeService {
     }
 
     private Time stopTime(Project project, Time time) {
-        return stopTime(project, time, Instant.now());
+        return stopTime(project, time, new Date());
     }
 
-    private Time stopTime(Project project, Time time, Instant date) {
+    private Time stopTime(Project project, Time time, Date date) {
         timeRepository.stopTime(project.getId(), time.getId(), date);
         return timeRepository.time(project.getId(), time.getId()).get();
     }

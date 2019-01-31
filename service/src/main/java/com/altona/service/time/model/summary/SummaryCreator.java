@@ -6,7 +6,6 @@ import com.altona.util.Result;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
@@ -27,7 +26,7 @@ public class SummaryCreator {
     private SummaryConfiguration summaryConfiguration;
 
     public Result<Summary, SummaryFailure> create(List<TimeCombination> timeCombinations) {
-        Instant now = Instant.now();
+        Date now = new Date();
         Map<LocalDate, LocalTime> timeMap = new HashMap<>();
         for (TimeCombination timeCombination : timeCombinations) {
             if (!timeCombination.isStopped()) {
@@ -63,7 +62,7 @@ public class SummaryCreator {
         return Result.success(new Summary(from, to, summaryTimes));
     }
 
-    private Optional<SummaryFailure> addTime(Map<LocalDate, LocalTime> map, TimeCombination time, Instant now) {
+    private Optional<SummaryFailure> addTime(Map<LocalDate, LocalTime> map, TimeCombination time, Date now) {
         LocalDate fromDate = timeConfig.localize(time.getStart()).toLocalDate();
         LocalDate toDate = timeConfig.localize(time.getEnd(now)).toLocalDate();
         if (fromDate.equals(toDate)) {
