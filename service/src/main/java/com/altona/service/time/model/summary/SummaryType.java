@@ -18,16 +18,10 @@ public enum SummaryType {
             return new SummaryConfiguration(userContext.localize(new Date()), userContext.firstDayOfWeek(), userContext.today().plusDays(1), TimeRounding.NONE, NotStoppedAction.EXCLUDE);
         }
     },
-    DAY {
+    CURRENT_MONTH {
         @Override
         public SummaryConfiguration getConfiguration(UserContext userContext) {
-            return new SummaryConfiguration(userContext.localize(new Date()), userContext.today(), userContext.today().plusDays(1), TimeRounding.NONE, NotStoppedAction.EXCLUDE);
-        }
-    },
-    WEEK {
-        @Override
-        public SummaryConfiguration getConfiguration(UserContext userContext) {
-            return new SummaryConfiguration(userContext.localize(new Date()), userContext.today().minusDays(6), userContext.today().plusDays(1), TimeRounding.NONE, NotStoppedAction.EXCLUDE);
+            return new SummaryConfiguration(userContext.localize(new Date()), userContext.firstDayOfMonth(), userContext.today().plusDays(1), TimeRounding.NONE, NotStoppedAction.EXCLUDE);
         }
     };
 

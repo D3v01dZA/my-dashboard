@@ -41,6 +41,11 @@ public class UserContext extends User implements TimeConfig, Encryptor {
     }
 
     @Override
+    public LocalDate firstDayOfMonth() {
+        return today().withDayOfMonth(1);
+    }
+
+    @Override
     public LocalDateTime localize(Date date) {
         return date.toInstant().atZone(timeZone.toZoneId()).toLocalDateTime();
     }
