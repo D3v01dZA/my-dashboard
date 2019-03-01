@@ -63,8 +63,6 @@ public class Summary {
                 }
             } else if (right.isPresent() && right.get().isAfter(LocalTime.of(0, 0))) {
                 return Result.error(SummaryFailure.CURRENT_TIME_SMALLER_THAN_DIFFERENCE);
-            } else {
-                differenceTimes.put(current, LocalTime.of(0, 0));
             }
         }
         return Result.success(new Summary(fromDate, toDate, differenceTimes));
