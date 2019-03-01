@@ -17,6 +17,7 @@ public class SystemProperties {
         System.setProperty("webdriver.chrome.driver", environment.getRequiredProperty("webdriver.chrome.driver"));
         System.setProperty("webdriver.chrome.headless", environment.getRequiredProperty("webdriver.chrome.headless"));
         System.setProperty("webdriver.chrome.silent", environment.getRequiredProperty("webdriver.chrome.silent"));
+        System.setProperty("webdriver.chrome.linux", environment.getRequiredProperty("webdriver.chrome.linux"));
     }
 
 }

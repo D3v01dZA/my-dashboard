@@ -20,6 +20,9 @@ public class NetsuiteContext implements WebDriver, TakesScreenshot {
                 .build();
         ChromeOptions chromeOptions = new ChromeOptions();
         chromeOptions.setHeadless(Boolean.valueOf(System.getProperty("webdriver.chrome.headless")));
+        if (Boolean.valueOf("webdriver.chrome.linux")) {
+            chromeOptions.addArguments("--disable-dev-shm-usage");
+        }
         return new ChromeDriver(chromeDriverService, chromeOptions);
     }
 
