@@ -2,7 +2,7 @@ package com.altona.service.synchronization.maconomy;
 
 import com.altona.service.synchronization.SynchronizeRequest;
 import com.altona.service.synchronization.maconomy.model.MaconomyConfiguration;
-import com.altona.service.synchronization.maconomy.model.TimeData;
+import com.altona.service.synchronization.maconomy.model.MaconomyTimeData;
 import com.altona.service.synchronization.SynchronizationTraceRepository;
 import com.altona.service.synchronization.maconomy.model.root.Root;
 import com.altona.service.synchronization.maconomy.model.get.Get;
@@ -71,12 +71,12 @@ public class MaconomyRepository {
     public Result<Project, String> searchProjectData(
             SynchronizeRequest request,
             MaconomyConfiguration configuration,
-            TimeData timeData
+            MaconomyTimeData maconomyTimeData
     ) {
         HttpHeaders httpHeaders = basicHeaders(configuration);
 
         String search = "Search Projects";
-        String postData = serialize(objectMapper, new Root(timeData));
+        String postData = serialize(objectMapper, new Root(maconomyTimeData));
         synchronizationTraceRepository.trace(request, search + " Request", postData);
 
         HttpEntity<String> entity = new HttpEntity<>(postData, httpHeaders);
@@ -87,17 +87,38 @@ public class MaconomyRepository {
     public Result<Job, String> searchJobData(
             SynchronizeRequest request,
             MaconomyConfiguration configuration,
-            TimeData timeData
+            MaconomyTimeData maconomyTimeData
     ) {
         HttpHeaders httpHeaders = basicHeaders(configuration);
 
         String search = "Search Jobs";
-        String postData = serialize(objectMapper, new Root(timeData));
+        String postData = serialize(objectMapper, new Root(maconomyTimeData));
         synchronizationTraceRepository.trace(request, search + " Request", postData);
 
         HttpEntity<String> entity = new HttpEntity<>(postData, httpHeaders);
         String url = searchJobs(configuration);
         return executeRequest(request, url, entity, POST, Job.class, search);
+    }
+
+    public Result<Get, String> updateTimeData(
+            SynchronizeRequest request,
+            MaconomyConfiguration configuration,
+            LocalDate date,
+            String employee,
+            String concurrencyControl,
+            int rowNumber,
+            MaconomyTimeData maconomyTimeData
+    ) {
+        HttpHeaders httpHeaders = basicHeaders(configuration);
+        httpHeaders.add("Maconomy-Concurrency-Control", concurrencyControl);
+
+        String what = "Update Time Data";
+        String postData = serialize(objectMapper, new Root(maconomyTimeData));
+        synchronizationTraceRepository.trace(request, what + " Request", postData);
+
+        HttpEntity<String> entity = new HttpEntity<>(postData, httpHeaders);
+        String url = updateTimeDataUrl(configuration, date, employee, rowNumber);
+        return executeRequest(request, url, entity, POST, Get.class, what);
     }
 
     public Result<Get, String> writeTimeData(
@@ -106,34 +127,13 @@ public class MaconomyRepository {
             LocalDate date,
             String employee,
             String concurrencyControl,
-            int rowNumber,
-            TimeData timeData
-    ) {
-        HttpHeaders httpHeaders = basicHeaders(configuration);
-        httpHeaders.add("Maconomy-Concurrency-Control", concurrencyControl);
-
-        String what = "Update Time Data";
-        String postData = serialize(objectMapper, new Root(timeData));
-        synchronizationTraceRepository.trace(request, what + " Request", postData);
-
-        HttpEntity<String> entity = new HttpEntity<>(postData, httpHeaders);
-        String url = updateTimeDataUrl(configuration, date, employee, rowNumber);
-        return executeRequest(request, url, entity, POST, Get.class, what);
-    }
-
-    public Result<Get, String> writeNewTimeData(
-            SynchronizeRequest request,
-            MaconomyConfiguration configuration,
-            LocalDate date,
-            String employee,
-            String concurrencyControl,
-            TimeData timeData
+            MaconomyTimeData maconomyTimeData
     ) {
         HttpHeaders httpHeaders = basicHeaders(configuration);
         httpHeaders.add("Maconomy-Concurrency-Control", concurrencyControl);
 
         String what = "New Time Data";
-        String postData = serialize(objectMapper, new Root(timeData));
+        String postData = serialize(objectMapper, new Root(maconomyTimeData));
         synchronizationTraceRepository.trace(request, what + " Request", postData);
 
         HttpEntity<String> entity = new HttpEntity<>(postData, httpHeaders);

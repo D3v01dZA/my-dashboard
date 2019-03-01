@@ -18,16 +18,15 @@ public class SynchronizeRequest implements TimeConfig, Encryptor {
     @Getter
     private String attemptId = UUID.randomUUID().toString();
     @Getter
-    @NonNull
-    private int synchronizationId;
+    private final int synchronizationId;
     @NonNull
     @Delegate(types = { TimeConfig.class, Encryptor.class })
-    private UserContext user;
+    private final UserContext user;
     @Getter
     @NonNull
-    private Project project;
+    private final Project project;
     @NonNull
-    private SynchronizeCommand command;
+    private final SynchronizeCommand command;
 
     public int getPeriodsBack() {
         return command.getPeriodsBack();

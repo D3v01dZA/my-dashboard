@@ -20,7 +20,7 @@ public class Result<T, E> {
     private T success;
     private E error;
 
-    public <R> Result<R, E> mapSuccess(
+    public <R> Result<R, E> success(
             Function<? super T, ? extends R> whenSuccess
     ) {
         if (success != null) {
@@ -29,7 +29,7 @@ public class Result<T, E> {
         return (Result<R, E>) this;
     }
 
-    public <R> Result<R, E> flatMapSuccess(
+    public <R> Result<R, E> successf(
             Function<? super T, Result<R, E>> whenSuccess
     ) {
         if (success != null) {
@@ -38,7 +38,7 @@ public class Result<T, E> {
         return (Result<R, E>) this;
     }
 
-    public <R> Result<T, R> mapError(
+    public <R> Result<T, R> error(
             Function<? super E, ? extends R> whenError
     ) {
         if (success != null) {

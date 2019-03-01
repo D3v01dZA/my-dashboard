@@ -12,6 +12,10 @@ public class LocalDateIterator implements Iterator<LocalDate> {
         return () -> new LocalDateIterator(from, to);
     }
 
+    public static Iterable<LocalDate> exclusive(LocalDate from, LocalDate to) {
+        return () -> new LocalDateIterator(from, to.minusDays(1));
+    }
+
     private LocalDate current;
     private LocalDate to;
 

@@ -1,8 +1,10 @@
 package com.altona.html;
 
 import com.altona.facade.SynchronizationFacade;
+import com.altona.security.UserContext;
 import com.altona.service.synchronization.model.Synchronization;
 import com.altona.security.UserService;
+import com.altona.service.synchronization.model.SynchronizationTrace;
 import com.altona.service.synchronization.model.SynchronizeCommand;
 import com.altona.service.synchronization.model.SynchronizeResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -61,6 +63,20 @@ public class SynchronizationController {
         SynchronizeCommand command = periodsBack == null ? SynchronizeCommand.current() : SynchronizeCommand.previous(periodsBack);
         return synchronizationFacade.synchronize(userService.getUserContext(authentication, timeZone), projectId, synchronizationId, command)
                 .map(synchronizeResult -> new ResponseEntity<>(synchronizeResult, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @RequestMapping(path = "/time/project/{projectId}/synchronization/{synchronizationId}/trace/{attemptId}", method = RequestMethod.GET, produces = "application/json")
+    public ResponseEntity<List<SynchronizationTrace>> synchronizeTrace(
+            Authentication authentication,
+            TimeZone timeZone,
+            @PathVariable Integer projectId,
+            @PathVariable Integer synchronizationId,
+            @PathVariable String attemptId
+    ) {
+        UserContext userContext = userService.getUserContext(authentication, timeZone);
+        return synchronizationFacade.traces(userContext, projectId, synchronizationId, attemptId)
+                .map(traces -> new ResponseEntity<>(traces, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 

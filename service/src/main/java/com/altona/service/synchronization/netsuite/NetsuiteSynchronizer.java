@@ -1,0 +1,99 @@
+package com.altona.service.synchronization.netsuite;
+
+import com.altona.service.synchronization.SynchronizeRequest;
+import com.altona.service.synchronization.Synchronizer;
+import com.altona.service.synchronization.model.SynchronizeResult;
+import com.altona.service.synchronization.netsuite.model.NetsuiteConfiguration;
+import com.altona.service.synchronization.netsuite.model.NetsuiteContext;
+import com.altona.service.synchronization.netsuite.model.NetsuiteTimeData;
+import com.altona.service.synchronization.netsuite.model.NetsuiteTimeDataList;
+import com.altona.service.time.TimeService;
+import com.altona.service.time.model.summary.*;
+import com.altona.util.Result;
+import lombok.AllArgsConstructor;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.Date;
+import java.util.stream.Collectors;
+
+@Slf4j
+@AllArgsConstructor
+public class NetsuiteSynchronizer implements Synchronizer {
+
+    // Application Beans
+    @NonNull
+    private final TimeService timeService;
+
+    @NonNull
+    private final NetsuiteBrowser netsuiteBrowser;
+
+    // Configuration
+    private final int synchronizationId;
+
+    @NonNull
+    private final SynchronizeRequest request;
+
+    @NonNull
+    private final NetsuiteConfiguration netsuiteConfiguration;
+
+    @Override
+    public int getSynchronizationId() {
+        return synchronizationId;
+    }
+
+    @Override
+    public SynchronizeResult synchronize() {
+        return netsuiteBrowser.login(request, netsuiteConfiguration)
+                .successf(this::synchronizeTime)
+                .map(
+                        summary -> SynchronizeResult.success(this, request, summary),
+                        error -> SynchronizeResult.failure(this, request, error)
+                );
+    }
+
+    private Result<Summary, String> synchronizeTime(NetsuiteContext netsuiteContext) {
+        try {
+            netsuiteBrowser.weeklyTimesheets(netsuiteContext, request);
+            for (int i = 0; i < request.getPeriodsBack(); i++) {
+                netsuiteBrowser.previousWeeklyTimesheet(netsuiteContext, request);
+            }
+            NetsuiteTimeDataList data = netsuiteBrowser.weeklyData(netsuiteContext, request);
+
+            SummaryConfiguration configuration = new SummaryConfiguration(
+                    request.localize(new Date()),
+                    data.getWeekStart(),
+                    data.getWeekEnd(),
+                    TimeRounding.NEAREST_FIFTEEN,
+                    NotStoppedAction.FAIL
+            );
+            return timeService.summary(request, request.getProject(), configuration)
+                    .error(SummaryFailure::getMessage)
+                    .successf(summary -> createLine(netsuiteContext, data, summary));
+        } finally {
+            netsuiteBrowser.close(netsuiteContext, request);
+        }
+    }
+
+    private Result<Summary, String> createLine(NetsuiteContext netsuiteContext, NetsuiteTimeDataList data, Summary summary) {
+        Summary current = data.getAllData();
+        return summary.getDifference(current)
+                .map(
+                        difference -> {
+                            NetsuiteTimeData line = new NetsuiteTimeData(
+                                    netsuiteConfiguration.getProject(),
+                                    netsuiteConfiguration.getTask(),
+                                    difference.getTimes().stream()
+                                            .collect(Collectors.toMap(
+                                                    SummaryTime::getDate,
+                                                    SummaryTime::getTime
+                                            ))
+                            );
+                            netsuiteBrowser.addLine(netsuiteContext, request, difference.getFromDate(), difference.getToDate(), line);
+                            return Result.success(summary);
+                        },
+                        summaryFailure -> Result.error(summaryFailure.getMessage())
+                );
+    }
+
+}

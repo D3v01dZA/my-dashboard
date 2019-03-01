@@ -3,10 +3,7 @@ package com.altona.service.synchronization;
 import com.altona.service.project.model.Project;
 import com.altona.security.Encryptor;
 import com.altona.security.UserContext;
-import com.altona.service.synchronization.model.Synchronization;
-import com.altona.service.synchronization.model.SynchronizeCommand;
-import com.altona.service.synchronization.model.SynchronizeError;
-import com.altona.service.synchronization.model.SynchronizeResult;
+import com.altona.service.synchronization.model.*;
 import com.altona.util.Result;
 import lombok.AllArgsConstructor;
 import org.springframework.context.ApplicationContext;
@@ -22,10 +19,16 @@ public class SynchronizationService {
 
     private ApplicationContext applicationContext;
     private SynchronizationRepository synchronizationRepository;
+    private SynchronizationTraceRepository synchronizationTraceRepository;
 
     public Synchronization createSynchronization(Encryptor encryptor, Project project, Synchronization synchronization) {
         int id = synchronizationRepository.createSynchronization(encryptor, project.getId(), synchronization);
         return synchronizationRepository.synchronization(encryptor, project.getId(), id).get();
+    }
+
+    public Optional<List<SynchronizationTrace>> traces(UserContext userContext, Project project, int synchronizationId, String attemptId) {
+        return synchronizationRepository.synchronization(userContext, project.getId(), synchronizationId)
+                .map(synchronization -> synchronizationTraceRepository.traces(userContext, project.getId(), synchronizationId, attemptId));
     }
 
     public Optional<SynchronizeResult> synchronize(UserContext userContext, Project project, int synchronizationId, SynchronizeCommand command) {

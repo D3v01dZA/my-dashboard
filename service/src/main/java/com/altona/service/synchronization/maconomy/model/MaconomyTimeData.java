@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 
 @Getter
 @AllArgsConstructor
-public class TimeData {
+public class MaconomyTimeData {
 
     // Project Data
     @Setter

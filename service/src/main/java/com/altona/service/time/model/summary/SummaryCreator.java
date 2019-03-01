@@ -49,13 +49,13 @@ public class SummaryCreator {
         LocalDate from = summaryConfiguration.getFrom();
         LocalDate to = summaryConfiguration.getTo();
         Predicate<LocalDate> between = betweenInclusive(from, to);
-        LinkedHashMap<LocalDate, SummaryTime> summaryTimes = timeMap.entrySet().stream()
+        LinkedHashMap<LocalDate, LocalTime> summaryTimes = timeMap.entrySet().stream()
                 .filter(entry -> between.test(entry.getKey()))
                 .sorted(Comparator.comparing(Map.Entry::getKey))
                 .map(entry -> new SummaryTime(entry.getKey(), summaryConfiguration.getRounding().round(entry.getValue())))
                 .collect(Collectors.toMap(
                         SummaryTime::getDate,
-                        Function.identity(),
+                        SummaryTime::getTime,
                         (one, two) -> { throw new IllegalStateException("Should be impossible but " + one + " and " + two + " are identical"); },
                         LinkedHashMap::new
                 ));

@@ -3,7 +3,7 @@ package com.altona.service.synchronization.maconomy;
 import com.altona.service.synchronization.SynchronizeRequest;
 import com.altona.service.synchronization.Synchronizer;
 import com.altona.service.synchronization.maconomy.model.MaconomyConfiguration;
-import com.altona.service.synchronization.maconomy.model.TimeData;
+import com.altona.service.synchronization.maconomy.model.MaconomyTimeData;
 import com.altona.service.synchronization.maconomy.model.get.*;
 import com.altona.service.synchronization.maconomy.model.searchjob.JobData;
 import com.altona.service.synchronization.maconomy.model.searchproject.ProjectData;
@@ -13,6 +13,8 @@ import com.altona.service.time.model.summary.*;
 import com.altona.util.LocalDateIterator;
 import com.altona.util.Result;
 import lombok.AllArgsConstructor;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -21,50 +23,61 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
-// This is not an @Service because it is constructed based on the user
+@Slf4j
 @AllArgsConstructor
 public class MaconomySynchronizer implements Synchronizer {
 
     // Application Beans
+    @NonNull
     private TimeService timeService;
+
+    @NonNull
     private MaconomyRepository maconomyRepository;
 
     // Configuration
-    private int synchronizationServiceId;
+    private int synchronizationId;
+
+    @NonNull
     private SynchronizeRequest request;
+
+    @NonNull
     private MaconomyConfiguration configuration;
 
     @Override
     public int getSynchronizationId() {
-        return synchronizationServiceId;
+        return synchronizationId;
     }
 
     @Override
     public SynchronizeResult synchronize() {
         int periodsBack = request.getPeriodsBack();
         // Logic isn't clean for the 0 case because of where Card information is - might do an API review to remove this special case?
+        log.info("Synchronization {}: Synchronizing Maconomy {} periods back", synchronizationId, periodsBack);
         if (periodsBack == 0) {
             return maconomyRepository.timeData(request, configuration)
-                    .flatMapSuccess(this::saveTimeData)
+                    .successf(this::saveTimeData)
                     .map(
-                            summary -> SynchronizeResult.success(this, summary),
-                            error -> SynchronizeResult.failure(this, error)
+                            summary -> SynchronizeResult.success(this, request, summary),
+                            error -> SynchronizeResult.failure(this, request, error)
                     );
         }
         return maconomyRepository.timeData(request, configuration)
-                .flatMapSuccess(currentTime -> saveTimeDataRelative(currentTime.getCardData(), periodsBack - 1))
+                .successf(currentTime -> saveTimeDataRelative(currentTime.getCardData(), periodsBack - 1))
                 .map(
-                        summary -> SynchronizeResult.success(this, summary),
-                        error -> SynchronizeResult.failure(this, error)
+                        summary -> SynchronizeResult.success(this, request, summary),
+                        error -> SynchronizeResult.failure(this, request, error)
                 );
     }
 
     private Result<Summary, String> saveTimeDataRelative(CardData cardData, int periodsBack) {
         LocalDate periodStart = cardData.getPeriodstartvar();
         String employee = cardData.getEmployeenumbervar();
+
+        log.info("Retrieving Relative Maconomy {} periods back with date {}", periodsBack, periodStart);
         return maconomyRepository.timeData(request, configuration, periodStart.minusDays(1), employee)
-                .flatMapSuccess(currentTime -> {
+                .successf(currentTime -> {
                     if (periodsBack == 0) {
                         return saveTimeData(currentTime);
                     } else {
@@ -77,63 +90,71 @@ public class MaconomySynchronizer implements Synchronizer {
     private Result<Summary, String> saveTimeData(Get currentTime) {
         CardRecord cardRecord = currentTime.getCardRecord();
         CardData cardData = cardRecord.getData();
+        LocalDate periodStart = cardData.getPeriodstartvar();
+        LocalDate periodEnd = cardData.getPeriodendvar();
         SummaryConfiguration configuration = new SummaryConfiguration(
                 request.localize(new Date()),
-                cardData.getPeriodstartvar(),
-                cardData.getPeriodendvar(),
+                periodStart,
+                periodEnd,
                 TimeRounding.NEAREST_FIFTEEN,
                 NotStoppedAction.FAIL
         );
-
+        log.info("Retrieving time data {}-{}", periodStart, periodEnd);
         return timeService.summary(request, request.getProject(), configuration)
-                .mapError(SummaryFailure::getMessage)
-                .flatMapSuccess(summary -> saveTimeDataWithSummary(currentTime, summary, cardRecord));
+                .error(SummaryFailure::getMessage)
+                .successf(summary -> saveTimeDataWithSummary(currentTime, summary, cardRecord));
     }
 
     private Result<Summary, String> saveTimeDataWithSummary(Get currentTime, Summary summary, CardRecord cardRecord) {
         CardData cardData = cardRecord.getData();
         List<TableRecord> tableRecords = currentTime.getTableRecords();
+        LocalDate date = cardData.getDatevar();
         if (tableRecords.isEmpty()) {
-            return maconomyRepository.initTimeData(request, configuration, cardData.getDatevar(), cardData.getEmployeenumbervar(), cardRecord.getMeta().getConcurrencyControl())
-                    .flatMapSuccess(init -> setProjectAndJobAndWriteTimeData(init.getData(), summary, cardRecord));
+            log.info("Initializing time data for period with date {}", date);
+            return maconomyRepository.initTimeData(request, configuration, date, cardData.getEmployeenumbervar(), cardRecord.getMeta().getConcurrencyControl())
+                    .successf(init -> setProjectAndJobAndWriteTimeData(init.getData(), summary, cardRecord));
         } else if (tableRecords.size() == 1) {
             TableRecord tableRecord = tableRecords.get(0);
-            TimeData timeData = tableRecord.getData();
-            rewriteTimes(timeData, summary);
+            MaconomyTimeData maconomyTimeData = tableRecord.getData();
+            rewriteTimes(maconomyTimeData, summary);
             TableMeta meta = tableRecord.getMeta();
-            return maconomyRepository.writeTimeData(
+            log.info("Updating time data");
+            return maconomyRepository.updateTimeData(
                     request,
                     configuration,
-                    cardData.getDatevar(),
+                    date,
                     cardData.getEmployeenumbervar(),
                     meta.getConcurrencyControl(),
                     meta.getRowNumber(),
-                    timeData
-            ).flatMapSuccess(get -> checkTimeData(get, summary));
+                    maconomyTimeData
+            ).successf(get -> checkTimeData(get, summary));
         } else {
             return Result.error("Expected only one meta record");
         }
     }
 
-    private Result<Summary, String> setProjectAndJobAndWriteTimeData(TimeData timeData, Summary summary, CardRecord cardRecord) {
-        return maconomyRepository.searchProjectData(request, configuration, timeData)
-                .flatMapSuccess(project -> project.getProjectData(configuration.getProjectId())
+    private Result<Summary, String> setProjectAndJobAndWriteTimeData(MaconomyTimeData maconomyTimeData, Summary summary, CardRecord cardRecord) {
+        log.info("Finding project");
+        return maconomyRepository.searchProjectData(request, configuration, maconomyTimeData)
+                .successf(project -> project.getProjectData(configuration.getProjectId())
                         .map(projectData -> {
-                            rewriteProject(timeData, projectData);
-                            return maconomyRepository.searchJobData(request, configuration, timeData)
-                                    .flatMapSuccess(job -> job.getJobData(configuration.getProjectTaskId())
+                            rewriteProject(maconomyTimeData, projectData);
+                            log.info("Finding job");
+                            return maconomyRepository.searchJobData(request, configuration, maconomyTimeData)
+                                    .successf(job -> job.getJobData(configuration.getProjectTaskId())
                                             .map(jobData -> {
-                                                rewriteJob(timeData, jobData);
-                                                rewriteTimes(timeData, summary);
+                                                rewriteJob(maconomyTimeData, jobData);
+                                                rewriteTimes(maconomyTimeData, summary);
                                                 CardData cardData = cardRecord.getData();
-                                                return maconomyRepository.writeNewTimeData(
+                                                log.info("Writing new time data");
+                                                return maconomyRepository.writeTimeData(
                                                         request,
                                                         configuration,
                                                         cardData.getDatevar(),
                                                         cardData.getEmployeenumbervar(),
                                                         cardRecord.getMeta().getConcurrencyControl(),
-                                                        timeData
-                                                ).flatMapSuccess(get -> checkTimeData(get, summary));
+                                                        maconomyTimeData
+                                                ).successf(get -> checkTimeData(get, summary));
                                             })
                                             .orElseGet(() -> Result.error("Job Not Found With Id/Name " + configuration.getProjectTaskId()))
                                     );
@@ -142,54 +163,188 @@ public class MaconomySynchronizer implements Synchronizer {
                 );
     }
 
-    private static Result<Summary, String> checkTimeData(Get get, Summary summary) {
-        return Result.error("Time Data Was Saved But Not Verified");
+    private Result<Summary, String> checkTimeData(Get get, Summary summary) {
+        List<TableRecord> tableRecords = get.getTableRecords();
+        if (tableRecords.size() != 1) {
+            return Result.error("There are " + tableRecords.size() + " time records which is not 1");
+        }
+        MaconomyTimeData maconomyTimeData = tableRecords.get(0).getData();
+        LocalDate fromDate = summary.getFromDate();
+        LocalDate toDate = summary.getToDate();
+        for (LocalDate date : LocalDateIterator.inclusive(fromDate, toDate)) {
+            if (date.getDayOfWeek() == DayOfWeek.MONDAY) {
+                Optional<LocalTime> actualTime = summary.getActualTime(date);
+                if (actualTime.isPresent()) {
+                    BigDecimal time = maconomyTimeData.getNumberday1();
+                    BigDecimal actualTimeDecimal = asDecimal(actualTime.get());
+                    if (!isCloseEnough(actualTimeDecimal, time)) {
+                        return notCloseEnough(actualTimeDecimal, time, DayOfWeek.MONDAY);
+                    }
+                } else {
+                    BigDecimal time = maconomyTimeData.getNumberday1();
+                    if (!isZero(time)) {
+                        return notZero(time, DayOfWeek.MONDAY);
+                    }
+                }
+            } else if (date.getDayOfWeek() == DayOfWeek.TUESDAY) {
+                Optional<LocalTime> actualTime = summary.getActualTime(date);
+                if (actualTime.isPresent()) {
+                    BigDecimal time = maconomyTimeData.getNumberday2();
+                    BigDecimal actualTimeDecimal = asDecimal(actualTime.get());
+                    if (!isCloseEnough(actualTimeDecimal, time)) {
+                        return notCloseEnough(actualTimeDecimal, time, DayOfWeek.TUESDAY);
+                    }
+                } else {
+                    BigDecimal time = maconomyTimeData.getNumberday2();
+                    if (!isZero(time)) {
+                        return notZero(time, DayOfWeek.TUESDAY);
+                    }
+                }
+            } else if (date.getDayOfWeek() == DayOfWeek.WEDNESDAY) {
+                Optional<LocalTime> actualTime = summary.getActualTime(date);
+                if (actualTime.isPresent()) {
+                    BigDecimal time = maconomyTimeData.getNumberday3();
+                    BigDecimal actualTimeDecimal = asDecimal(actualTime.get());
+                    if (!isCloseEnough(actualTimeDecimal, time)) {
+                        return notCloseEnough(actualTimeDecimal, time, DayOfWeek.WEDNESDAY);
+                    }
+                } else {
+                    BigDecimal time = maconomyTimeData.getNumberday3();
+                    if (!isZero(time)) {
+                        return notZero(time, DayOfWeek.WEDNESDAY);
+                    }
+                }
+            } else if (date.getDayOfWeek() == DayOfWeek.THURSDAY) {
+                Optional<LocalTime> actualTime = summary.getActualTime(date);
+                if (actualTime.isPresent()) {
+                    BigDecimal time = maconomyTimeData.getNumberday4();
+                    BigDecimal actualTimeDecimal = asDecimal(actualTime.get());
+                    if (!isCloseEnough(actualTimeDecimal, time)) {
+                        return notCloseEnough(actualTimeDecimal, time, DayOfWeek.THURSDAY);
+                    }
+                } else {
+                    BigDecimal time = maconomyTimeData.getNumberday4();
+                    if (!isZero(time)) {
+                        return notZero(time, DayOfWeek.THURSDAY);
+                    }
+                }
+            } else if (date.getDayOfWeek() == DayOfWeek.FRIDAY) {
+                Optional<LocalTime> actualTime = summary.getActualTime(date);
+                if (actualTime.isPresent()) {
+                    BigDecimal time = maconomyTimeData.getNumberday5();
+                    BigDecimal actualTimeDecimal = asDecimal(actualTime.get());
+                    if (!isCloseEnough(actualTimeDecimal, time)) {
+                        return notCloseEnough(actualTimeDecimal, time, DayOfWeek.FRIDAY);
+                    }
+                } else {
+                    BigDecimal time = maconomyTimeData.getNumberday5();
+                    if (!isZero(time)) {
+                        return notZero(time, DayOfWeek.FRIDAY);
+                    }
+                }
+            } else if (date.getDayOfWeek() == DayOfWeek.SATURDAY) {
+                Optional<LocalTime> actualTime = summary.getActualTime(date);
+                if (actualTime.isPresent()) {
+                    BigDecimal time = maconomyTimeData.getNumberday6();
+                    BigDecimal actualTimeDecimal = asDecimal(actualTime.get());
+                    if (!isCloseEnough(actualTimeDecimal, time)) {
+                        return notCloseEnough(actualTimeDecimal, time, DayOfWeek.SATURDAY);
+                    }
+                } else {
+                    BigDecimal time = maconomyTimeData.getNumberday6();
+                    if (!isZero(time)) {
+                        return notZero(time, DayOfWeek.SATURDAY);
+                    }
+                }
+            } else if (date.getDayOfWeek() == DayOfWeek.SUNDAY) {
+                Optional<LocalTime> actualTime = summary.getActualTime(date);
+                if (actualTime.isPresent()) {
+                    BigDecimal time = maconomyTimeData.getNumberday7();
+                    BigDecimal actualTimeDecimal = asDecimal(actualTime.get());
+                    if (!isCloseEnough(actualTimeDecimal, time)) {
+                        return notCloseEnough(actualTimeDecimal, time, DayOfWeek.SATURDAY);
+                    }
+                } else {
+                    BigDecimal time = maconomyTimeData.getNumberday7();
+                    if (!isZero(time)) {
+                        return notZero(time, DayOfWeek.SUNDAY);
+                    }
+                }
+            } else {
+                throw new IllegalStateException("Summary came with more than 7 dates between " + fromDate + " and " + toDate);
+            }
+        }
+        return Result.success(summary);
     }
 
-    private static void rewriteProject(TimeData timeData, ProjectData projectData) {
-        timeData.setCustomernumbervar(projectData.getCustomernumber());
-        timeData.setCustomernamevar(projectData.getName1());
-        timeData.setJobnamevar(projectData.getJobname());
-        timeData.setJobnumber(projectData.getJobnumber());
+    private boolean isZero(BigDecimal time) {
+        return time == null || time.compareTo(BigDecimal.ZERO) == 0;
     }
 
-    private static void rewriteJob(TimeData timeData, JobData jobData) {
-        timeData.setTaskname(jobData.getTaskname());
-        timeData.setTasktextvar(jobData.getDescription());
+    private boolean isCloseEnough(BigDecimal actualTime, BigDecimal time) {
+        if (time == null) {
+            return false;
+        }
+        if (actualTime.compareTo(time) == 0) {
+            return true;
+        }
+        BigDecimal difference = time.subtract(actualTime).abs();
+        // Within one minute
+        return difference.compareTo(new BigDecimal("0.02")) == -1;
     }
 
-    private static void rewriteTimes(TimeData timeData, Summary summary) {
+    private Result<Summary, String> notCloseEnough(BigDecimal actualTime, BigDecimal time, DayOfWeek day) {
+        return Result.error("Time data for " + day + " expected " + actualTime + " but was " + time);
+    }
+
+    private Result<Summary, String> notZero(BigDecimal time, DayOfWeek day) {
+        return Result.error("Time data for " + day + " expected zero but was " + time);
+    }
+
+    private void rewriteProject(MaconomyTimeData maconomyTimeData, ProjectData projectData) {
+        maconomyTimeData.setCustomernumbervar(projectData.getCustomernumber());
+        maconomyTimeData.setCustomernamevar(projectData.getName1());
+        maconomyTimeData.setJobnamevar(projectData.getJobname());
+        maconomyTimeData.setJobnumber(projectData.getJobnumber());
+    }
+
+    private void rewriteJob(MaconomyTimeData maconomyTimeData, JobData jobData) {
+        maconomyTimeData.setTaskname(jobData.getTaskname());
+        maconomyTimeData.setTasktextvar(jobData.getDescription());
+    }
+
+    private void rewriteTimes(MaconomyTimeData maconomyTimeData, Summary summary) {
         LocalDate fromDate = summary.getFromDate();
         LocalDate toDate = summary.getToDate();
         for (LocalDate date : LocalDateIterator.inclusive(fromDate, toDate)) {
             if (date.getDayOfWeek() == DayOfWeek.MONDAY) {
                 summary.getActualTime(date)
-                        .ifPresent(time -> timeData.setNumberday1(asDecimal(time)));
+                        .ifPresent(time -> maconomyTimeData.setNumberday1(asDecimal(time)));
             } else if (date.getDayOfWeek() == DayOfWeek.TUESDAY) {
                 summary.getActualTime(date)
-                        .ifPresent(time -> timeData.setNumberday2(asDecimal(time)));
+                        .ifPresent(time -> maconomyTimeData.setNumberday2(asDecimal(time)));
             } else if (date.getDayOfWeek() == DayOfWeek.WEDNESDAY) {
                 summary.getActualTime(date)
-                        .ifPresent(time -> timeData.setNumberday3(asDecimal(time)));
+                        .ifPresent(time -> maconomyTimeData.setNumberday3(asDecimal(time)));
             } else if (date.getDayOfWeek() == DayOfWeek.THURSDAY) {
                 summary.getActualTime(date)
-                        .ifPresent(time -> timeData.setNumberday4(asDecimal(time)));
+                        .ifPresent(time -> maconomyTimeData.setNumberday4(asDecimal(time)));
             } else if (date.getDayOfWeek() == DayOfWeek.FRIDAY) {
                 summary.getActualTime(date)
-                        .ifPresent(time -> timeData.setNumberday5(asDecimal(time)));
+                        .ifPresent(time -> maconomyTimeData.setNumberday5(asDecimal(time)));
             } else if (date.getDayOfWeek() == DayOfWeek.SATURDAY) {
                 summary.getActualTime(date)
-                        .ifPresent(time -> timeData.setNumberday6(asDecimal(time)));
+                        .ifPresent(time -> maconomyTimeData.setNumberday6(asDecimal(time)));
             } else if (date.getDayOfWeek() == DayOfWeek.SUNDAY) {
                 summary.getActualTime(date)
-                        .ifPresent(time -> timeData.setNumberday7(asDecimal(time)));
+                        .ifPresent(time -> maconomyTimeData.setNumberday7(asDecimal(time)));
             } else {
                 throw new IllegalStateException("Summary came with more than 7 dates between " + fromDate + " and " + toDate);
             }
         }
     }
 
-    private static BigDecimal asDecimal(LocalTime time) {
+    private BigDecimal asDecimal(LocalTime time) {
         // On the site 1:40 becomes 1.6666666666666665 which I have no idea how to replicate so imma ignore it
         String minutes = new BigDecimal(time.getMinute()).divide(new BigDecimal(60), 16, RoundingMode.FLOOR).toPlainString();
         String minutesWithoutZero = minutes.substring(2);

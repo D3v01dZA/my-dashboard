@@ -1,5 +1,6 @@
 package com.altona.facade;
 
+import com.altona.service.synchronization.model.SynchronizationTrace;
 import com.altona.service.synchronization.model.Synchronization;
 import com.altona.security.UserContext;
 import com.altona.service.project.ProjectService;
@@ -36,6 +37,12 @@ public class SynchronizationFacade {
     public Optional<SynchronizeResult> synchronize(UserContext userContext, int projectId, int synchronizationId, SynchronizeCommand command) {
         return projectService.project(userContext, projectId)
                 .flatMap(project -> synchronizationService.synchronize(userContext, project, synchronizationId, command));
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<List<SynchronizationTrace>> traces(UserContext userContext, int projectId, int synchronizationId, String attemptId) {
+        return projectService.project(userContext, projectId)
+                .flatMap(project -> synchronizationService.traces(userContext, project, synchronizationId, attemptId));
     }
 
 }

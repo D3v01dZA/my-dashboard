@@ -34,6 +34,8 @@ dependencies {
     compile("org.postgresql:postgresql:${potgreDriverVersion}")
     compile("com.google.guava:guava:${guavaVersion}")
 
+    compile("org.seleniumhq.selenium:selenium-java:${seleniumVersion}")
+
     compileOnly("org.projectlombok:lombok:${lombokVersion}")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:${jupiterJunitVersion}")
