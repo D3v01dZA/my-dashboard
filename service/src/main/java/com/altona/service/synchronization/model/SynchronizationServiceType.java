@@ -8,6 +8,8 @@ import com.altona.service.synchronization.maconomy.model.MaconomyConfiguration;
 import com.altona.service.synchronization.netsuite.NetsuiteBrowser;
 import com.altona.service.synchronization.netsuite.NetsuiteSynchronizer;
 import com.altona.service.synchronization.netsuite.model.NetsuiteConfiguration;
+import com.altona.service.synchronization.test.FailingSynchronizer;
+import com.altona.service.synchronization.test.SucceedingSynchronizer;
 import com.altona.service.time.TimeService;
 import com.altona.util.Result;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -63,6 +65,32 @@ public enum SynchronizationServiceType {
                             netsuiteConfiguration
                     )
             );
+        }
+    },
+    SUCCEEDING {
+        @Override
+        public boolean hasValidConfiguration(ObjectMapper objectMapper, Synchronization synchronization) {
+            return true;
+        }
+
+        @Override
+        public Result<Synchronizer, SynchronizeError> createService(ApplicationContext applicationContext, Synchronization synchronization, SynchronizeRequest request) {
+            return Result.success(new SucceedingSynchronizer(
+                    applicationContext.getBean(TimeService.class),
+                    synchronization.getId(),
+                    request
+            ));
+        }
+    },
+    FAILING {
+        @Override
+        public boolean hasValidConfiguration(ObjectMapper objectMapper, Synchronization synchronization) {
+            return true;
+        }
+
+        @Override
+        public Result<Synchronizer, SynchronizeError> createService(ApplicationContext applicationContext, Synchronization synchronization, SynchronizeRequest request) {
+            return Result.success(new FailingSynchronizer(synchronization.getId(), request));
         }
     };
 

@@ -141,6 +141,7 @@ public class TimeActivity extends SecureAppActivity {
 
     private void setupButtons() {
         startButton().setOnClickListener(view -> start());
+        syncButton().setOnClickListener(view -> sync());
         stopButton().setOnClickListener(view -> stop());
         pauseButton().setOnClickListener(view -> pause());
     }
@@ -148,6 +149,7 @@ public class TimeActivity extends SecureAppActivity {
     private void disableInteraction() {
         projectSpinner().setEnabled(false);
         startButton().setEnabled(false);
+        syncButton().setEnabled(false);
         stopButton().setEnabled(false);
         pauseButton().setEnabled(false);
     }
@@ -156,8 +158,27 @@ public class TimeActivity extends SecureAppActivity {
         updateWithCurrentStatus();
         projectSpinner().setEnabled(true);
         startButton().setEnabled(true);
+        syncButton().setEnabled(true);
         stopButton().setEnabled(true);
         pauseButton().setEnabled(true);
+    }
+
+    private void sync() {
+        disableInteraction();
+        Project project = currentProject();
+        timeService().synchronize(
+                project,
+                synchronizationResults -> {
+                    boolean failure = synchronizationResults.stream().anyMatch(synchronizationResult -> !synchronizationResult.isSuccess());
+                    if (failure) {
+                        toast("Synchronization Failed");
+                    } else {
+                        toast("Synchronization Succeeded");
+                    }
+                    enableInteractionAndUpdate();
+                },
+                this::logoutErrorHandler
+        );
     }
 
     private void start() {
@@ -228,6 +249,10 @@ public class TimeActivity extends SecureAppActivity {
 
     protected Button startButton() {
         return findViewById(R.id.time_start_button);
+    }
+
+    protected Button syncButton() {
+        return findViewById(R.id.time_sync_button);
     }
 
     protected LinearLayout secondaryButtonContainer() {

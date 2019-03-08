@@ -146,6 +146,7 @@ public class NetsuiteBrowser {
     }
 
     public void close(NetsuiteContext context, SynchronizeRequest request) {
+        log.info("Closing");
         synchronizationTraceRepository.trace(request, "Before Close", context);
         context.quit();
     }

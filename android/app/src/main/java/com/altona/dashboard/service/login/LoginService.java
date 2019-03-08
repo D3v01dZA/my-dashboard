@@ -13,6 +13,7 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,6 +42,7 @@ public class LoginService implements CookieJar {
         this.activity = activity;
         this.httpClient = new OkHttpClient.Builder()
                 .cookieJar(this)
+                .callTimeout(2, TimeUnit.MINUTES)
                 .build();
         this.settings = new Settings(activity);
         this.session = new Session(activity);

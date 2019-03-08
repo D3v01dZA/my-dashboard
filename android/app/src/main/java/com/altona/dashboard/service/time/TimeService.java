@@ -4,6 +4,7 @@ import com.altona.dashboard.Static;
 import com.altona.dashboard.service.login.LoginService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.IOException;
@@ -40,6 +41,7 @@ public class TimeService {
 
     private static final Logger LOGGER = Logger.getLogger(TimeService.class.getName());
     private static final TypeReference<List<Project>> PROJECT_LIST = new TypeReference<List<Project>>() {};
+    private static final TypeReference<List<SynchronizationResult>> SYNCHRONIZATION_RESULT_LIST = new TypeReference<List<SynchronizationResult>>() {};
 
     private LoginService loginService;
 
@@ -77,6 +79,10 @@ public class TimeService {
 
     public void weekSummary(Project project, Consumer<TimeSummary> onSuccess, Consumer<String> onFailure) {
         request(get(), projectUrl(project) + "/summary?type=CURRENT_WEEK", TimeSummary.class, onSuccess, onFailure);
+    }
+
+    public void synchronize(Project project, Consumer<List<SynchronizationResult>> onSuccess, Consumer<String> onFailure) {
+        request(emptyPost(), projectUrl(project) + "/synchronize", SYNCHRONIZATION_RESULT_LIST, onSuccess, onFailure);
     }
 
     private static Request.Builder emptyPost() {

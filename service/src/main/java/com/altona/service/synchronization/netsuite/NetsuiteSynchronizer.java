@@ -44,6 +44,7 @@ public class NetsuiteSynchronizer implements Synchronizer {
 
     @Override
     public SynchronizeResult synchronize() {
+        log.info("Synchronization {}: Synchronizing Netsuite {} periods back", synchronizationId, request.getPeriodsBack());
         return netsuiteBrowser.login(request, netsuiteConfiguration)
                 .successf(this::synchronizeTime)
                 .map(
@@ -54,6 +55,7 @@ public class NetsuiteSynchronizer implements Synchronizer {
 
     private Result<Summary, String> synchronizeTime(NetsuiteContext netsuiteContext) {
         try {
+            log.info("Retrieving time data for requested period");
             netsuiteBrowser.weeklyTimesheets(netsuiteContext, request);
             for (int i = 0; i < request.getPeriodsBack(); i++) {
                 netsuiteBrowser.previousWeeklyTimesheet(netsuiteContext, request);
