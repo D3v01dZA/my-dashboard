@@ -1,3 +1,5 @@
+certbot certonly
+
 // Create the keystore post renewal
 openssl pkcs12 -export -in fullchain.pem -inkey privkey.pem -out keystore.p12 -name tomcat -CAfile chain.pem -caname root
 
