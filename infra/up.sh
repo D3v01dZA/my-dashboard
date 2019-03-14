@@ -23,3 +23,5 @@ cd "${branch}"
 java -jar ./boot.jar --spring.config.additional-location="application.properties" >> "log.txt" &
 echo $! > "pid.txt"
 cd -
+
+less "${branch}/log.txt"
