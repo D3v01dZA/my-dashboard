@@ -28,4 +28,4 @@ password=`../prop.sh server.ssl.key-store-password application.properties`
 openssl pkcs12 -export -in ssl/fullchain.pem -inkey ssl/privkey.pem -out keystore -name tomcat -CAfile ssl/chain.pem -caname root -password "pass:${password}"
 
 echo "Running application"
-java -jar ./boot.jar --spring.config.additional-location="application.properties" --logging.file="log.txt"
+java -jar ./boot.jar --spring.config.additional-location="application.properties" --logging.file="logs/log.txt"
