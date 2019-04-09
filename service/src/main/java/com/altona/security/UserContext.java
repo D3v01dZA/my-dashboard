@@ -9,6 +9,8 @@ import org.springframework.security.crypto.encrypt.TextEncryptor;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjuster;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
 import java.util.Objects;
 import java.util.TimeZone;
@@ -41,8 +43,18 @@ public class UserContext extends User implements TimeConfig, Encryptor {
     }
 
     @Override
+    public LocalDate lastDayOfWeek() {
+        return today().with(DayOfWeek.SUNDAY);
+    }
+
+    @Override
     public LocalDate firstDayOfMonth() {
-        return today().withDayOfMonth(1);
+        return today().with(TemporalAdjusters.firstDayOfMonth());
+    }
+
+    @Override
+    public LocalDate lastDayOfMonth() {
+        return today().with(TemporalAdjusters.lastDayOfMonth());
     }
 
     @Override

@@ -2,7 +2,7 @@ package com.altona.service.synchronization.model;
 
 import com.altona.service.synchronization.SynchronizeRequest;
 import com.altona.service.synchronization.Synchronizer;
-import com.altona.service.time.model.summary.Summary;
+import com.altona.service.time.model.summary.TimeSummary;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,8 +13,8 @@ import java.util.Optional;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class SynchronizeResult {
 
-    public static SynchronizeResult success(Synchronizer service, SynchronizeRequest request, Summary summary) {
-        return new SynchronizeResult(true, service.getSynchronizationId(), request.getAttemptId(), summary, null);
+    public static SynchronizeResult success(Synchronizer service, SynchronizeRequest request, TimeSummary timeSummary) {
+        return new SynchronizeResult(true, service.getSynchronizationId(), request.getAttemptId(), timeSummary, null);
     }
 
     public static SynchronizeResult failure(Synchronizer service, SynchronizeRequest request, String message) {
@@ -28,15 +28,15 @@ public class SynchronizeResult {
     private boolean success;
     private int synchronizerId;
     private String attemptId;
-    private Summary summary;
+    private TimeSummary timeSummary;
     private String message;
 
     public Optional<String> getAttemptId() {
         return Optional.ofNullable(attemptId);
     }
 
-    public Optional<Summary> getSummary() {
-        return Optional.ofNullable(summary);
+    public Optional<TimeSummary> getTimeSummary() {
+        return Optional.ofNullable(timeSummary);
     }
 
     public Optional<String> getMessage() {

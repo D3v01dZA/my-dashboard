@@ -28,4 +28,7 @@ public class SummaryConfiguration {
     @NonNull
     private NotStoppedAction notStoppedAction;
 
+    @NonNull
+    private boolean includeZeroDays;
+
 }

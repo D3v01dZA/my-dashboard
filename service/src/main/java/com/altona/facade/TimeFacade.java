@@ -6,7 +6,7 @@ import com.altona.security.UserContext;
 import com.altona.service.project.ProjectService;
 import com.altona.service.time.TimeService;
 import com.altona.service.time.model.control.*;
-import com.altona.service.time.model.summary.Summary;
+import com.altona.service.time.model.summary.TimeSummary;
 import com.altona.service.time.model.summary.SummaryConfiguration;
 import com.altona.service.time.model.summary.SummaryFailure;
 import com.altona.util.Result;
@@ -58,7 +58,7 @@ public class TimeFacade {
     }
 
     @Transactional(readOnly = true)
-    public Optional<Result<Summary, SummaryFailure>> summary(UserContext userContext, int projectId, SummaryConfiguration configuration) {
+    public Optional<Result<TimeSummary, SummaryFailure>> summary(UserContext userContext, int projectId, SummaryConfiguration configuration) {
         return projectService.project(userContext, projectId)
                 .map(project -> timeService.summary(userContext, project, configuration));
     }

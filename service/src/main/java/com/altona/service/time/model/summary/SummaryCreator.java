@@ -2,6 +2,7 @@ package com.altona.service.time.model.summary;
 
 import com.altona.service.time.model.TimeCombination;
 import com.altona.service.time.util.TimeConfig;
+import com.altona.util.LocalDateIterator;
 import com.altona.util.Result;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -10,7 +11,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -25,7 +25,7 @@ public class SummaryCreator {
     @NonNull
     private SummaryConfiguration summaryConfiguration;
 
-    public Result<Summary, SummaryFailure> create(List<TimeCombination> timeCombinations) {
+    public Result<TimeSummary, SummaryFailure> create(List<TimeCombination> timeCombinations) {
         Date now = new Date();
         Map<LocalDate, LocalTime> timeMap = new HashMap<>();
         for (TimeCombination timeCombination : timeCombinations) {
@@ -59,7 +59,14 @@ public class SummaryCreator {
                         (one, two) -> { throw new IllegalStateException("Should be impossible but " + one + " and " + two + " are identical"); },
                         LinkedHashMap::new
                 ));
-        return Result.success(new Summary(from, to, summaryTimes));
+        if (summaryConfiguration.isIncludeZeroDays()) {
+            for (LocalDate localDate : LocalDateIterator.exclusive(from, to)) {
+                if (!summaryTimes.containsKey(localDate)) {
+                    summaryTimes.put(localDate, LocalTime.of(0, 0));
+                }
+            }
+        }
+        return Result.success(new TimeSummary(from, to, summaryTimes));
     }
 
     private Optional<SummaryFailure> addTime(Map<LocalDate, LocalTime> map, TimeCombination time, Date now) {

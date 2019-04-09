@@ -40,7 +40,6 @@ public class TimeService {
             .toFormatter();
 
     private static final Logger LOGGER = Logger.getLogger(TimeService.class.getName());
-    private static final TypeReference<List<Project>> PROJECT_LIST = new TypeReference<List<Project>>() {};
     private static final TypeReference<List<SynchronizationResult>> SYNCHRONIZATION_RESULT_LIST = new TypeReference<List<SynchronizationResult>>() {};
 
     private LoginService loginService;
@@ -53,8 +52,8 @@ public class TimeService {
         request(post(project), "/time/project", Project.class, onSuccess, onFailure);
     }
 
-    public void getProjects(Consumer<List<Project>> onSuccess, Consumer<String> onFailure) {
-        request(get(), "/time/project", PROJECT_LIST, onSuccess, onFailure);
+    public void getTimeScreen(Consumer<TimeScreen> onSuccess, Consumer<String> onFailure) {
+        request(get(), "/interface/time", TimeScreen.class, onSuccess, onFailure);
     }
 
     public void startWork(Project project, Consumer<ObjectNode> onSuccess, Consumer<String> onFailure) {
@@ -71,14 +70,6 @@ public class TimeService {
 
     public void stopBreak(Project project, Consumer<ObjectNode> onSuccess, Consumer<String> onFailure) {
         request(emptyPost(), projectUrl(project) + "/stop-break", ObjectNode.class, onSuccess, onFailure);
-    }
-
-    public void timeStatus(Consumer<TimeStatus> onSuccess, Consumer<String> onFailure) {
-        request(emptyPost(), "/time/project/time-status", TimeStatus.class, onSuccess, onFailure);
-    }
-
-    public void weekSummary(Project project, Consumer<TimeSummary> onSuccess, Consumer<String> onFailure) {
-        request(get(), projectUrl(project) + "/summary?type=CURRENT_WEEK", TimeSummary.class, onSuccess, onFailure);
     }
 
     public void synchronize(Project project, Consumer<List<SynchronizationResult>> onSuccess, Consumer<String> onFailure) {

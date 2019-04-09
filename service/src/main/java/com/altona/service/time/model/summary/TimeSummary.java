@@ -15,7 +15,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @AllArgsConstructor
-public class Summary {
+public class TimeSummary {
 
     @Getter
     @NonNull
@@ -38,7 +38,7 @@ public class Summary {
         return Optional.ofNullable(times.get(date));
     }
 
-    public Result<Summary, SummaryFailure> getDifference(Summary other) {
+    public Result<TimeSummary, SummaryFailure> getDifference(TimeSummary other) {
         if (!other.fromDate.equals(fromDate)) {
             return Result.error(SummaryFailure.MISMATCHED_START_DATE);
         }
@@ -65,7 +65,7 @@ public class Summary {
                 return Result.error(SummaryFailure.CURRENT_TIME_SMALLER_THAN_DIFFERENCE);
             }
         }
-        return Result.success(new Summary(fromDate, toDate, differenceTimes));
+        return Result.success(new TimeSummary(fromDate, toDate, differenceTimes));
     }
 
 }

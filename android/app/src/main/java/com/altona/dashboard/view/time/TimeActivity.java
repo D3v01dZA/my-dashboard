@@ -9,6 +9,7 @@ import android.widget.TextView;
 import com.altona.dashboard.R;
 import com.altona.dashboard.component.UsableRecycler;
 import com.altona.dashboard.service.time.Project;
+import com.altona.dashboard.service.time.TimeScreen;
 import com.altona.dashboard.service.time.TimeService;
 import com.altona.dashboard.service.time.TimeStatus;
 import com.altona.dashboard.service.time.TimeSummary;
@@ -20,6 +21,7 @@ import com.altona.dashboard.view.util.UserInputDialog;
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -28,6 +30,7 @@ import static com.altona.dashboard.service.time.TimeService.SHORT_TIME_FORMATTER
 public class TimeActivity extends SecureAppActivity {
 
     private TimeStatus currentStatus;
+    private Project currentProject;
     private List<Project> currentProjects;
     private Timer timer;
 
@@ -58,43 +61,30 @@ public class TimeActivity extends SecureAppActivity {
 
     @Override
     protected void onShow() {
-        disableInteraction();
-        timeService().getProjects(projects -> {
-            currentProjects = projects;
-            if (projects.size() == 0) {
-                createProject();
-            } else {
-                projectSpinner().setAdapter(new TimeSpinnerAdapter(this, projects));
-                updateStatus();
-            }
-        }, this::logoutErrorHandler);
+        retrieveTimeScreen();
     }
 
-    private void updateStatus() {
-        timeService().timeStatus(
-                timeStatus -> {
-                    setCurrentStatus(timeStatus);
-                    updateWeek();
+    private void retrieveTimeScreen() {
+        disableInteraction();
+        timeService().getTimeScreen(
+                timeScreen -> {
+                    currentProject = timeScreen.getProject().orElse(null);
+                    currentProjects = timeScreen.getProjects();
+                    if (currentProjects.size() == 0) {
+                        createProject();
+                    } else {
+                        projectSpinner().setAdapter(new TimeSpinnerAdapter(this, currentProjects));
+                        setCurrentStatus(timeScreen.getTimeStatus());
+                        recycler().setup(
+                                R.layout.basic_row,
+                                timeScreen.getTimeSummary().get().getTimes(),
+                                this::renderRow
+                        );
+                        enableInteractionAndUpdate();
+                    }
                 },
                 this::logoutErrorHandler
         );
-    }
-
-    private void updateWeek() {
-        timeService().weekSummary(
-                currentProject(),
-                this::setupRecycler,
-                this::logoutErrorHandler
-        );
-    }
-
-    private void setupRecycler(TimeSummary timeSummary) {
-        recycler().setup(
-                R.layout.basic_row,
-                timeSummary.getTimes(),
-                this::renderRow
-        );
-        enableInteractionAndUpdate();
     }
 
     private void renderRow(View view, TimeSummaryEntry timeSummaryEntry) {

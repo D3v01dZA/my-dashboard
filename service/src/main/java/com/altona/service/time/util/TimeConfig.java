@@ -10,7 +10,11 @@ public interface TimeConfig {
 
     LocalDate firstDayOfWeek();
 
+    LocalDate lastDayOfWeek();
+
     LocalDate firstDayOfMonth();
+
+    LocalDate lastDayOfMonth();
 
     LocalDateTime localize(Date date);
 

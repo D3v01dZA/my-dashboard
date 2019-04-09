@@ -18,14 +18,12 @@ import android.widget.Toast;
 
 import com.altona.dashboard.R;
 import com.altona.dashboard.Static;
-import com.altona.dashboard.service.login.Credentials;
 import com.altona.dashboard.service.login.LoginService;
 import com.altona.dashboard.view.login.LoginActivity;
 import com.altona.dashboard.view.settings.SettingsActivity;
 
 public abstract class BaseActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
-    public static final String VIEW_STATE = "viewState";
     private int activityId;
     private boolean drawer;
 

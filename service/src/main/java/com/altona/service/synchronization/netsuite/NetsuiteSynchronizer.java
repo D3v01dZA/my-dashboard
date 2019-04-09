@@ -53,7 +53,7 @@ public class NetsuiteSynchronizer implements Synchronizer {
                 );
     }
 
-    private Result<Summary, String> synchronizeTime(NetsuiteContext netsuiteContext) {
+    private Result<TimeSummary, String> synchronizeTime(NetsuiteContext netsuiteContext) {
         try {
             log.info("Retrieving time data for requested period");
             netsuiteBrowser.weeklyTimesheets(netsuiteContext, request);
@@ -67,7 +67,8 @@ public class NetsuiteSynchronizer implements Synchronizer {
                     data.getWeekStart(),
                     data.getWeekEnd(),
                     TimeRounding.NEAREST_FIFTEEN,
-                    NotStoppedAction.FAIL
+                    NotStoppedAction.FAIL,
+                    false
             );
             return timeService.summary(request, request.getProject(), configuration)
                     .error(SummaryFailure::getMessage)
@@ -77,9 +78,9 @@ public class NetsuiteSynchronizer implements Synchronizer {
         }
     }
 
-    private Result<Summary, String> createLine(NetsuiteContext netsuiteContext, NetsuiteTimeDataList data, Summary summary) {
-        Summary current = data.getAllData();
-        return summary.getDifference(current)
+    private Result<TimeSummary, String> createLine(NetsuiteContext netsuiteContext, NetsuiteTimeDataList data, TimeSummary timeSummary) {
+        TimeSummary current = data.getAllData();
+        return timeSummary.getDifference(current)
                 .map(
                         difference -> {
                             NetsuiteTimeData line = new NetsuiteTimeData(
@@ -92,7 +93,7 @@ public class NetsuiteSynchronizer implements Synchronizer {
                                             ))
                             );
                             netsuiteBrowser.addLine(netsuiteContext, request, difference.getFromDate(), difference.getToDate(), line);
-                            return Result.success(summary);
+                            return Result.success(timeSummary);
                         },
                         summaryFailure -> Result.error(summaryFailure.getMessage())
                 );

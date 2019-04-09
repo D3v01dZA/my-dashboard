@@ -5,7 +5,7 @@ import com.altona.service.time.model.control.*;
 import com.altona.service.time.model.Time;
 import com.altona.service.time.model.TimeCombination;
 import com.altona.service.time.model.TimeType;
-import com.altona.service.time.model.summary.Summary;
+import com.altona.service.time.model.summary.TimeSummary;
 import com.altona.service.time.model.summary.SummaryConfiguration;
 import com.altona.service.time.model.summary.SummaryCreator;
 import com.altona.service.time.model.summary.SummaryFailure;
@@ -87,7 +87,7 @@ public class TimeService {
                 .orElseGet(TimeStatus::none);
     }
 
-    public Result<Summary, SummaryFailure> summary(TimeConfig timeConfig, Project project, SummaryConfiguration configuration) {
+    public Result<TimeSummary, SummaryFailure> summary(TimeConfig timeConfig, Project project, SummaryConfiguration configuration) {
         List<Time> times = timeRepository
                 .timeListBetween(
                         project.getId(),

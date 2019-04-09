@@ -38,7 +38,8 @@ public class SucceedingSynchronizer implements Synchronizer {
                 request.firstDayOfWeek(),
                 request.today(),
                 TimeRounding.NEAREST_FIFTEEN,
-                NotStoppedAction.INCLUDE
+                NotStoppedAction.INCLUDE,
+                false
         );
         return timeService.summary(request, request.getProject(), configuration)
                 .map(

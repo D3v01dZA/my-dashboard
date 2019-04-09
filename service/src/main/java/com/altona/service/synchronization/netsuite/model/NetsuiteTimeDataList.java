@@ -1,6 +1,6 @@
 package com.altona.service.synchronization.netsuite.model;
 
-import com.altona.service.time.model.summary.Summary;
+import com.altona.service.time.model.summary.TimeSummary;
 import com.altona.util.LocalDateIterator;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -29,7 +29,7 @@ public class NetsuiteTimeDataList {
         return week.plusDays(7);
     }
 
-    public Summary getAllData() {
+    public TimeSummary getAllData() {
         LinkedHashMap<LocalDate, LocalTime> all = new LinkedHashMap<>();
         for (LocalDate localDate : LocalDateIterator.inclusive(getWeekStart(), getWeekEnd())) {
             all.put(localDate, LocalTime.of(0, 0));
@@ -41,7 +41,7 @@ public class NetsuiteTimeDataList {
                 all.put(entry.getKey(), added);
             }
         }
-        return new Summary(getWeekStart(), getWeekEnd(), all);
+        return new TimeSummary(getWeekStart(), getWeekEnd(), all);
     }
 
 }
