@@ -48,6 +48,15 @@ public class SummaryCreator {
 
         LocalDate from = summaryConfiguration.getFrom();
         LocalDate to = summaryConfiguration.getTo();
+
+        if (summaryConfiguration.isIncludeZeroDays()) {
+            for (LocalDate localDate : LocalDateIterator.exclusive(from, to)) {
+                if (!timeMap.containsKey(localDate)) {
+                    timeMap.put(localDate, NO_TIME);
+                }
+            }
+        }
+
         Predicate<LocalDate> between = betweenInclusive(from, to);
         LinkedHashMap<LocalDate, LocalTime> summaryTimes = timeMap.entrySet().stream()
                 .filter(entry -> between.test(entry.getKey()))
@@ -59,13 +68,6 @@ public class SummaryCreator {
                         (one, two) -> { throw new IllegalStateException("Should be impossible but " + one + " and " + two + " are identical"); },
                         LinkedHashMap::new
                 ));
-        if (summaryConfiguration.isIncludeZeroDays()) {
-            for (LocalDate localDate : LocalDateIterator.exclusive(from, to)) {
-                if (!summaryTimes.containsKey(localDate)) {
-                    summaryTimes.put(localDate, LocalTime.of(0, 0));
-                }
-            }
-        }
         return Result.success(new TimeSummary(from, to, summaryTimes));
     }
 
