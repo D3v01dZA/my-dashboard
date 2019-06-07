@@ -31,17 +31,17 @@ public class SummaryCreator {
         for (TimeCombination timeCombination : timeCombinations) {
             if (!timeCombination.isStopped()) {
                 if (summaryConfiguration.getNotStoppedAction() == NotStoppedAction.FAIL) {
-                    return Result.error(SummaryFailure.CURRENTLY_RUNNING_TIME);
+                    return Result.failure(SummaryFailure.CURRENTLY_RUNNING_TIME);
                 } else if (summaryConfiguration.getNotStoppedAction() == NotStoppedAction.INCLUDE) {
                     Optional<SummaryFailure> failure = addTime(timeMap, timeCombination, now);
                     if (failure.isPresent()) {
-                        return Result.error(failure.get());
+                        return Result.failure(failure.get());
                     }
                 }
             } else {
                 Optional<SummaryFailure> failure = addTime(timeMap, timeCombination, now);
                 if (failure.isPresent()) {
-                    return Result.error(failure.get());
+                    return Result.failure(failure.get());
                 }
             }
         }

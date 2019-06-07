@@ -52,9 +52,9 @@ public class NetsuiteBrowser {
             }
             return verifyLoggedIn(request, context);
         } catch (Exception ex) {
-            log.error("Exception logging in", ex);
+            log.error("Exception logging in to Netsuite ", ex);
             close(context, request);
-            return Result.error("Exception occurred while logging in");
+            return Result.failure("Exception occurred while logging in");
         }
     }
 
@@ -107,7 +107,7 @@ public class NetsuiteBrowser {
 
     public void addLine(NetsuiteContext context, SynchronizeRequest request, LocalDate from, LocalDate to, NetsuiteTimeData data) {
         synchronizationTraceRepository.trace(request, "Before Adding Line", context);
-        log.info("Adding Time Data Line");
+        log.info("Adding time data line");
 
         context.findElement(By.id("timeitem_customer_display"))
                 .click();
@@ -155,14 +155,6 @@ public class NetsuiteBrowser {
         return context.findElement(By.id("timeitem_splits"));
     }
 
-    private void sleep() {
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
     private Result<NetsuiteContext, String> answerSecurityQuestion(NetsuiteContext context, SynchronizeRequest request, NetsuiteConfiguration configuration) {
         synchronizationTraceRepository.trace(request, "Before Security Question", context);
         WebElement question = context.findElements(By.className("smalltextnolink")).stream()
@@ -187,7 +179,7 @@ public class NetsuiteBrowser {
                     return verifyLoggedIn(request, context);
                 }).orElseGet(() -> {
                     log.info("No answer found");
-                    return Result.error(String.format("No answer found for %s", question.getText()));
+                    return Result.failure(String.format("No answer found for %s", question.getText()));
                 });
     }
 
@@ -198,14 +190,15 @@ public class NetsuiteBrowser {
         }
         String msg = String.format("Login failed at page %s", context.getCurrentUrl());
         log.info(msg);
-        return Result.error(msg);
+        close(context, request);
+        return Result.failure(msg);
     }
 
     private Result<NetsuiteContext, String> missingElement(NetsuiteContext context, String format) {
         context.quit();
         String msg = String.format(format, context.getCurrentUrl());
         log.warn(msg);
-        return Result.error(msg);
+        return Result.failure(msg);
     }
 
 }

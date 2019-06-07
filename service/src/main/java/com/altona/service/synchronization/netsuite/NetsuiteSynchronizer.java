@@ -71,7 +71,7 @@ public class NetsuiteSynchronizer implements Synchronizer {
                     false
             );
             return timeService.summary(request, request.getProject(), configuration)
-                    .error(SummaryFailure::getMessage)
+                    .failure(SummaryFailure::getMessage)
                     .successf(summary -> createLine(netsuiteContext, data, summary));
         } finally {
             netsuiteBrowser.close(netsuiteContext, request);
@@ -92,10 +92,15 @@ public class NetsuiteSynchronizer implements Synchronizer {
                                                     SummaryTime::getTime
                                             ))
                             );
-                            netsuiteBrowser.addLine(netsuiteContext, request, difference.getFromDate(), difference.getToDate(), line);
+                            if (difference.hasTime()) {
+                                log.info("Time Difference Found");
+                                netsuiteBrowser.addLine(netsuiteContext, request, difference.getFromDate(), difference.getToDate(), line);
+                            } else {
+                                log.info("No Time Difference Found");
+                            }
                             return Result.success(timeSummary);
                         },
-                        summaryFailure -> Result.error(summaryFailure.getMessage())
+                        summaryFailure -> Result.failure(summaryFailure.getMessage())
                 );
     }
 

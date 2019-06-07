@@ -2,7 +2,7 @@ package com.altona.service.synchronization.model;
 
 import com.altona.service.synchronization.SynchronizeRequest;
 import com.altona.service.synchronization.Synchronizer;
-import com.altona.service.synchronization.maconomy.MaconomyRepository;
+import com.altona.service.synchronization.maconomy.MaconomyBrowser;
 import com.altona.service.synchronization.maconomy.MaconomySynchronizer;
 import com.altona.service.synchronization.maconomy.model.MaconomyConfiguration;
 import com.altona.service.synchronization.netsuite.NetsuiteBrowser;
@@ -37,7 +37,7 @@ public enum SynchronizationServiceType {
                     maconomyConfiguration ->
                             new MaconomySynchronizer(
                                     applicationContext.getBean(TimeService.class),
-                                    applicationContext.getBean(MaconomyRepository.class),
+                                    applicationContext.getBean(MaconomyBrowser.class),
                                     synchronization.getId(),
                                     request,
                                     maconomyConfiguration
@@ -126,7 +126,7 @@ public enum SynchronizationServiceType {
             return Result.success(synchronizerCreator.apply(configuration));
         } catch (IOException e) {
             LOGGER.warn("Invalid Configuration", e);
-            return Result.error(new SynchronizeError(synchronization.getId(), "Could not read saved configuration"));
+            return Result.failure(new SynchronizeError(synchronization.getId(), "Could not read saved configuration"));
         }
     }
 

@@ -38,12 +38,16 @@ public class TimeSummary {
         return Optional.ofNullable(times.get(date));
     }
 
-    public Result<TimeSummary, SummaryFailure> getDifference(TimeSummary other) {
+    public boolean hasTime() {
+        return times.values().stream().anyMatch(localTime -> localTime.isAfter(LocalTime.of(0, 0, 0)));
+    }
+
+    public Result<TimeSummary, SummaryFailure>  getDifference(TimeSummary other) {
         if (!other.fromDate.equals(fromDate)) {
-            return Result.error(SummaryFailure.MISMATCHED_START_DATE);
+            return Result.failure(SummaryFailure.MISMATCHED_START_DATE);
         }
         if (!other.toDate.equals(toDate)) {
-            return Result.error(SummaryFailure.MISMATCHED_END_DATE);
+            return Result.failure(SummaryFailure.MISMATCHED_END_DATE);
         }
 
         LinkedHashMap<LocalDate, LocalTime> differenceTimes = new LinkedHashMap<>();
@@ -55,14 +59,14 @@ public class TimeSummary {
                     LocalTime l = left.get();
                     LocalTime r = right.get();
                     if (l.isBefore(r)) {
-                        return Result.error(SummaryFailure.CURRENT_TIME_SMALLER_THAN_DIFFERENCE);
+                        return Result.failure(SummaryFailure.CURRENT_TIME_SMALLER_THAN_DIFFERENCE);
                     }
                     differenceTimes.put(current, l.minus(r.toNanoOfDay(), ChronoUnit.NANOS));
                 } else {
                     differenceTimes.put(current, left.get());
                 }
             } else if (right.isPresent() && right.get().isAfter(LocalTime.of(0, 0))) {
-                return Result.error(SummaryFailure.CURRENT_TIME_SMALLER_THAN_DIFFERENCE);
+                return Result.failure(SummaryFailure.CURRENT_TIME_SMALLER_THAN_DIFFERENCE);
             }
         }
         return Result.success(new TimeSummary(fromDate, toDate, differenceTimes));

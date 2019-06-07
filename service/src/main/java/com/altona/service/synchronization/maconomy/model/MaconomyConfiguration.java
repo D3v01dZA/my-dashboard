@@ -13,22 +13,20 @@ public class MaconomyConfiguration {
     @NonNull
     private String url;
 
+    @Getter
     @NonNull
     private String username;
 
+    @Getter
     @NonNull
     private String password;
 
     @Getter
     @NonNull
-    private String projectId;
+    private String projectName;
 
     @Getter
     @NonNull
-    private String projectTaskId;
-
-    public String getAuthorization() {
-        return Base64.getEncoder().encodeToString((username + ":" + password).getBytes());
-    }
+    private String taskName;
 
 }

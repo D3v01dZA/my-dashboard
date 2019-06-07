@@ -120,4 +120,14 @@
         <dropColumn tableName="synchronization_trace" columnName="user_id"/>
     </changeSet>
 
+    <changeSet id="drop_maconomy_synchronizations" author="chris">
+        <sql> <!-- #BakulDrop -->
+            DELETE FROM synchronization_trace
+                WHERE synchronization_trace.synchronization_id IN (SELECT id FROM synchronization WHERE service = 'MACONOMY')
+        </sql>
+        <sql> <!-- #BakulDrop -->
+            DELETE FROM synchronization WHERE service = 'MACONOMY'
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>

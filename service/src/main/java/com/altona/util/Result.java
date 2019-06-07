@@ -13,7 +13,7 @@ public class Result<T, E> {
         return new Result<>(Objects.requireNonNull(object), null);
     }
 
-    public static <T, E> Result<T, E> error(E object) {
+    public static <T, E> Result<T, E> failure(E object) {
         return new Result<>(null, Objects.requireNonNull(object));
     }
 
@@ -38,13 +38,13 @@ public class Result<T, E> {
         return (Result<R, E>) this;
     }
 
-    public <R> Result<T, R> error(
+    public <R> Result<T, R> failure(
             Function<? super E, ? extends R> whenError
     ) {
         if (success != null) {
             return (Result<T, R>) this;
         }
-        return Result.error(whenError.apply(error));
+        return Result.failure(whenError.apply(error));
     }
 
     public <R> R map(
