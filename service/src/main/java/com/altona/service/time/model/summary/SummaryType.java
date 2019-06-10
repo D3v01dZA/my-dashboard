@@ -58,7 +58,7 @@ public enum SummaryType {
                     true
             );
         }
-    };;
+    };
 
     public abstract SummaryConfiguration getConfiguration(UserContext userContext);
 }

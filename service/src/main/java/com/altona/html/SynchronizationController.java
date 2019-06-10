@@ -7,7 +7,7 @@ import com.altona.security.UserService;
 import com.altona.service.synchronization.model.SynchronizationTrace;
 import com.altona.service.synchronization.model.SynchronizeCommand;
 import com.altona.service.synchronization.model.SynchronizeResult;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +22,6 @@ import java.util.TimeZone;
 public class SynchronizationController {
 
     private UserService userService;
-    private ObjectMapper objectMapper;
     private SynchronizationFacade synchronizationFacade;
 
     @RequestMapping(path = "/time/project/{projectId}/synchronization", method = RequestMethod.POST, produces = "application/json")
@@ -32,14 +31,41 @@ public class SynchronizationController {
             @PathVariable Integer projectId,
             @RequestBody Synchronization synchronization
     ) {
-        if (!synchronization.hasValidConfiguration(objectMapper)) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
         return synchronizationFacade.createSynchronization(userService.getUserContext(authentication, timeZone), projectId, synchronization)
-                .map(created -> new ResponseEntity<>(created, HttpStatus.CREATED))
+                .map(created -> created.map(
+                        success -> new ResponseEntity<>(success, HttpStatus.CREATED),
+                        failure -> new ResponseEntity<Synchronization>(HttpStatus.BAD_REQUEST)
+                ))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    @RequestMapping(path = "/time/project/{projectId}/synchronization/{synchronizationId}", method = RequestMethod.GET, produces = "application/json")
+    public ResponseEntity<Synchronization> getSynchronization(
+            Authentication authentication,
+            TimeZone timeZone,
+            @PathVariable Integer projectId,
+            @PathVariable Integer synchronizationId
+    ) {
+        return synchronizationFacade.getSynchronization(userService.getUserContext(authentication, timeZone), projectId, synchronizationId)
+                .map(found -> new ResponseEntity<>(found, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @RequestMapping(path = "/time/project/{projectId}/synchronization/{synchronizationId}/configuration", method = RequestMethod.PATCH, produces = "application/json")
+    public ResponseEntity<Synchronization> modifySynchronization(
+            Authentication authentication,
+            TimeZone timeZone,
+            @PathVariable Integer projectId,
+            @PathVariable Integer synchronizationId,
+            @RequestBody ObjectNode modification
+    ) {
+        return synchronizationFacade.modifySynchronization(userService.getUserContext(authentication, timeZone), projectId, synchronizationId, modification)
+                .map(modified -> modified.map(
+                        success -> new ResponseEntity<>(success, HttpStatus.ACCEPTED),
+                        failure -> new ResponseEntity<Synchronization>(HttpStatus.BAD_REQUEST)
+                ))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
 
     @RequestMapping(path = "/time/project/{projectId}/synchronize", method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<List<SynchronizeResult>> synchronize(

@@ -3,8 +3,8 @@ package com.altona.service.synchronization;
 import com.altona.security.Encryptor;
 import com.altona.service.synchronization.model.Synchronization;
 import com.altona.util.ObjectMapperHelper;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -44,6 +44,23 @@ public class SynchronizationRepository {
         ).intValue();
     }
 
+    public void updateSynchronization(Encryptor encryptor, int projectId, Synchronization synchronization) {
+        int updated = namedJdbc.update(
+                "UPDATE synchronization SET service = :service, configuration = :configuration WHERE project_id = :projectId AND id = :synchronizationId",
+                new MapSqlParameterSource()
+                        .addValue("service", synchronization.getService().name())
+                        .addValue("configuration",
+                                encryptor.encrypt(
+                                        ObjectMapperHelper.serialize(objectMapper, synchronization.getConfiguration())
+                                ))
+                        .addValue("projectId", projectId)
+                        .addValue("synchronizationId", synchronization.getId())
+        );
+        if (updated != 1) {
+            throw new RuntimeException("Didn't update the correct number of rows, should have been 1, was " + updated);
+        }
+    }
+
     public List<Synchronization> synchronizations(Encryptor encryptor, int projectId) {
         return namedJdbc.query(
                 "SELECT id, service, configuration FROM synchronization WHERE project_id = :projectId",
@@ -78,7 +95,7 @@ public class SynchronizationRepository {
                         rs.getString("service"),
                         objectMapper.readValue(
                                 encryptor.decrypt(rs.getString("configuration")),
-                                JsonNode.class
+                                ObjectNode.class
                         )
                 );
             } catch (IOException e) {
