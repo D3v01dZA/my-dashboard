@@ -64,6 +64,7 @@ public class MaconomyBrowser {
     public void previousWeeklyTimesheet(MaconomyContext context, SynchronizeRequest request) {
         synchronizationTraceRepository.trace(request, "Before Previous Timesheet", context);
         String heading = context.findElement(By.className("heading")).getText();
+        log.info("Going to the previous period from {}", heading);
         context.findElement(By.className("icon-recordarrow-left")).click();
         new WebDriverWait(context, 30)
                 .until(webDriver -> {
