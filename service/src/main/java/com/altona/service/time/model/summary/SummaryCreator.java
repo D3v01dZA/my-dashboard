@@ -6,6 +6,7 @@ import com.altona.util.LocalDateIterator;
 import com.altona.util.Result;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -14,6 +15,7 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+@Slf4j
 @AllArgsConstructor
 public class SummaryCreator {
 
@@ -31,16 +33,21 @@ public class SummaryCreator {
         for (TimeCombination timeCombination : timeCombinations) {
             if (!timeCombination.isStopped()) {
                 if (summaryConfiguration.getNotStoppedAction() == NotStoppedAction.FAIL) {
+                    log.info("Summary failure due to not stopped time");
                     return Result.failure(SummaryFailure.CURRENTLY_RUNNING_TIME);
                 } else if (summaryConfiguration.getNotStoppedAction() == NotStoppedAction.INCLUDE) {
                     Optional<SummaryFailure> failure = addTime(timeMap, timeCombination, now);
                     if (failure.isPresent()) {
-                        return Result.failure(failure.get());
+                        SummaryFailure msg = failure.get();
+                        log.info("Summary failure {}", msg);
+                        return Result.failure(msg);
                     }
                 }
             } else {
                 Optional<SummaryFailure> failure = addTime(timeMap, timeCombination, now);
                 if (failure.isPresent()) {
+                    SummaryFailure msg = failure.get();
+                    log.info("Summary failure {}", msg);
                     return Result.failure(failure.get());
                 }
             }
