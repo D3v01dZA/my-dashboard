@@ -66,14 +66,14 @@ public class MaconomyBrowser {
         String heading = context.findElement(By.className("heading")).getText();
         log.info("Going to the previous period from {}", heading);
         context.findElement(By.className("icon-recordarrow-left")).click();
-        WebElement periodHeading = new WebDriverWait(context, 30)
+        String periodHeading = new WebDriverWait(context, 30)
                 .until(webDriver -> {
                     WebElement headingElement = webDriver.findElement(By.className("heading"));
                     String newHeading = headingElement.getText();
                     if (heading.equals(newHeading)) {
                         throw new NoSuchElementException(String.format("Heading %s is not different to %s", heading, newHeading));
                     }
-                    return headingElement;
+                    return headingElement.getText();
                 });
         log.info("Arrived at period {}", periodHeading);
     }
