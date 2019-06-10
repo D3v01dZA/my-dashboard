@@ -13,6 +13,7 @@ import com.altona.service.time.util.SingleTimeStatusCollector;
 import com.altona.service.time.util.TimeConfig;
 import com.altona.util.Result;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -24,6 +25,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class TimeService {
@@ -31,6 +33,7 @@ public class TimeService {
     private TimeRepository timeRepository;
 
     public WorkStart startProjectWork(List<Project> projects, Project project) {
+        log.info("Starting work");
         return timeStatusInternal(projects)
                 .map(timeStatus -> WorkStart.alreadyStarted(timeStatus.getProjectId().get(), timeStatus.getTimeId().get()))
                 .orElseGet(
@@ -43,6 +46,7 @@ public class TimeService {
     }
 
     public WorkStop endProjectWork(Project project) {
+        log.info("Stopping work");
         return runningWorkAwareFunction(
                 project,
                 runningWork -> {
@@ -59,6 +63,7 @@ public class TimeService {
     }
 
     public BreakStart startProjectBreak(Project project) {
+        log.info("Starting break");
         return runningWorkAwareFunction(
                 project,
                 runningWork -> runningBreakAwareFunction(
@@ -71,6 +76,7 @@ public class TimeService {
     }
 
     public BreakStop endProjectBreak(Project project) {
+        log.info("Stopping break");
         return runningBreakAwareFunction(
                 project,
                 runningBreak -> BreakStop.stopped(stopTime(project, runningBreak).getId()),
@@ -88,6 +94,7 @@ public class TimeService {
     }
 
     public Result<TimeSummary, SummaryFailure> summary(TimeConfig timeConfig, Project project, SummaryConfiguration configuration) {
+        log.info("Summarizing {}", configuration);
         List<Time> times = timeRepository
                 .timeListBetween(
                         project.getId(),
