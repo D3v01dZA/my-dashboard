@@ -66,7 +66,7 @@ public class MaconomyBrowser {
         String heading = context.findElement(By.className("heading")).getText();
         log.info("Going to the previous period from {}", heading);
         context.findElement(By.className("icon-recordarrow-left")).click();
-        new WebDriverWait(context, 30)
+        WebElement periodHeading = new WebDriverWait(context, 30)
                 .until(webDriver -> {
                     WebElement headingElement = webDriver.findElement(By.className("heading"));
                     String newHeading = headingElement.getText();
@@ -75,6 +75,7 @@ public class MaconomyBrowser {
                     }
                     return headingElement;
                 });
+        log.info("Arrived at period {}", periodHeading);
     }
 
     public Result<MaconomyTimeDataList, String> weeklyData(MaconomyContext context, SynchronizeRequest request) {
