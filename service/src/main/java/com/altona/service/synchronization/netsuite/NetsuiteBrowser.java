@@ -25,6 +25,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.altona.util.Util.sleep;
+
 @Slf4j
 @Repository
 @AllArgsConstructor
@@ -60,7 +62,9 @@ public class NetsuiteBrowser {
 
     public void weeklyTimesheets(NetsuiteContext context, SynchronizeRequest request) {
         synchronizationTraceRepository.trace(request, "Before Weekly Link Click", context);
-        context.findElements(By.className("ns-searchable-value ")).stream()
+        log.info("Clicking weekly timesheets");
+        sleep();
+        context.findElements(By.className("ns-searchable-value")).stream()
                 .filter(webElement -> webElement.getText().equals("Weekly Timesheet"))
                 .collect(MoreCollectors.onlyElement())
                 .click();

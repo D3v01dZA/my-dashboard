@@ -29,6 +29,8 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.altona.util.Util.sleep;
+
 @Slf4j
 @Repository
 @AllArgsConstructor
@@ -184,14 +186,6 @@ public class MaconomyBrowser {
                 .click();
         sleep();
         return Optional.empty();
-    }
-
-    private void sleep() {
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public void close(MaconomyContext context, SynchronizeRequest request) {
