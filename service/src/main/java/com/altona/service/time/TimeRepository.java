@@ -74,14 +74,6 @@ public class TimeRepository {
                 .usingGeneratedKeyColumns("id");
     }
 
-    public List<Time> timeList(int projectId) {
-        return namedJdbc.query(
-                "SELECT id, type, start_time, end_time FROM time WHERE project_id = :projectId",
-                new MapSqlParameterSource("projectId", projectId),
-                TIME_ROW_MAPPER
-        );
-    }
-
     public Optional<Time> time(int projectId, int timeId) {
         return getSingleTimeFromQuery(
                 "SELECT id, type, start_time, end_time FROM time WHERE id = :id AND project_id = :projectId",
@@ -114,7 +106,7 @@ public class TimeRepository {
         return namedJdbc.query(
                 "SELECT id, type, start_time, end_time FROM time WHERE " +
                         "(" +
-                        "   (end_time IS NULL AND (start_time > :fromDate OR start_time < :toDate))" +
+                        "   (end_time IS NULL AND ((start_time > :fromDate AND start_time < :toDate) OR start_time < :toDate))" +
                         "   OR (end_time < :toDate AND start_time > :fromDate) " +
                         "   OR (start_time < :fromDate AND end_time > :fromDate) " +
                         "   OR (end_time < :toDate AND end_time > :toDate) " +
