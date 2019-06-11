@@ -8,13 +8,17 @@ import com.altona.service.synchronization.netsuite.model.NetsuiteContext;
 import com.altona.service.synchronization.netsuite.model.NetsuiteTimeData;
 import com.altona.service.synchronization.netsuite.model.NetsuiteTimeDataList;
 import com.altona.service.time.TimeService;
-import com.altona.service.time.model.summary.*;
+import com.altona.service.time.model.summary.NotStoppedAction;
+import com.altona.service.time.model.summary.SummaryConfiguration;
+import com.altona.service.time.model.summary.SummaryFailure;
+import com.altona.service.time.model.summary.SummaryTime;
+import com.altona.service.time.model.summary.TimeRounding;
+import com.altona.service.time.model.summary.TimeSummary;
 import com.altona.util.Result;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Date;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -63,7 +67,7 @@ public class NetsuiteSynchronizer implements Synchronizer {
             NetsuiteTimeDataList data = netsuiteBrowser.weeklyData(netsuiteContext, request);
 
             SummaryConfiguration configuration = new SummaryConfiguration(
-                    request.localize(new Date()),
+                    request.localize(request.now()),
                     data.getWeekStart(),
                     data.getWeekEnd(),
                     TimeRounding.NEAREST_FIFTEEN,

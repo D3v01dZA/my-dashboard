@@ -4,9 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 
-public interface TimeConfig {
-
-    LocalDate today();
+public interface TimeConfig extends TimeInfo {
 
     LocalDate firstDayOfWeek();
 
@@ -15,6 +13,8 @@ public interface TimeConfig {
     LocalDate firstDayOfMonth();
 
     LocalDate lastDayOfMonth();
+
+    LocalDateTime localizedNow();
 
     LocalDateTime localize(Date date);
 

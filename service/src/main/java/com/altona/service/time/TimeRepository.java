@@ -2,6 +2,7 @@ package com.altona.service.time;
 
 import com.altona.service.time.model.Time;
 import com.altona.service.time.model.TimeType;
+import com.altona.service.time.util.TimeInfo;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -121,19 +122,19 @@ public class TimeRepository {
         );
     }
 
-    public int startTime(int projectId, TimeType type) {
+    public int startTime(int projectId, TimeType type, TimeInfo timeInfo) {
         return timeJdbcInsert.executeAndReturnKey(new MapSqlParameterSource()
                 .addValue("type", type.name())
-                .addValue("start_time", new Date())
+                .addValue("start_time", timeInfo.now())
                 .addValue("project_id", projectId))
                 .intValue();
     }
 
-    public void stopTime(int projectId, int id, Date stopTime) {
+    public void stopTime(int projectId, int id, TimeInfo timeInfo) {
         namedJdbc.update(
                 "UPDATE time SET end_time = :endTime WHERE id = :id AND project_id = :projectId",
                 new MapSqlParameterSource()
-                        .addValue("endTime", stopTime)
+                        .addValue("endTime", timeInfo.now())
                         .addValue("id", id)
                         .addValue("projectId", projectId)
         );

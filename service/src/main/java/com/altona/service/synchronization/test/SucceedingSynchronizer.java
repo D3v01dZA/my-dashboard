@@ -11,8 +11,6 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Date;
-
 @Slf4j
 @AllArgsConstructor
 public class SucceedingSynchronizer implements Synchronizer {
@@ -34,7 +32,7 @@ public class SucceedingSynchronizer implements Synchronizer {
     public SynchronizeResult synchronize() {
         log.info("Synchronizing");
         SummaryConfiguration configuration = new SummaryConfiguration(
-                request.localize(new Date()),
+                request.localize(request.now()),
                 request.firstDayOfWeek(),
                 request.today(),
                 TimeRounding.NEAREST_FIFTEEN,

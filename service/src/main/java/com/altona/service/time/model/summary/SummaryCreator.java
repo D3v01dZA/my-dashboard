@@ -2,6 +2,7 @@ package com.altona.service.time.model.summary;
 
 import com.altona.service.time.model.TimeCombination;
 import com.altona.service.time.util.TimeConfig;
+import com.altona.service.time.util.TimeInfo;
 import com.altona.util.LocalDateIterator;
 import com.altona.util.Result;
 import lombok.AllArgsConstructor;
@@ -27,8 +28,8 @@ public class SummaryCreator {
     @NonNull
     private SummaryConfiguration summaryConfiguration;
 
-    public Result<TimeSummary, SummaryFailure> create(List<TimeCombination> timeCombinations) {
-        Date now = new Date();
+    public Result<TimeSummary, SummaryFailure> create(TimeInfo timeInfo, List<TimeCombination> timeCombinations) {
+        Date now = timeInfo.now();
         Map<LocalDate, LocalTime> timeMap = new HashMap<>();
         for (TimeCombination timeCombination : timeCombinations) {
             if (!timeCombination.isStopped()) {

@@ -23,9 +23,10 @@ public class TimeController {
     @RequestMapping(path = "/time/project/{projectId}/start-work", method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<WorkStart> startWork(
             Authentication authentication,
+            TimeZone timeZone,
             @PathVariable Integer projectId
     ) {
-        return timeFacade.startWork(userService.getUser(authentication), projectId)
+        return timeFacade.startWork(userService.getUserContext(authentication, timeZone), projectId)
                 .map(workStart -> new ResponseEntity<>(workStart, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -33,9 +34,10 @@ public class TimeController {
     @RequestMapping(path = "/time/project/{projectId}/start-break", method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<BreakStart> startBreak(
             Authentication authentication,
+            TimeZone timeZone,
             @PathVariable Integer projectId
     ) {
-        return timeFacade.startBreak(userService.getUser(authentication), projectId)
+        return timeFacade.startBreak(userService.getUserContext(authentication, timeZone), projectId)
                 .map(breakStart -> new ResponseEntity<>(breakStart, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -43,9 +45,10 @@ public class TimeController {
     @RequestMapping(path = "/time/project/{projectId}/stop-work", method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<WorkStop> endWork(
             Authentication authentication,
+            TimeZone timeZone,
             @PathVariable Integer projectId
     ) {
-        return timeFacade.endWork(userService.getUser(authentication), projectId)
+        return timeFacade.endWork(userService.getUserContext(authentication, timeZone), projectId)
                 .map(workStop -> new ResponseEntity<>(workStop, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -53,18 +56,20 @@ public class TimeController {
     @RequestMapping(path = "/time/project/{projectId}/stop-break", method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<BreakStop> endBreak(
             Authentication authentication,
+            TimeZone timeZone,
             @PathVariable Integer projectId
     ) {
-        return timeFacade.endBreak(userService.getUser(authentication), projectId)
+        return timeFacade.endBreak(userService.getUserContext(authentication, timeZone), projectId)
                 .map(breakStop -> new ResponseEntity<>(breakStop, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @RequestMapping(path = "/time/project/time-status", method = RequestMethod.POST, produces = "application/json")
     public TimeStatus timeStatus(
-            Authentication authentication
+            Authentication authentication,
+            TimeZone timeZone
     ) {
-        return timeFacade.timeStatus(userService.getUser(authentication));
+        return timeFacade.timeStatus(userService.getUserContext(authentication, timeZone));
     }
 
     @RequestMapping(path = "/time/project/{projectId}/summary", method = RequestMethod.GET, produces = "application/json")

@@ -19,8 +19,6 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Date;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -74,7 +72,7 @@ public class MaconomySynchronizer implements Synchronizer {
 
     private Result<TimeSummary, String> synchronizeTime(MaconomyContext context, MaconomyTimeDataList currentData) {
         SummaryConfiguration configuration = new SummaryConfiguration(
-                request.localize(new Date()),
+                request.localizedNow(),
                 currentData.getWeekStart(),
                 currentData.getWeekEnd(),
                 TimeRounding.NEAREST_FIFTEEN,

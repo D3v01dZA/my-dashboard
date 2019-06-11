@@ -5,8 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 
-import java.time.LocalDateTime;
-
 @Getter
 @AllArgsConstructor
 public class SynchronizationTrace {
@@ -19,9 +17,6 @@ public class SynchronizationTrace {
 
     @NonNull
     private String atttemptId;
-
-    @NonNull
-    private LocalDateTime time;
 
     @NonNull
     private String stage;

@@ -3,7 +3,6 @@ package com.altona.service.time.model.summary;
 import com.altona.security.UserContext;
 
 import java.time.temporal.TemporalAdjusters;
-import java.util.Date;
 
 public enum SummaryType {
 
@@ -11,7 +10,7 @@ public enum SummaryType {
         @Override
         public SummaryConfiguration getConfiguration(UserContext userContext) {
             return new SummaryConfiguration(
-                    userContext.localize(new Date()),
+                    userContext.localizedNow(),
                     userContext.today(),
                     userContext.today().plusDays(1),
                     TimeRounding.NONE,
@@ -24,7 +23,7 @@ public enum SummaryType {
         @Override
         public SummaryConfiguration getConfiguration(UserContext userContext) {
             return new SummaryConfiguration(
-                    userContext.localize(new Date()),
+                    userContext.localizedNow(),
                     userContext.firstDayOfWeek(),
                     userContext.lastDayOfWeek().plusDays(1),
                     TimeRounding.NONE,
@@ -37,7 +36,7 @@ public enum SummaryType {
         @Override
         public SummaryConfiguration getConfiguration(UserContext userContext) {
             return new SummaryConfiguration(
-                    userContext.localize(new Date()),
+                    userContext.localizedNow(),
                     userContext.firstDayOfMonth(),
                     userContext.lastDayOfMonth().plusDays(1),
                     TimeRounding.NONE,
@@ -50,7 +49,7 @@ public enum SummaryType {
         @Override
         public SummaryConfiguration getConfiguration(UserContext userContext) {
             return new SummaryConfiguration(
-                    userContext.localize(new Date()),
+                    userContext.localizedNow(),
                     userContext.firstDayOfMonth().minusMonths(1).with(TemporalAdjusters.firstDayOfMonth()),
                     userContext.lastDayOfMonth().minusMonths(1).with(TemporalAdjusters.lastDayOfMonth()).plusDays(1),
                     TimeRounding.NONE,

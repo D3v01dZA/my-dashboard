@@ -9,7 +9,6 @@ import org.springframework.security.crypto.encrypt.TextEncryptor;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
 import java.util.Objects;
@@ -30,6 +29,11 @@ public class UserContext extends User implements TimeConfig, Encryptor {
             throw new IllegalStateException("I'm supposed to have access to the credentials");
         }
         this.encryptor = Encryptors.delux((String) credentials, getSalt().replace("-", ""));
+    }
+
+    @Override
+    public Date now() {
+        return now;
     }
 
     @Override
@@ -55,6 +59,11 @@ public class UserContext extends User implements TimeConfig, Encryptor {
     @Override
     public LocalDate lastDayOfMonth() {
         return today().with(TemporalAdjusters.lastDayOfMonth());
+    }
+
+    @Override
+    public LocalDateTime localizedNow() {
+        return localize(now);
     }
 
     @Override

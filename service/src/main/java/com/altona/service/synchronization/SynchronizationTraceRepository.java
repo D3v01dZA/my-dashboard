@@ -2,7 +2,6 @@ package com.altona.service.synchronization;
 
 import com.altona.security.UserContext;
 import com.altona.service.synchronization.model.SynchronizationTrace;
-import com.altona.service.time.util.TimeConfig;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -17,7 +16,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.sql.DataSource;
-import java.util.Date;
 import java.util.List;
 
 import static com.altona.util.ObjectMapperHelper.deserialize;
@@ -45,7 +43,6 @@ public class SynchronizationTraceRepository {
                 .addValue("project_id", request.getProject().getId())
                 .addValue("synchronization_id", request.getSynchronizationId())
                 .addValue("attempt_id", request.getAttemptId())
-                .addValue("time", new Date())
                 .addValue("stage", stage)
                 .addValue("value", request.encrypt(value)));
     }
@@ -77,7 +74,6 @@ public class SynchronizationTraceRepository {
                         rs.getInt("project_id"),
                         rs.getInt("synchronization_id"),
                         rs.getString("attempt_id"),
-                        userContext.localize(new Date(rs.getDate("time").getTime())),
                         rs.getString("stage"),
                         deserialize(objectMapper, userContext.decrypt(rs.getString("value")), JsonNode.class)
                 )

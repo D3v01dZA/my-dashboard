@@ -130,4 +130,8 @@
         </sql>
     </changeSet>
 
+    <changeSet id="drop_synchronization_trace_time" author="chris">
+        <dropColumn tableName="synchronization_trace" columnName="time"/>
+    </changeSet>
+
 </databaseChangeLog>
