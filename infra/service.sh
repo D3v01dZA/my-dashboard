@@ -16,7 +16,7 @@ cd my-dashboard/service
 git fetch
 git checkout "${branch}"
 git pull
-./gradlew clean build
+./gradlew clean build --no-daemon
 cd -
 
 echo "Copying boot jar"
