@@ -1,5 +1,6 @@
 package com.altona.security;
 
+import com.altona.service.time.util.TimeInfo;
 import lombok.AllArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -16,6 +17,7 @@ import java.util.TimeZone;
 @AllArgsConstructor
 public class UserService {
 
+    private TimeInfo timeInfo;
     private NamedParameterJdbcTemplate namedJdbcTemplate;
 
     @Transactional(readOnly = true)
@@ -27,7 +29,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserContext getUserContext(Authentication authentication, TimeZone timeZone) {
         return getUserByUsername(authentication.getName())
-                .map(user -> new UserContext(user, authentication, timeZone))
+                .map(user -> new UserContext(user, authentication, timeZone, timeInfo))
                 .orElseThrow(() -> new InsufficientAuthenticationException("Couldn't determine current user"));
     }
 

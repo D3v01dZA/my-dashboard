@@ -1,6 +1,7 @@
 package com.altona.security;
 
 import com.altona.service.time.util.TimeConfig;
+import com.altona.service.time.util.TimeInfo;
 import lombok.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.encrypt.Encryptors;
@@ -19,9 +20,9 @@ public class UserContext extends User implements TimeConfig, Encryptor {
     private TimeZone timeZone;
     private TextEncryptor encryptor;
 
-    private Date now = new Date();
+    private Date now;
 
-    UserContext(User user, @NonNull Authentication authentication, @NonNull TimeZone timeZone) {
+    UserContext(User user, @NonNull Authentication authentication, @NonNull TimeZone timeZone, @NonNull TimeInfo timeInfo) {
         super(user.getId(), user.getUsername(), user.getPassword(), user.getSalt());
         this.timeZone = Objects.requireNonNull(timeZone);
         Object credentials = authentication.getCredentials();
@@ -29,6 +30,7 @@ public class UserContext extends User implements TimeConfig, Encryptor {
             throw new IllegalStateException("I'm supposed to have access to the credentials");
         }
         this.encryptor = Encryptors.delux((String) credentials, getSalt().replace("-", ""));
+        this.now = timeInfo.now();
     }
 
     @Override

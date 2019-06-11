@@ -18,6 +18,10 @@ bootJar {
     version = '0.1.0'
 }
 
+test {
+    useJUnitPlatform()
+}
+
 repositories {
     mavenCentral()
 }
@@ -31,7 +35,7 @@ dependencies {
     compile("org.springframework.boot:spring-boot-starter-security:${bootVersion}")
 
     compile("org.liquibase:liquibase-core:${liquibaseVersion}")
-    compile("org.postgresql:postgresql:${potgreDriverVersion}")
+    compile("org.postgresql:postgresql:${postgreDriverVersion}")
     compile("com.google.guava:guava:${guavaVersion}")
 
     compile("org.seleniumhq.selenium:selenium-java:${seleniumVersion}")
@@ -40,5 +44,7 @@ dependencies {
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:${jupiterJunitVersion}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${jupiterJunitVersion}")
+    testCompile("org.springframework.boot:spring-boot-starter-test:${bootVersion}")
+    testCompile("com.opentable.components:otj-pg-embedded:${postgreEmbeddedVersion}")
 
 }

@@ -6,6 +6,8 @@ import java.util.Date;
 
 public interface TimeConfig extends TimeInfo {
 
+    LocalDate today();
+
     LocalDate firstDayOfWeek();
 
     LocalDate lastDayOfWeek();

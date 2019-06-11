@@ -20,6 +20,7 @@ public class Result<T, E> {
     private T success;
     private E error;
 
+    @SuppressWarnings("unchecked")
     public <R> Result<R, E> success(
             Function<? super T, ? extends R> whenSuccess
     ) {
@@ -29,6 +30,7 @@ public class Result<T, E> {
         return (Result<R, E>) this;
     }
 
+    @SuppressWarnings("unchecked")
     public <R> Result<R, E> successf(
             Function<? super T, Result<R, E>> whenSuccess
     ) {
@@ -38,6 +40,7 @@ public class Result<T, E> {
         return (Result<R, E>) this;
     }
 
+    @SuppressWarnings("unchecked")
     public <R> Result<T, R> failure(
             Function<? super E, ? extends R> whenError
     ) {
