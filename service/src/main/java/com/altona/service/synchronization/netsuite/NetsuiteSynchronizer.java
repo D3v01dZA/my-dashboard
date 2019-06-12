@@ -1,5 +1,6 @@
 package com.altona.service.synchronization.netsuite;
 
+import com.altona.service.synchronization.Screenshot;
 import com.altona.service.synchronization.SynchronizeRequest;
 import com.altona.service.synchronization.Synchronizer;
 import com.altona.service.synchronization.model.SynchronizeResult;
@@ -16,6 +17,7 @@ import com.altona.service.time.model.summary.TimeRounding;
 import com.altona.service.time.model.summary.TimeSummary;
 import com.altona.util.Result;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,12 +54,17 @@ public class NetsuiteSynchronizer implements Synchronizer {
         return netsuiteBrowser.login(request, netsuiteConfiguration)
                 .successf(this::synchronizeTime)
                 .map(
-                        summary -> SynchronizeResult.success(this, request, summary),
+                        summaryAndScreenshot -> SynchronizeResult.success(
+                                this,
+                                request,
+                                summaryAndScreenshot.getTimeSummary(),
+                                summaryAndScreenshot.getScreenshot()
+                        ),
                         error -> SynchronizeResult.failure(this, request, error)
                 );
     }
 
-    private Result<TimeSummary, String> synchronizeTime(NetsuiteContext netsuiteContext) {
+    private Result<SummaryAndScreenshot, String> synchronizeTime(NetsuiteContext netsuiteContext) {
         try {
             log.info("Retrieving time data for requested period");
             netsuiteBrowser.weeklyTimesheets(netsuiteContext, request);
@@ -82,7 +89,7 @@ public class NetsuiteSynchronizer implements Synchronizer {
         }
     }
 
-    private Result<TimeSummary, String> createLine(NetsuiteContext netsuiteContext, NetsuiteTimeDataList data, TimeSummary timeSummary) {
+    private Result<SummaryAndScreenshot, String> createLine(NetsuiteContext netsuiteContext, NetsuiteTimeDataList data, TimeSummary timeSummary) {
         TimeSummary current = data.getAllData();
         return timeSummary.getDifference(current)
                 .map(
@@ -102,10 +109,19 @@ public class NetsuiteSynchronizer implements Synchronizer {
                             } else {
                                 log.info("No Time Difference Found");
                             }
-                            return Result.success(timeSummary);
+                            return Result.success(new SummaryAndScreenshot(timeSummary, Screenshot.take(netsuiteContext)));
                         },
                         summaryFailure -> Result.failure(summaryFailure.getMessage())
                 );
+    }
+
+    @Getter
+    @AllArgsConstructor
+    private class SummaryAndScreenshot {
+
+        private TimeSummary timeSummary;
+        private Screenshot screenshot;
+
     }
 
 }

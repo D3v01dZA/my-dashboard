@@ -121,7 +121,6 @@ class IntegrationTests extends SpringTest {
                 WorkStart.class
         );
         assertEquals(WorkStart.Result.WORK_STARTED, workStart.getResult());
-        assertEquals(project.getId(), workStart.getProjectId());
 
         doReturn(instant(2019, 2, 2, 12, 0)).when(timeInfo).now();
 
@@ -136,7 +135,6 @@ class IntegrationTests extends SpringTest {
                 WorkStart.class
         );
         assertEquals(WorkStart.Result.WORK_ALREADY_STARTED, workStartWorkAlreadyStarted.getResult());
-        assertEquals(project.getId(), workStartWorkAlreadyStarted.getProjectId());
         assertEquals(workStart.getTimeId(), workStartWorkAlreadyStarted.getTimeId());
 
         // Stop Break With Work Already Started Without Break Start

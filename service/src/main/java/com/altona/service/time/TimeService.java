@@ -39,12 +39,12 @@ public class TimeService {
     public WorkStart startProjectWork(List<Project> projects, Project project, TimeInfo timeInfo) {
         log.info("Starting work");
         return timeStatusInternal(projects, timeInfo)
-                .map(timeStatus -> WorkStart.alreadyStarted(timeStatus.getProjectId().get(), timeStatus.getTimeId().get()))
+                .map(timeStatus -> WorkStart.alreadyStarted(timeStatus.getTimeId().get()))
                 .orElseGet(
                         () -> runningWorkAwareFunction(
                                 project,
-                                runningWork -> WorkStart.alreadyStarted(project.getId(), runningWork.getId()),
-                                () -> WorkStart.started(project.getId(), timeRepository.startTime(project.getId(), TimeType.WORK, timeInfo))
+                                runningWork -> WorkStart.alreadyStarted(runningWork.getId()),
+                                () -> WorkStart.started(timeRepository.startTime(project.getId(), TimeType.WORK, timeInfo))
                         )
                 );
     }
