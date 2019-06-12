@@ -32,7 +32,7 @@ public class BreakStart {
         return Optional.ofNullable(timeId);
     }
 
-    private enum Result {
+    public enum Result {
 
         BREAK_STARTED,
         BREAK_ALREADY_STARTED,

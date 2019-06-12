@@ -32,7 +32,7 @@ public class BreakStop {
         return Optional.ofNullable(timeId);
     }
 
-    private enum Result {
+    public enum Result {
 
         BREAK_STOPPED,
         WORK_NOT_STARTED,

@@ -26,7 +26,7 @@ public class WorkStart {
         return new WorkStart(Result.WORK_STARTED, projectId, timeId);
     }
 
-    private enum Result {
+    public enum Result {
         WORK_ALREADY_STARTED,
         WORK_STARTED
     }

@@ -44,6 +44,7 @@ dependencies {
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:${jupiterJunitVersion}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${jupiterJunitVersion}")
+    testCompileOnly("org.projectlombok:lombok:${lombokVersion}")
     testCompile("org.springframework.boot:spring-boot-starter-test:${bootVersion}")
     testCompile("com.opentable.components:otj-pg-embedded:${postgreEmbeddedVersion}")
 

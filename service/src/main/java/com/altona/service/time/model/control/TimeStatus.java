@@ -65,7 +65,7 @@ public class TimeStatus {
         return getStatus() != Status.NONE;
     }
 
-    private enum Status {
+    public enum Status {
 
         NONE,
         WORK,

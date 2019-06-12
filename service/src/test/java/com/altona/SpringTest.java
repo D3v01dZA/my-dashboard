@@ -13,6 +13,9 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Base64;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
@@ -55,6 +58,10 @@ public class SpringTest {
 
     protected <T> T read(byte[] content, TypeReference<T> typeReference) throws IOException {
         return objectMapper.readValue(content, typeReference);
+    }
+
+    protected Instant instant(int year, int month, int date, int hour, int minute) {
+        return LocalDateTime.of(year, month, date, hour, minute, minute).toInstant(ZoneOffset.UTC);
     }
 
     protected String testAuth() {
