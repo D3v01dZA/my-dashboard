@@ -9,10 +9,16 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -29,7 +35,7 @@ public class SummaryCreator {
     private SummaryConfiguration summaryConfiguration;
 
     public Result<TimeSummary, SummaryFailure> create(TimeInfo timeInfo, List<TimeCombination> timeCombinations) {
-        Date now = timeInfo.now();
+        Instant now = timeInfo.now();
         Map<LocalDate, LocalTime> timeMap = new HashMap<>();
         for (TimeCombination timeCombination : timeCombinations) {
             if (!timeCombination.isStopped()) {
@@ -79,7 +85,7 @@ public class SummaryCreator {
         return Result.success(new TimeSummary(from, to, summaryTimes));
     }
 
-    private Optional<SummaryFailure> addTime(Map<LocalDate, LocalTime> map, TimeCombination time, Date now) {
+    private Optional<SummaryFailure> addTime(Map<LocalDate, LocalTime> map, TimeCombination time, Instant now) {
         LocalDate fromDate = timeConfig.localize(time.getStart()).toLocalDate();
         LocalDate toDate = timeConfig.localize(time.getEnd(now)).toLocalDate();
         if (fromDate.equals(toDate)) {

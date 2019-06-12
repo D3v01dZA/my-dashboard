@@ -1,9 +1,9 @@
 package com.altona.service.time.util;
 
-import java.util.Date;
+import java.time.Instant;
 
 public interface TimeInfo {
 
-    Date now();
+    Instant now();
 
 }

@@ -1,8 +1,8 @@
 package com.altona.service.time.util;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 public interface TimeConfig extends TimeInfo {
 
@@ -18,8 +18,8 @@ public interface TimeConfig extends TimeInfo {
 
     LocalDateTime localizedNow();
 
-    LocalDateTime localize(Date date);
+    LocalDateTime localize(Instant date);
 
-    Date unlocalize(LocalDate localDate);
+    Instant unlocalize(LocalDate localDate);
 
 }
