@@ -1,5 +1,7 @@
 package com.altona.dashboard.service.time;
 
+import android.content.Context;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -19,7 +21,7 @@ public class SynchronizationResult {
 
     private String message;
 
-    private TimeSummary summary;
+    private Screenshot screenshot;
 
     @JsonCreator
     public SynchronizationResult(
@@ -27,13 +29,13 @@ public class SynchronizationResult {
             @JsonProperty(value = "synchronizerId", required = true) int synchronizerId,
             @JsonProperty(value = "attemptId") String attemptId,
             @JsonProperty(value = "message") String message,
-            @JsonProperty(value = "summary") TimeSummary summary
+            @JsonProperty(value = "screenshot") Screenshot screenshot
     ) {
         this.success = success;
         this.synchronizerId = synchronizerId;
         this.attemptId = attemptId;
         this.message = message;
-        this.summary = summary;
+        this.screenshot = screenshot;
     }
 
     public Optional<String> getAttemptId() {
@@ -44,7 +46,9 @@ public class SynchronizationResult {
         return Optional.ofNullable(message);
     }
 
-    public Optional<TimeSummary> getSummary() {
-        return Optional.ofNullable(summary);
+    public void saveScreenshot(Context context) {
+        if (screenshot != null && attemptId != null) {
+            screenshot.save(context, attemptId);
+        }
     }
 }

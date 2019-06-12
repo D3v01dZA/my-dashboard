@@ -40,9 +40,12 @@ public class LoginService implements CookieJar {
 
     public LoginService(BaseActivity activity) {
         this.activity = activity;
+        // Effectively make timeouts take forever until they are async
         this.httpClient = new OkHttpClient.Builder()
                 .cookieJar(this)
-                .callTimeout(2, TimeUnit.MINUTES)
+                .readTimeout(5, TimeUnit.MINUTES)
+                .connectTimeout(5, TimeUnit.MINUTES)
+                .writeTimeout(5, TimeUnit.MINUTES)
                 .build();
         this.settings = new Settings(activity);
         this.session = new Session(activity);
@@ -71,7 +74,24 @@ public class LoginService implements CookieJar {
                             try {
                                 ServiceResponse serviceResponse = new ServiceResponse(response.code(), response.body().string());
                                 int code = serviceResponse.getCode();
-                                if (code >= 500) {
+                                if (code == 401) {
+                                    // Retry once in case of a server restart / session timeout
+                                    LOGGER.warning(() -> "Failed to call " + subUrl + " with " + code);
+                                    Optional<Credentials> credentials = getStoredCredentials();
+                                    if (credentials.isPresent()) {
+                                        LOGGER.warning(() -> "Retrying to call " + subUrl);
+                                        session.clearCookie();
+                                        tryExecute(
+                                                builder.header("Authorization", basicAuth(credentials.get())),
+                                                subUrl,
+                                                onSuccessBackgroundThread,
+                                                onSuccessUiThread,
+                                                onFailure
+                                        );
+                                    } else {
+                                        activity.runOnUiThread(() -> onFailure.accept("Timed out " + code));
+                                    }
+                                } else if (code >= 500) {
                                     LOGGER.severe(() -> "Failed to call " + subUrl + " with " + code);
                                     activity.runOnUiThread(() -> onFailure.accept("Server " + code));
                                 } else if (code >= 400) {
@@ -101,15 +121,10 @@ public class LoginService implements CookieJar {
     ) {
         try {
             URL url = new URL(settings.getHost());
-            String auth = Base64.encodeToString((credentials.getUsername() + ":" + credentials.getPassword()).getBytes(), Base64.DEFAULT);
-            // Base64 returns an \n at the end which my Samsung REALLY doesn't like
-            while (auth.endsWith("\n")) {
-                auth = auth.substring(0, auth.length() - 1);
-            }
             Request request = new Request.Builder()
                     .url(url)
                     .get()
-                    .header("Authorization", "Basic " + auth)
+                    .header("Authorization", basicAuth(credentials))
                     .build();
             httpClient.newCall(request).enqueue(new Callback() {
                 @Override
@@ -168,6 +183,15 @@ public class LoginService implements CookieJar {
         return session.getCookie()
                 .map(session -> Collections.singletonList(Cookie.parse(url, session)))
                 .orElseGet(Collections::emptyList);
+    }
+
+    private String basicAuth(Credentials credentials) {
+        String auth = Base64.encodeToString((credentials.getUsername() + ":" + credentials.getPassword()).getBytes(), Base64.DEFAULT);
+        // Base64 returns an \n at the end which my Samsung REALLY doesn't like
+        while (auth.endsWith("\n")) {
+            auth = auth.substring(0, auth.length() - 1);
+        }
+        return "Basic " + auth;
     }
 
     public interface CheckedFunction<T, R> {

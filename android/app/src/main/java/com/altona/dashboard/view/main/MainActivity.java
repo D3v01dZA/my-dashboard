@@ -5,7 +5,7 @@ import com.altona.dashboard.view.SecureAppActivity;
 
 public class MainActivity extends SecureAppActivity {
 
-    protected MainActivity() {
+    public MainActivity() {
         super(R.layout.activity_main, true);
     }
 

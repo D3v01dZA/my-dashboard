@@ -17,7 +17,6 @@ import com.altona.service.time.model.summary.TimeRounding;
 import com.altona.service.time.model.summary.TimeSummary;
 import com.altona.util.Result;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,17 +52,16 @@ public class MaconomySynchronizer implements Synchronizer {
         return maconomyBrowser.login(request, configuration)
                 .successf(this::synchronizeTime)
                 .map(
-                        summaryAndScreenshot -> SynchronizeResult.success(
+                        screenshot -> SynchronizeResult.success(
                                 this,
                                 request,
-                                summaryAndScreenshot.getTimeSummary(),
-                                summaryAndScreenshot.getScreenshot()
+                                screenshot
                         ),
                         error -> SynchronizeResult.failure(this, request, error)
                 );
     }
 
-    private Result<SummaryAndScreenshot, String> synchronizeTime(MaconomyContext context) {
+    private Result<Screenshot, String> synchronizeTime(MaconomyContext context) {
         try {
             log.info("Retrieving time data for requested period");
             for (int i = 0; i < request.getPeriodsBack(); i++) {
@@ -77,7 +75,7 @@ public class MaconomySynchronizer implements Synchronizer {
         }
     }
 
-    private Result<SummaryAndScreenshot, String> synchronizeTime(MaconomyContext context, MaconomyTimeDataList currentData) {
+    private Result<Screenshot, String> synchronizeTime(MaconomyContext context, MaconomyTimeDataList currentData) {
         SummaryConfiguration configuration = new SummaryConfiguration(
                 request.localizedNow(),
                 currentData.getWeekStart(),
@@ -91,7 +89,7 @@ public class MaconomySynchronizer implements Synchronizer {
                 .successf(timeSummary -> createLine(context, currentData, timeSummary));
     }
 
-    private Result<SummaryAndScreenshot, String> createLine(
+    private Result<Screenshot, String> createLine(
             MaconomyContext context,
             MaconomyTimeDataList currentData,
             TimeSummary timeSummary
@@ -112,22 +110,13 @@ public class MaconomySynchronizer implements Synchronizer {
                     if (difference.hasTime()) {
                         log.info("Time difference found");
                         return maconomyBrowser.addLine(context, request, difference.getFromDate(), difference.getToDate(), timeData)
-                                .<Result<SummaryAndScreenshot, String>>map(Result::failure)
-                                .orElseGet(() -> Result.success(new SummaryAndScreenshot(timeSummary, Screenshot.take(context))));
+                                .<Result<Screenshot, String>>map(Result::failure)
+                                .orElseGet(() -> Result.success(Screenshot.take(context)));
                     } else {
                         log.info("No time difference found");
                     }
-                    return Result.success(new SummaryAndScreenshot(timeSummary, Screenshot.take(context)));
+                    return Result.success(Screenshot.take(context));
                 });
-    }
-
-    @Getter
-    @AllArgsConstructor
-    private class SummaryAndScreenshot {
-
-        private TimeSummary timeSummary;
-        private Screenshot screenshot;
-
     }
 
 }

@@ -47,7 +47,7 @@ public class SucceedingSynchronizer implements Synchronizer {
         try {
             return timeService.summary(request, request.getProject(), configuration)
                     .map(
-                            summary -> SynchronizeResult.success(this, request, summary, Screenshot.take(chromeDriver)),
+                            summary -> SynchronizeResult.success(this, request, Screenshot.take(chromeDriver)),
                             summaryFailure -> SynchronizeResult.failure(this, request, summaryFailure.getMessage())
                     );
         } finally {

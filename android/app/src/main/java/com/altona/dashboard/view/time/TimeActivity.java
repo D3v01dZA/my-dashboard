@@ -9,6 +9,7 @@ import android.widget.TextView;
 import com.altona.dashboard.R;
 import com.altona.dashboard.component.UsableRecycler;
 import com.altona.dashboard.service.time.Project;
+import com.altona.dashboard.service.time.SynchronizationResult;
 import com.altona.dashboard.service.time.TimeScreen;
 import com.altona.dashboard.service.time.TimeService;
 import com.altona.dashboard.service.time.TimeStatus;
@@ -159,7 +160,9 @@ public class TimeActivity extends SecureAppActivity {
         timeService().synchronize(
                 project,
                 synchronizationResults -> {
-                    boolean failure = synchronizationResults.stream().anyMatch(synchronizationResult -> !synchronizationResult.isSuccess());
+                    boolean failure = synchronizationResults.stream()
+                            .peek(synchronizationResult -> synchronizationResult.saveScreenshot(this))
+                            .anyMatch(synchronizationResult -> !synchronizationResult.isSuccess());
                     if (failure) {
                         toast("Synchronization Failed");
                     } else {
