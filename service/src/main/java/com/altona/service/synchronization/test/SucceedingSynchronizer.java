@@ -43,8 +43,8 @@ public class SucceedingSynchronizer implements Synchronizer {
                 false
         );
         ChromeDriver chromeDriver = Driver.getChromeDriver();
-        chromeDriver.get("https://www.google.com");
         try {
+            chromeDriver.get("https://www.google.com");
             return timeService.summary(request, request.getProject(), configuration)
                     .map(
                             summary -> SynchronizeResult.success(this, request, Screenshot.take(chromeDriver)),
