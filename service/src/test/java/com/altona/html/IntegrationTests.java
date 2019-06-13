@@ -204,8 +204,53 @@ class IntegrationTests extends SpringTest {
                 WorkStop.class
         );
         assertEquals(WorkStop.Result.WORK_STOPPED, workStop.getResult());
-        assertEquals(workStop.getWorkTimeId(), workStop.getWorkTimeId());
+        assertEquals(Optional.of(workStart.getTimeId()), workStop.getWorkTimeId());
         assertFalse(workStop.getBreakTimeId().isPresent());
+
+        doReturn(instant(2019, 2, 2, 18, 0)).when(timeInfo).now();
+
+        // Start Work
+        assertNoTimeStatus();
+        WorkStart workStartTwo = read(
+                mvc.perform(post("/time/project/" + project.getId() + "/start-work"))
+                        .andExpect(status().isOk())
+                        .andExpect(content().contentType(APPLICATION_JSON_UTF8))
+                        .andReturn()
+                        .getResponse().getContentAsByteArray(),
+                WorkStart.class
+        );
+        assertEquals(WorkStart.Result.WORK_STARTED, workStartTwo.getResult());
+
+        doReturn(instant(2019, 2, 2, 19, 0)).when(timeInfo).now();
+
+        // Start Break
+        assertWorkingTimeStatus(project, 1, 0);
+        BreakStart breakStartTwo = read(
+                mvc.perform(post("/time/project/" + project.getId() + "/start-break"))
+                        .andExpect(status().isOk())
+                        .andExpect(content().contentType(APPLICATION_JSON_UTF8))
+                        .andReturn()
+                        .getResponse().getContentAsByteArray(),
+                BreakStart.class
+        );
+        assertEquals(BreakStart.Result.BREAK_STARTED, breakStartTwo.getResult());
+        assertTrue(breakStartTwo.getTimeId().isPresent());
+
+        doReturn(instant(2019, 2, 2, 20, 0)).when(timeInfo).now();
+
+        // Start Break
+        assertBreakTimeStatus(project, 1, 1);
+        WorkStop workStopTwo = read(
+                mvc.perform(post("/time/project/" + project.getId() + "/stop-work"))
+                        .andExpect(status().isOk())
+                        .andExpect(content().contentType(APPLICATION_JSON_UTF8))
+                        .andReturn()
+                        .getResponse().getContentAsByteArray(),
+                WorkStop.class
+        );
+        assertEquals(WorkStop.Result.WORK_AND_BREAK_STOPPED, workStopTwo.getResult());
+        assertEquals(Optional.of(workStartTwo.getTimeId()), workStopTwo.getWorkTimeId());
+        assertEquals(breakStartTwo.getTimeId(), workStopTwo.getBreakTimeId());
 
         assertNoTimeStatus();
 
