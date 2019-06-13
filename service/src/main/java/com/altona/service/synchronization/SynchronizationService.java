@@ -9,6 +9,7 @@ import com.altona.service.synchronization.model.SynchronizeCommand;
 import com.altona.service.synchronization.model.SynchronizeError;
 import com.altona.service.synchronization.model.SynchronizeResult;
 import com.altona.util.Result;
+import com.altona.util.threading.TransactionalThreading;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.AllArgsConstructor;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,6 +27,7 @@ public class SynchronizationService {
 
     private ObjectMapper objectMapper;
     private ApplicationContext applicationContext;
+    private TransactionalThreading transactionalThreading;
     private SynchronizationRepository synchronizationRepository;
     private SynchronizationTraceRepository synchronizationTraceRepository;
 
@@ -62,10 +65,11 @@ public class SynchronizationService {
     }
 
     public List<SynchronizeResult> synchronize(UserContext userContext, Project project) {
-        return synchronizationRepository.synchronizations(userContext, project.getId()).stream()
+        List<Supplier<SynchronizeResult>> suppliers = synchronizationRepository.synchronizations(userContext, project.getId()).stream()
                 .map(synchronization -> createService(synchronization, new SynchronizeRequest(synchronization.getId(), userContext, project, SynchronizeCommand.current())))
-                .map(this::synchronize)
+                .<Supplier<SynchronizeResult>>map(result -> () -> synchronize(result))
                 .collect(Collectors.toList());
+        return transactionalThreading.executeInReadOnlyTransaction(suppliers);
     }
 
     private Result<Synchronizer, SynchronizeError> createService(Synchronization synchronization, SynchronizeRequest request) {
