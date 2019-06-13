@@ -40,6 +40,6 @@ public class SynchronizeResult {
     }
 
     public Optional<Screenshot> getScreenshot() {
-        return Optional.of(screenshot);
+        return Optional.ofNullable(screenshot);
     }
 }

@@ -10,6 +10,7 @@ import com.altona.util.LocalDateIterator;
 import com.altona.util.Result;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.MoreCollectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
@@ -22,7 +23,6 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -108,9 +108,9 @@ public class MaconomyBrowser {
 
                 // Start at cell 4 + the start index
                 Map<LocalDate, LocalTime> timeMap = Maps.newHashMap();
-                int i = 4 + (6 - (int) ChronoUnit.DAYS.between(weekStart, weekEnd));
                 for (LocalDate localDate : LocalDateIterator.inclusive(weekStart, weekEnd)) {
-                    WebElement day = cells.get(i++);
+                    int index = 3 + localDate.getDayOfWeek().getValue();
+                    WebElement day = cells.get(index);
                     List<WebElement> dayInputs = day.findElements(By.tagName("input"));
                     if (dayInputs.size() != 2) {
                         String message = String.format("Expected 2 inputs but found %s on date %s", dayInputs, localDate);
@@ -162,9 +162,9 @@ public class MaconomyBrowser {
         cells.get(3).findElement(By.tagName("input")).sendKeys(data.getTaskName());
         sleep();
 
-        int i = 4 + (6 - (int) ChronoUnit.DAYS.between(from, to));
         for (LocalDate localDate : LocalDateIterator.inclusive(from, to)) {
-            WebElement dayCell = cells.get(i++);
+            int index = 3 + localDate.getDayOfWeek().getValue();
+            WebElement dayCell = cells.get(index);
             Optional<String> result = data.getTime(localDate).flatMap(dayTime -> {
                 List<WebElement> dayInputs = dayCell.findElements(By.tagName("input"));
                 if (dayInputs.size() != 2) {
@@ -191,7 +191,19 @@ public class MaconomyBrowser {
     public void close(MaconomyContext context, SynchronizeRequest request) {
         log.info("Closing");
         synchronizationTraceRepository.trace(request, "Before Close", context);
-        context.quit();
+        try {
+            log.info("Trying to log out");
+            context.findElement(By.className("icon-settings")).click();
+            context.findElements(By.className("dropdown-menu-right")).stream()
+                    .flatMap(element -> element.findElements(By.tagName("a")).stream())
+                    .filter(element -> element.getText().startsWith("Log Out"))
+                    .collect(MoreCollectors.onlyElement())
+                    .click();
+        } catch (Exception ex) {
+            log.error("Error encountered logging out", ex);
+        } finally {
+            context.quit();
+        }
     }
 
     private Result<MaconomyContext, String> verifyLogin(SynchronizeRequest request, MaconomyContext context) {
