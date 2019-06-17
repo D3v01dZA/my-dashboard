@@ -2,7 +2,9 @@ package com.altona.util.threading;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -44,4 +46,13 @@ public class TransactionalThreading {
 
     }
 
+    @Component
+    public static class TransactionalExecutor {
+
+        @Transactional(readOnly = true)
+        public <T> T executeInReadOnlyTransaction(Supplier<T> supplier) {
+            return supplier.get();
+        }
+
+    }
 }
