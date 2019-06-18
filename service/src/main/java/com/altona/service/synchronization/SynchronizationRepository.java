@@ -32,7 +32,7 @@ public class SynchronizationRepository {
                 .usingGeneratedKeyColumns("id");
     }
 
-    public int createSynchronization(Encryptor encryptor, int projectId, Synchronization synchronization) {
+    public int insert(Encryptor encryptor, int projectId, Synchronization synchronization) {
         return synchronizationJdbcInsert.executeAndReturnKey(new MapSqlParameterSource()
                 .addValue("service", synchronization.getService().name())
                 .addValue("configuration",
@@ -44,7 +44,7 @@ public class SynchronizationRepository {
         ).intValue();
     }
 
-    public void updateSynchronization(Encryptor encryptor, int projectId, Synchronization synchronization) {
+    public void update(Encryptor encryptor, int projectId, Synchronization synchronization) {
         int updated = namedJdbc.update(
                 "UPDATE synchronization SET service = :service, configuration = :configuration WHERE project_id = :projectId AND id = :synchronizationId",
                 new MapSqlParameterSource()
@@ -61,7 +61,7 @@ public class SynchronizationRepository {
         }
     }
 
-    public List<Synchronization> synchronizations(Encryptor encryptor, int projectId) {
+    public List<Synchronization> select(Encryptor encryptor, int projectId) {
         return namedJdbc.query(
                 "SELECT id, service, configuration FROM synchronization WHERE project_id = :projectId",
                 new MapSqlParameterSource("projectId", projectId),
@@ -69,7 +69,7 @@ public class SynchronizationRepository {
         );
     }
 
-    public Optional<Synchronization> synchronization(Encryptor encryptor, int projectId, int id) {
+    public Optional<Synchronization> select(Encryptor encryptor, int projectId, int id) {
         try {
             return Optional.of(namedJdbc.queryForObject(
                     "SELECT id, service, configuration FROM synchronization WHERE project_id = :projectId and id = :id",

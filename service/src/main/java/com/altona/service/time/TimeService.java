@@ -99,7 +99,7 @@ public class TimeService {
     public Result<TimeSummary, SummaryFailure> summary(TimeConfig timeConfig, Project project, SummaryConfiguration configuration) {
         log.info("Summarizing {}", configuration);
         List<Time> times = timeRepository
-                .timeListBetween(
+                .selectBetween(
                         project.getId(),
                         timeConfig.unlocalize(configuration.getFrom()),
                         timeConfig.unlocalize(configuration.getTo())
@@ -117,7 +117,7 @@ public class TimeService {
         return runningWorkAwareFunction(
                 project,
                 runningWork -> {
-                    LocalTime breakTime = timeRepository.timesFromDate(project.getId(), runningWork.getStart())
+                    LocalTime breakTime = timeRepository.selectFromDate(project.getId(), runningWork.getStart())
                             .stream()
                             .map(time -> {
                                 Assert.isTrue(time.getType() == TimeType.BREAK, "All times after a non-ended work should be breaks");
@@ -139,7 +139,7 @@ public class TimeService {
 
     private Time stopTime(Project project, Time time, TimeInfo timeInfo) {
         timeRepository.stopTime(project.getId(), time.getId(), timeInfo);
-        return timeRepository.time(project.getId(), time.getId()).get();
+        return timeRepository.select(project.getId(), time.getId()).get();
     }
 
     private <T> T runningBreakAwareFunction(Project project, Function<Time, T> whenRunning, Supplier<T> whenNotRunning) {
@@ -151,7 +151,7 @@ public class TimeService {
     }
 
     private <T> T runningAwareFunction(TimeType type, Project project, Function<Time, T> whenRunning, Supplier<T> whenNotRunning) {
-        Optional<Time> currentlyRunningOptional = timeRepository.timeWithNullEnd(project.getId(), type);
+        Optional<Time> currentlyRunningOptional = timeRepository.selectWithNullEnd(project.getId(), type);
         if (currentlyRunningOptional.isPresent()) {
             return whenRunning.apply(currentlyRunningOptional.get());
         } else {

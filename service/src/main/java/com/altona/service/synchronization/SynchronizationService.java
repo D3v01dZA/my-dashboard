@@ -35,12 +35,12 @@ public class SynchronizationService {
         if (!synchronization.hasValidConfiguration(objectMapper)) {
             return Result.failure("Invalid Configuration");
         }
-        int id = synchronizationRepository.createSynchronization(encryptor, project.getId(), synchronization);
-        return Result.success(synchronizationRepository.synchronization(encryptor, project.getId(), id).get());
+        int id = synchronizationRepository.insert(encryptor, project.getId(), synchronization);
+        return Result.success(synchronizationRepository.select(encryptor, project.getId(), id).get());
     }
 
     public Optional<Synchronization> getSynchronization(Encryptor encryptor, Project project, int synchronizationId) {
-        return synchronizationRepository.synchronization(encryptor, project.getId(), synchronizationId);
+        return synchronizationRepository.select(encryptor, project.getId(), synchronizationId);
     }
 
     public Result<Synchronization, String> updateSynchronization(Encryptor encryptor, Project project, Synchronization original, ObjectNode modification) {
@@ -48,24 +48,24 @@ public class SynchronizationService {
         if (!modified.hasValidConfiguration(objectMapper)) {
             return Result.failure("Invalid Configuration");
         }
-        synchronizationRepository.updateSynchronization(encryptor, project.getId(), modified);
-        return Result.success(synchronizationRepository.synchronization(encryptor, project.getId(), modified.getId()).get());
+        synchronizationRepository.update(encryptor, project.getId(), modified);
+        return Result.success(synchronizationRepository.select(encryptor, project.getId(), modified.getId()).get());
     }
 
     public Optional<List<SynchronizationTrace>> traces(UserContext userContext, Project project, int synchronizationId, String attemptId) {
-        return synchronizationRepository.synchronization(userContext, project.getId(), synchronizationId)
+        return synchronizationRepository.select(userContext, project.getId(), synchronizationId)
                 .map(synchronization -> synchronizationTraceRepository.traces(userContext, project.getId(), synchronizationId, attemptId));
     }
 
     public Optional<SynchronizeResult> synchronize(UserContext userContext, Project project, int synchronizationId, SynchronizeCommand command) {
         SynchronizeRequest request = new SynchronizeRequest(synchronizationId, userContext, project, command);
-        return synchronizationRepository.synchronization(userContext, project.getId(), synchronizationId)
+        return synchronizationRepository.select(userContext, project.getId(), synchronizationId)
                 .map(synchronization -> createService(synchronization, request))
                 .map(this::synchronize);
     }
 
     public List<SynchronizeResult> synchronize(UserContext userContext, Project project) {
-        List<Supplier<SynchronizeResult>> suppliers = synchronizationRepository.synchronizations(userContext, project.getId()).stream()
+        List<Supplier<SynchronizeResult>> suppliers = synchronizationRepository.select(userContext, project.getId()).stream()
                 .map(synchronization -> createService(synchronization, new SynchronizeRequest(synchronization.getId(), userContext, project, SynchronizeCommand.current())))
                 .<Supplier<SynchronizeResult>>map(result -> () -> synchronize(result))
                 .collect(Collectors.toList());

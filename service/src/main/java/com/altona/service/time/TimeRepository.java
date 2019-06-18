@@ -76,7 +76,7 @@ public class TimeRepository {
                 .usingGeneratedKeyColumns("id");
     }
 
-    public Optional<Time> time(int projectId, int timeId) {
+    public Optional<Time> select(int projectId, int timeId) {
         return getSingleTimeFromQuery(
                 "SELECT id, type, start_time, end_time FROM time WHERE id = :id AND project_id = :projectId",
                 new MapSqlParameterSource()
@@ -85,7 +85,7 @@ public class TimeRepository {
         );
     }
 
-    public Optional<Time> timeWithNullEnd(int projectId, TimeType type) {
+    public Optional<Time> selectWithNullEnd(int projectId, TimeType type) {
         return getSingleTimeFromQuery(
                 "SELECT id, type, start_time, end_time FROM time WHERE end_time IS NULL AND type = :type AND project_id = :projectId",
                 new MapSqlParameterSource()
@@ -94,7 +94,7 @@ public class TimeRepository {
         );
     }
 
-    public List<Time> timesFromDate(int projectId, Instant fromTime) {
+    public List<Time> selectFromDate(int projectId, Instant fromTime) {
         return namedJdbc.query(
                 "SELECT id, type, start_time, end_time FROM time WHERE project_id = :projectId AND start_time > :fromTime",
                 new MapSqlParameterSource()
@@ -104,7 +104,7 @@ public class TimeRepository {
         );
     }
 
-    public List<Time> timeListBetween(int projectId, Instant from, Instant to) {
+    public List<Time> selectBetween(int projectId, Instant from, Instant to) {
         return namedJdbc.query(
                 "SELECT id, type, start_time, end_time FROM time WHERE " +
                         "(" +

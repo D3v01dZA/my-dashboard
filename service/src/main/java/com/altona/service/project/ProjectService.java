@@ -15,15 +15,15 @@ public class ProjectService {
     private ProjectRepository projectRepository;
 
     public List<Project> projects(User user) {
-        return projectRepository.projects(user);
+        return projectRepository.select(user);
     }
 
     public Optional<Project> project(User user, int projectId) {
-        return projectRepository.project(user, projectId);
+        return projectRepository.select(user, projectId);
     }
 
     public Project createProject(User user, Project project) {
-        int key = projectRepository.createProject(user, project);
+        int key = projectRepository.insert(user, project);
         return project(user, key).get();
     }
 

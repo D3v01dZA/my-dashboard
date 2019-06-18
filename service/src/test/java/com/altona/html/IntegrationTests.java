@@ -1,6 +1,8 @@
 package com.altona.html;
 
 import com.altona.SpringTest;
+import com.altona.service.broadcast.Broadcast;
+import com.altona.service.broadcast.BroadcastUpdate;
 import com.altona.service.project.model.Project;
 import com.altona.service.time.model.control.BreakStart;
 import com.altona.service.time.model.control.BreakStop;
@@ -37,7 +39,7 @@ class IntegrationTests extends SpringTest {
     private TimeInfo timeInfo;
 
     @Test
-    void basicSequence() throws Exception {
+    void basicTimeSequence() throws Exception {
         String root = mvc.perform(get("/"))
                 .andExpect(status().isOk())
                 .andReturn()
@@ -254,6 +256,64 @@ class IntegrationTests extends SpringTest {
 
         assertNoTimeStatus();
 
+    }
+
+    @Test
+    void basicBroadcastSequence() throws Exception {
+        List<Broadcast> broadcasts = read(
+                mvc.perform(get("/broadcast"))
+                        .andExpect(status().isOk())
+                        .andExpect(content().contentType(APPLICATION_JSON_UTF8))
+                        .andReturn()
+                        .getResponse().getContentAsByteArray(),
+                new TypeReference<List<Broadcast>>() {
+                }
+        );
+        assertTrue(broadcasts.isEmpty());
+
+        Broadcast broadcast = read(
+                mvc.perform(post("/broadcast/update", new BroadcastUpdate("B", "A")))
+                        .andExpect(status().isOk())
+                        .andExpect(content().contentType(APPLICATION_JSON_UTF8))
+                        .andReturn()
+                        .getResponse().getContentAsByteArray(),
+                Broadcast.class
+        );
+        assertEquals("A", broadcast.getBroadcast());
+
+        List<Broadcast> broadcastsAfterCreate = read(
+                mvc.perform(get("/broadcast"))
+                        .andExpect(status().isOk())
+                        .andExpect(content().contentType(APPLICATION_JSON_UTF8))
+                        .andReturn()
+                        .getResponse().getContentAsByteArray(),
+                new TypeReference<List<Broadcast>>() {
+                }
+        );
+        assertEquals(1, broadcastsAfterCreate.size());
+        assertTrue(broadcastsAfterCreate.stream().anyMatch(b -> b.getBroadcast().equals("A")));
+
+        Broadcast broadcastUpdate = read(
+                mvc.perform(post("/broadcast/update", new BroadcastUpdate("A", "B")))
+                        .andExpect(status().isOk())
+                        .andExpect(content().contentType(APPLICATION_JSON_UTF8))
+                        .andReturn()
+                        .getResponse().getContentAsByteArray(),
+                Broadcast.class
+        );
+        assertEquals("B", broadcastUpdate.getBroadcast());
+
+        List<Broadcast> broadcastsAfterUpdate = read(
+                mvc.perform(get("/broadcast"))
+                        .andExpect(status().isOk())
+                        .andExpect(content().contentType(APPLICATION_JSON_UTF8))
+                        .andReturn()
+                        .getResponse().getContentAsByteArray(),
+                new TypeReference<List<Broadcast>>() {
+                }
+        );
+        assertEquals(1, broadcastsAfterUpdate.size());
+        assertTrue(broadcastsAfterUpdate.stream().anyMatch(b -> b.getBroadcast().equals("B")));
     }
 
     private void assertNoTimeStatus() throws Exception {

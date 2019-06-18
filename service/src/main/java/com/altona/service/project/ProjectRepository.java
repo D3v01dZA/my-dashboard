@@ -27,7 +27,7 @@ public class ProjectRepository {
                 .usingGeneratedKeyColumns("id");
     }
 
-    public List<Project> projects(User user) {
+    public List<Project> select(User user) {
         return namedJdbc.query(
                 "SELECT id, name FROM project WHERE user_id = :userId",
                 new MapSqlParameterSource("userId", user.getId()),
@@ -35,7 +35,7 @@ public class ProjectRepository {
         );
     }
 
-    public Optional<Project> project(User user, int projectId) {
+    public Optional<Project> select(User user, int projectId) {
         try {
             return Optional.of(namedJdbc.queryForObject(
                     "SELECT id, name FROM project WHERE id = :projectId AND user_id = :userId",
@@ -49,7 +49,7 @@ public class ProjectRepository {
         }
     }
 
-    public int createProject(User user, Project project) {
+    public int insert(User user, Project project) {
         return projectJdbcInsert.executeAndReturnKey(new MapSqlParameterSource()
                 .addValue("name", project.getName())
                 .addValue("user_id", user.getId()))
