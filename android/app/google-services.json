@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "950325165391",
+    "firebase_url": "https://my-dashboard-prod.firebaseio.com",
+    "project_id": "my-dashboard-prod",
+    "storage_bucket": "my-dashboard-prod.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:950325165391:android:753a5634f0377a3e",
+        "android_client_info": {
+          "package_name": "com.altona.dashboard"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "950325165391-64vqh7lv4bp9g452b10i6lbb7okqnqgb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDOrJ0S94eckuhYHUNF1GY4I2szbPmiqhU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "950325165391-64vqh7lv4bp9g452b10i6lbb7okqnqgb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

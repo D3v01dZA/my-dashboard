@@ -51,6 +51,14 @@
 
         <service
             android:name=".view.time.TimeNotification"/>
+
+        <service
+            android:name=".service.Firebase"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>
