@@ -40,6 +40,8 @@ dependencies {
 
     compile("org.seleniumhq.selenium:selenium-java:${seleniumVersion}")
 
+    compile("com.google.firebase:firebase-admin:${firebaseAdminVersion}")
+
     compileOnly("org.projectlombok:lombok:${lombokVersion}")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:${jupiterJunitVersion}")

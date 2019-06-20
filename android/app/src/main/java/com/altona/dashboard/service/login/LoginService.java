@@ -1,11 +1,17 @@
 package com.altona.dashboard.service.login;
 
+import android.app.Service;
+import android.content.Context;
 import android.util.Base64;
 
+import com.altona.dashboard.Static;
 import com.altona.dashboard.service.ServiceResponse;
 import com.altona.dashboard.service.Session;
 import com.altona.dashboard.service.Settings;
+import com.altona.dashboard.service.firebase.FirebaseUpdate;
 import com.altona.dashboard.view.BaseActivity;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -23,8 +29,10 @@ import okhttp3.Callback;
 import okhttp3.Cookie;
 import okhttp3.CookieJar;
 import okhttp3.HttpUrl;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class LoginService implements CookieJar {
@@ -33,13 +41,13 @@ public class LoginService implements CookieJar {
 
     private OkHttpClient httpClient;
 
-    private BaseActivity activity;
+    private Consumer<Runnable> foregroundExecutor;
 
     private Settings settings;
     private Session session;
 
-    public LoginService(BaseActivity activity) {
-        this.activity = activity;
+    private LoginService(Context context, Consumer<Runnable> foregroundExecutor) {
+        this.foregroundExecutor = foregroundExecutor;
         // Effectively make timeouts take forever until they are async
         this.httpClient = new OkHttpClient.Builder()
                 .cookieJar(this)
@@ -47,8 +55,16 @@ public class LoginService implements CookieJar {
                 .connectTimeout(5, TimeUnit.MINUTES)
                 .writeTimeout(5, TimeUnit.MINUTES)
                 .build();
-        this.settings = new Settings(activity);
-        this.session = new Session(activity);
+        this.settings = new Settings(context);
+        this.session = new Session(context);
+    }
+
+    public LoginService(BaseActivity activity) {
+        this(activity, activity::runOnUiThread);
+    }
+
+    public LoginService(Service service) {
+        this(service, Runnable::run);
     }
 
     // Execute stuff on the background thread first
@@ -59,6 +75,17 @@ public class LoginService implements CookieJar {
             Consumer<T> onSuccessUiThread,
             Consumer<String> onFailure
     ) {
+        Optional<String> unsavedFirebaseId = settings.getUnsavedFirebaseId();
+        if (unsavedFirebaseId.isPresent()) {
+            FirebaseUpdate firebaseUpdate = settings.getFirebaseId()
+                    .map(oldId -> new FirebaseUpdate(oldId, unsavedFirebaseId.get()))
+                    .orElseGet(() -> new FirebaseUpdate(null, unsavedFirebaseId.get()));
+            updateFirebaseToken(firebaseUpdate);
+        }
+        actuallyTryExecute(builder, subUrl, onSuccessBackgroundThread, onSuccessUiThread, onFailure);
+    }
+
+    private <T> void actuallyTryExecute(Request.Builder builder, String subUrl, CheckedFunction<ServiceResponse, T> onSuccessBackgroundThread, Consumer<T> onSuccessUiThread, Consumer<String> onFailure) {
         try {
             URL url = new URL(settings.getHost() + subUrl);
             httpClient.newCall(builder.url(url).build())
@@ -66,7 +93,7 @@ public class LoginService implements CookieJar {
                         @Override
                         public void onFailure(Call call, IOException e) {
                             LOGGER.log(Level.SEVERE, "Failed to call " + subUrl, e);
-                            activity.runOnUiThread(() -> onFailure.accept("Unknown IOException: " + e.getMessage()));
+                            foregroundExecutor.accept(() -> onFailure.accept("Unknown IOException: " + e.getMessage()));
                         }
 
                         @Override
@@ -89,26 +116,26 @@ public class LoginService implements CookieJar {
                                                 onFailure
                                         );
                                     } else {
-                                        activity.runOnUiThread(() -> onFailure.accept("Timed out " + code));
+                                        foregroundExecutor.accept(() -> onFailure.accept("Timed out " + code));
                                     }
                                 } else if (code >= 500) {
                                     LOGGER.severe(() -> "Failed to call " + subUrl + " with " + code);
-                                    activity.runOnUiThread(() -> onFailure.accept("Server " + code));
+                                    foregroundExecutor.accept(() -> onFailure.accept("Server " + code));
                                 } else if (code >= 400) {
                                     LOGGER.warning(() -> "Failed to call " + subUrl + " with " + code);
-                                    activity.runOnUiThread(() -> onFailure.accept("Request " + code));
+                                    foregroundExecutor.accept(() -> onFailure.accept("Request " + code));
                                 } else {
                                     T result = onSuccessBackgroundThread.apply(serviceResponse);
-                                    activity.runOnUiThread(() -> onSuccessUiThread.accept(result));
+                                    foregroundExecutor.accept(() -> onSuccessUiThread.accept(result));
                                 }
                             } catch (IOException e) {
                                 LOGGER.log(Level.SEVERE, "Failed to call " + subUrl, e);
-                                activity.runOnUiThread(() -> onFailure.accept("Unknown IOException: " + e.getMessage()));
+                                foregroundExecutor.accept(() -> onFailure.accept("Unknown IOException: " + e.getMessage()));
                             }
                         }
                     });
         } catch (MalformedURLException e) {
-            activity.runOnUiThread(() -> onFailure.accept("Host " + settings.getHost() + " is not valid"));
+            foregroundExecutor.accept(() -> onFailure.accept("Host " + settings.getHost() + " is not valid"));
         }
     }
 
@@ -129,7 +156,7 @@ public class LoginService implements CookieJar {
             httpClient.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
-                    activity.runOnUiThread(() -> onFailure.accept("Unknown IOException: " + e.getMessage()));
+                    foregroundExecutor.accept(() -> onFailure.accept("Unknown IOException: " + e.getMessage()));
                 }
 
                 @Override
@@ -140,19 +167,45 @@ public class LoginService implements CookieJar {
                             if (remember) {
                                 settings.setCredentials(credentials);
                             }
-                            activity.runOnUiThread(() -> onSuccess.run());
+                            foregroundExecutor.accept(() -> onSuccess.run());
                         } else {
                             settings.clearCredentials();
-                            activity.runOnUiThread(() -> onFailure.accept("Wrong value received: " + string));
+                            foregroundExecutor.accept(() -> onFailure.accept("Wrong value received: " + string));
                         }
                     } else {
                         settings.clearCredentials();
-                        activity.runOnUiThread(() -> onFailure.accept("Wrong response code received: " + response.code()));
+                        foregroundExecutor.accept(() -> onFailure.accept("Wrong response code received: " + response.code()));
                     }
                 }
             });
         } catch (MalformedURLException e) {
-            activity.runOnUiThread(() -> onFailure.accept("Host " + settings.getHost() + " is not valid"));
+            foregroundExecutor.accept(() -> onFailure.accept("Host " + settings.getHost() + " is not valid"));
+        }
+    }
+
+    public void updateFirebaseToken(FirebaseUpdate firebaseUpdate) {
+        try {
+            actuallyTryExecute(
+                    new Request.Builder()
+                            .post(RequestBody.create(
+                                    MediaType.get("application/json"),
+                                    Static.OBJECT_MAPPER.writeValueAsString(firebaseUpdate))),
+                    "/broadcast/update",
+                    serviceResponse -> Static.OBJECT_MAPPER.readValue(serviceResponse.getValue(), ObjectNode.class),
+                    success -> {
+                        settings.setFirebaseId(firebaseUpdate.getNewBroadcast());
+                        settings.clearUnsavedFirebaseId();
+                        LOGGER.info(() -> String.format("Saved Broadcast %s", success));
+                    },
+                    failure -> {
+                        settings.setUnsavedFirebaseId(firebaseUpdate.getNewBroadcast());
+                        LOGGER.warning(() -> String.format("Failed Broadcast Save %s", failure));
+                    }
+            );
+        } catch (
+                JsonProcessingException e) {
+            LOGGER.log(Level.SEVERE, "Failed to serialize", e);
+            throw new IllegalStateException("Failed to serialize", e);
         }
     }
 

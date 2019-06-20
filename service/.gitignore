@@ -5,3 +5,6 @@ build/
 # IntelliJ
 .idea/
 out/
+
+# Firebase Key
+firebase-priv.json

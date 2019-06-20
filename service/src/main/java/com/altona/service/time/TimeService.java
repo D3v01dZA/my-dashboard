@@ -1,5 +1,7 @@
 package com.altona.service.time;
 
+import com.altona.security.UserContext;
+import com.altona.service.broadcast.BroadcastService;
 import com.altona.service.project.model.Project;
 import com.altona.service.time.model.Time;
 import com.altona.service.time.model.TimeCombination;
@@ -35,54 +37,75 @@ import java.util.function.Supplier;
 public class TimeService {
 
     private TimeRepository timeRepository;
+    private BroadcastService broadcastService;
 
-    public WorkStart startProjectWork(List<Project> projects, Project project, TimeInfo timeInfo) {
+    public WorkStart startProjectWork(List<Project> projects, Project project, UserContext user) {
         log.info("Starting work");
-        return timeStatusInternal(projects, timeInfo)
+        return timeStatusInternal(projects, user)
                 .map(timeStatus -> WorkStart.alreadyStarted(timeStatus.getTimeId().get()))
                 .orElseGet(
                         () -> runningWorkAwareFunction(
                                 project,
                                 runningWork -> WorkStart.alreadyStarted(runningWork.getId()),
-                                () -> WorkStart.started(timeRepository.startTime(project.getId(), TimeType.WORK, timeInfo))
+                                () -> {
+                                    WorkStart started = WorkStart.started(timeRepository.startTime(project.getId(), TimeType.WORK, user));
+                                    broadcastService.broadcast(user);
+                                    return started;
+                                }
                         )
                 );
     }
 
-    public WorkStop endProjectWork(Project project, TimeInfo timeInfo) {
+    public WorkStop endProjectWork(Project project, UserContext user) {
         log.info("Stopping work");
         return runningWorkAwareFunction(
                 project,
                 runningWork -> {
-                    Time endedWork = stopTime(project, runningWork, timeInfo);
+                    Time endedWork = stopTime(project, runningWork, user);
                     return runningBreakAwareFunction(
                             project,
-                            (runningBreak) -> WorkStop.ended(endedWork.getId(), stopTime(project, runningBreak, timeInfo).getId()),
-                            () -> WorkStop.ended(endedWork.getId())
+                            (runningBreak) -> {
+                                WorkStop ended = WorkStop.ended(endedWork.getId(), stopTime(project, runningBreak, user).getId());
+                                broadcastService.broadcast(user);
+                                return ended;
+                            },
+                            () -> {
+                                WorkStop ended = WorkStop.ended(endedWork.getId());
+                                broadcastService.broadcast(user);
+                                return ended;
+                            }
                     );
                 },
                 WorkStop::notStarted
         );
     }
 
-    public BreakStart startProjectBreak(Project project, TimeInfo timeInfo) {
+    public BreakStart startProjectBreak(Project project, UserContext user) {
         log.info("Starting break");
         return runningWorkAwareFunction(
                 project,
                 runningWork -> runningBreakAwareFunction(
                         project,
                         runningBreak -> BreakStart.breakAlreadyStarted(runningBreak.getId()),
-                        () -> BreakStart.started(timeRepository.startTime(project.getId(), TimeType.BREAK, timeInfo))
+                        () -> {
+                            BreakStart started = BreakStart.started(timeRepository.startTime(project.getId(), TimeType.BREAK, user));
+                            broadcastService.broadcast(user);
+                            return started;
+                        }
                 ),
                 BreakStart::workNotStarted
         );
     }
 
-    public BreakStop endProjectBreak(Project project, TimeInfo timeInfo) {
+    public BreakStop endProjectBreak(Project project, UserContext user) {
         log.info("Stopping break");
         return runningBreakAwareFunction(
                 project,
-                runningBreak -> BreakStop.stopped(stopTime(project, runningBreak, timeInfo).getId()),
+                runningBreak -> {
+                    BreakStop stopped = BreakStop.stopped(stopTime(project, runningBreak, user).getId());
+                    broadcastService.broadcast(user);
+                    return stopped;
+                },
                 () -> runningWorkAwareFunction(
                         project,
                         runningWork -> BreakStop.breakNotStarted(),
