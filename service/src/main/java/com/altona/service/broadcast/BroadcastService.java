@@ -4,15 +4,12 @@ import com.altona.security.User;
 import com.altona.util.threading.TransactionalThreading;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.firebase.messaging.AndroidConfig;
-import com.google.firebase.messaging.BatchResponse;
-import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.FirebaseMessagingException;
-import com.google.firebase.messaging.MulticastMessage;
+import com.google.common.collect.Maps;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,7 +19,7 @@ import java.util.stream.Collectors;
 public class BroadcastService {
 
     private BroadcastRepository broadcastRepository;
-    private FirebaseMessaging firebaseMessaging;
+    private FirebaseInteractor firebaseInteractor;
     private TransactionalThreading transactionalThreading;
     private ObjectMapper objectMapper;
 
@@ -44,20 +41,12 @@ public class BroadcastService {
                         .map(Broadcast::getBroadcast)
                         .collect(Collectors.toList());
 
-                MulticastMessage message = MulticastMessage.builder()
-                        .setAndroidConfig(
-                                AndroidConfig.builder()
-                                        .putData("type", broadcastMessage.getType().name())
-                                        .putData("message", objectMapper.writeValueAsString(broadcastMessage.getMessage()))
-                                        .build()
-                        )
-                        .addAllTokens(broadcasts)
-                        .build();
-
-                BatchResponse response = firebaseMessaging.sendMulticast(message);
-                log.info("Broadcasted to user {} - {} succeeded and {} failed", user.getId(), response.getSuccessCount(), response.getFailureCount());
-            } catch (FirebaseMessagingException | JsonProcessingException e) {
-                log.error("Exception while broadcasting to user {}", user.getId(), e);
+                HashMap<String, String> data = Maps.newHashMap();
+                data.put("type", broadcastMessage.getType().name());
+                data.put("message", objectMapper.writeValueAsString(broadcastMessage.getMessage()));
+                firebaseInteractor.send(user, broadcasts, data);
+            } catch (JsonProcessingException e) {
+                log.error("Exception while serializing" ,e);
                 throw new RuntimeException(e);
             }
         });

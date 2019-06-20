@@ -3,6 +3,7 @@ package com.altona.html;
 import com.altona.SpringTest;
 import com.altona.service.broadcast.Broadcast;
 import com.altona.service.broadcast.BroadcastUpdate;
+import com.altona.service.broadcast.FirebaseInteractor;
 import com.altona.service.project.model.Project;
 import com.altona.service.time.model.control.BreakStart;
 import com.altona.service.time.model.control.BreakStop;
@@ -25,7 +26,12 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -37,6 +43,9 @@ class IntegrationTests extends SpringTest {
 
     @MockBean
     private TimeInfo timeInfo;
+
+    @MockBean
+    private FirebaseInteractor firebaseInteractor;
 
     @Test
     void basicTimeSequence() throws Exception {
@@ -138,6 +147,7 @@ class IntegrationTests extends SpringTest {
         );
         assertEquals(WorkStart.Result.WORK_ALREADY_STARTED, workStartWorkAlreadyStarted.getResult());
         assertEquals(workStart.getTimeId(), workStartWorkAlreadyStarted.getTimeId());
+        verify(firebaseInteractor, times(1)).send(any(), anyList(), anyMap());
 
         // Stop Break With Work Already Started Without Break Start
         assertWorkingTimeStatus(project, 4, 0);
