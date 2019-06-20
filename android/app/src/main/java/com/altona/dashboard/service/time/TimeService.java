@@ -48,31 +48,35 @@ public class TimeService {
     }
 
     public void createProject(Project project, Consumer<Project> onSuccess, Consumer<String> onFailure) {
-        request(post(project), "/time/project", Project.class, onSuccess, onFailure);
+        request(post(project), "/time/project", Project.class, onSuccess, onFailure, unauthenticated(onFailure));
     }
 
     public void getTimeScreen(Consumer<TimeScreen> onSuccess, Consumer<String> onFailure) {
-        request(get(), "/interface/time", TimeScreen.class, onSuccess, onFailure);
+        request(get(), "/interface/time", TimeScreen.class, onSuccess, onFailure, unauthenticated(onFailure));
     }
 
     public void startWork(Project project, Consumer<ObjectNode> onSuccess, Consumer<String> onFailure) {
-        request(emptyPost(), projectUrl(project) + "/start-work", ObjectNode.class, onSuccess, onFailure);
+        request(emptyPost(), projectUrl(project) + "/start-work", ObjectNode.class, onSuccess, onFailure, unauthenticated(onFailure));
     }
 
     public void stopWork(Project project, Consumer<ObjectNode> onSuccess, Consumer<String> onFailure) {
-        request(emptyPost(), projectUrl(project) + "/stop-work", ObjectNode.class, onSuccess, onFailure);
+        request(emptyPost(), projectUrl(project) + "/stop-work", ObjectNode.class, onSuccess, onFailure, unauthenticated(onFailure));
     }
 
     public void startBreak(Project project, Consumer<ObjectNode> onSuccess, Consumer<String> onFailure) {
-        request(emptyPost(), projectUrl(project) + "/start-break", ObjectNode.class, onSuccess, onFailure);
+        request(emptyPost(), projectUrl(project) + "/start-break", ObjectNode.class, onSuccess, onFailure, unauthenticated(onFailure));
     }
 
     public void stopBreak(Project project, Consumer<ObjectNode> onSuccess, Consumer<String> onFailure) {
-        request(emptyPost(), projectUrl(project) + "/stop-break", ObjectNode.class, onSuccess, onFailure);
+        request(emptyPost(), projectUrl(project) + "/stop-break", ObjectNode.class, onSuccess, onFailure, unauthenticated(onFailure));
     }
 
     public void synchronize(Project project, Consumer<List<SynchronizationResult>> onSuccess, Consumer<String> onFailure) {
-        request(emptyPost(), projectUrl(project) + "/synchronize", SYNCHRONIZATION_RESULT_LIST, onSuccess, onFailure);
+        request(emptyPost(), projectUrl(project) + "/synchronize", SYNCHRONIZATION_RESULT_LIST, onSuccess, onFailure, unauthenticated(onFailure));
+    }
+
+    public void queryStatus(Consumer<TimeStatus> onSuccess, Consumer<String> onFailure, Runnable onUnauthenticated) {
+        request(emptyPost(), "/time/project/time-status", TimeStatus.class, onSuccess, onFailure, onUnauthenticated);
     }
 
     private static Request.Builder emptyPost() {
@@ -96,22 +100,48 @@ public class TimeService {
         return "/time/project/" + project.getId();
     }
 
-    private <T> void request(Request.Builder builder, String subUrl, TypeReference<T> typeReference, Consumer<T> onSuccess, Consumer<String> onFailure) {
-        request(builder, subUrl, result -> Static.OBJECT_MAPPER.readValue(result, typeReference), onSuccess, onFailure);
+    private <T> void request(
+            Request.Builder builder,
+            String subUrl,
+            TypeReference<T> typeReference,
+            Consumer<T> onSuccess,
+            Consumer<String> onFailure,
+            Runnable onUnauthenticated
+    ) {
+        request(builder, subUrl, result -> Static.OBJECT_MAPPER.readValue(result, typeReference), onSuccess, onFailure, onUnauthenticated);
     }
 
-    private <T> void request(Request.Builder builder, String subUrl, Class<T> clazz, Consumer<T> onSuccess, Consumer<String> onFailure) {
-        request(builder, subUrl, result -> Static.OBJECT_MAPPER.readValue(result, clazz), onSuccess, onFailure);
+    private <T> void request(
+            Request.Builder builder,
+            String subUrl,
+            Class<T> clazz,
+            Consumer<T> onSuccess,
+            Consumer<String> onFailure,
+            Runnable onUnauthenticated
+    ) {
+        request(builder, subUrl, result -> Static.OBJECT_MAPPER.readValue(result, clazz), onSuccess, onFailure, onUnauthenticated);
     }
 
-    private <T> void request(Request.Builder builder, String subUrl, ObjectMapperFunction<T> extractor, Consumer<T> onSuccess, Consumer<String> onFailure) {
+    private <T> void request(
+            Request.Builder builder,
+            String subUrl,
+            ObjectMapperFunction<T> extractor,
+            Consumer<T> onSuccess,
+            Consumer<String> onFailure,
+            Runnable onUnauthenticated
+    ) {
         loginService.tryExecute(
                 builder,
                 subUrl,
                 serviceResponse -> extractor.apply(serviceResponse.getValue()),
                 onSuccess,
-                onFailure
+                onFailure,
+                onUnauthenticated
         );
+    }
+
+    private static Runnable unauthenticated(Consumer<String> onFailure) {
+        return () -> onFailure.accept("Not Authenticated");
     }
 
     private interface ObjectMapperFunction<T> {

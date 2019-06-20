@@ -46,12 +46,21 @@ public class TransactionalThreading {
 
     }
 
+    public void executeInReadOnlyTransaction(Runnable runnable) {
+        executorService.execute(() -> transactionalExecutor.executeInReadOnlyTransaction(runnable));
+    }
+
     @Component
     public static class TransactionalExecutor {
 
         @Transactional(readOnly = true)
         public <T> T executeInReadOnlyTransaction(Supplier<T> supplier) {
             return supplier.get();
+        }
+
+        @Transactional(readOnly = true)
+        public void executeInReadOnlyTransaction(Runnable runnable) {
+            runnable.run();
         }
 
     }

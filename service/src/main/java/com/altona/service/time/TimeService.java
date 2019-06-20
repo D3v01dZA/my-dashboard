@@ -1,6 +1,7 @@
 package com.altona.service.time;
 
 import com.altona.security.UserContext;
+import com.altona.service.broadcast.BroadcastMessage;
 import com.altona.service.broadcast.BroadcastService;
 import com.altona.service.project.model.Project;
 import com.altona.service.time.model.Time;
@@ -49,7 +50,7 @@ public class TimeService {
                                 runningWork -> WorkStart.alreadyStarted(runningWork.getId()),
                                 () -> {
                                     WorkStart started = WorkStart.started(timeRepository.startTime(project.getId(), TimeType.WORK, user));
-                                    broadcastService.broadcast(user);
+                                    broadcastService.broadcast(user, BroadcastMessage.timeStatus(timeStatus(project, user)));
                                     return started;
                                 }
                         )
@@ -66,12 +67,12 @@ public class TimeService {
                             project,
                             (runningBreak) -> {
                                 WorkStop ended = WorkStop.ended(endedWork.getId(), stopTime(project, runningBreak, user).getId());
-                                broadcastService.broadcast(user);
+                                broadcastService.broadcast(user, BroadcastMessage.timeStatus(timeStatus(project, user)));
                                 return ended;
                             },
                             () -> {
                                 WorkStop ended = WorkStop.ended(endedWork.getId());
-                                broadcastService.broadcast(user);
+                                broadcastService.broadcast(user, BroadcastMessage.timeStatus(timeStatus(project, user)));
                                 return ended;
                             }
                     );
@@ -89,7 +90,7 @@ public class TimeService {
                         runningBreak -> BreakStart.breakAlreadyStarted(runningBreak.getId()),
                         () -> {
                             BreakStart started = BreakStart.started(timeRepository.startTime(project.getId(), TimeType.BREAK, user));
-                            broadcastService.broadcast(user);
+                            broadcastService.broadcast(user, BroadcastMessage.timeStatus(timeStatus(project, user)));
                             return started;
                         }
                 ),
@@ -103,7 +104,7 @@ public class TimeService {
                 project,
                 runningBreak -> {
                     BreakStop stopped = BreakStop.stopped(stopTime(project, runningBreak, user).getId());
-                    broadcastService.broadcast(user);
+                    broadcastService.broadcast(user, BroadcastMessage.timeStatus(timeStatus(project, user)));
                     return stopped;
                 },
                 () -> runningWorkAwareFunction(

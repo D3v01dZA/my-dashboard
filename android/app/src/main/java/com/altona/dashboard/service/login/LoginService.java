@@ -67,13 +67,18 @@ public class LoginService implements CookieJar {
         this(service, Runnable::run);
     }
 
+    public LoginService(Context context) {
+        this(context, Runnable::run);
+    }
+
     // Execute stuff on the background thread first
     public <T> void tryExecute(
             Request.Builder builder,
             String subUrl,
             CheckedFunction<ServiceResponse, T> onSuccessBackgroundThread,
             Consumer<T> onSuccessUiThread,
-            Consumer<String> onFailure
+            Consumer<String> onFailure,
+            Runnable onUnauthenticated
     ) {
         Optional<String> unsavedFirebaseId = settings.getUnsavedFirebaseId();
         if (unsavedFirebaseId.isPresent()) {
@@ -82,10 +87,17 @@ public class LoginService implements CookieJar {
                     .orElseGet(() -> new FirebaseUpdate(null, unsavedFirebaseId.get()));
             updateFirebaseToken(firebaseUpdate);
         }
-        actuallyTryExecute(builder, subUrl, onSuccessBackgroundThread, onSuccessUiThread, onFailure);
+        actuallyTryExecute(builder, subUrl, onSuccessBackgroundThread, onSuccessUiThread, onFailure, onUnauthenticated);
     }
 
-    private <T> void actuallyTryExecute(Request.Builder builder, String subUrl, CheckedFunction<ServiceResponse, T> onSuccessBackgroundThread, Consumer<T> onSuccessUiThread, Consumer<String> onFailure) {
+    private <T> void actuallyTryExecute(
+            Request.Builder builder,
+            String subUrl,
+            CheckedFunction<ServiceResponse, T> onSuccessBackgroundThread,
+            Consumer<T> onSuccessUiThread,
+            Consumer<String> onFailure,
+            Runnable onUnauthenticated
+    ) {
         try {
             URL url = new URL(settings.getHost() + subUrl);
             httpClient.newCall(builder.url(url).build())
@@ -113,10 +125,17 @@ public class LoginService implements CookieJar {
                                                 subUrl,
                                                 onSuccessBackgroundThread,
                                                 onSuccessUiThread,
-                                                onFailure
+                                                failure -> {
+                                                    settings.clearCredentials();
+                                                    onFailure.accept(failure);
+                                                },
+                                                () -> {
+                                                    settings.clearCredentials();
+                                                    onUnauthenticated.run();
+                                                }
                                         );
                                     } else {
-                                        foregroundExecutor.accept(() -> onFailure.accept("Timed out " + code));
+                                        foregroundExecutor.accept(onUnauthenticated);
                                     }
                                 } else if (code >= 500) {
                                     LOGGER.severe(() -> "Failed to call " + subUrl + " with " + code);
@@ -200,6 +219,10 @@ public class LoginService implements CookieJar {
                     failure -> {
                         settings.setUnsavedFirebaseId(firebaseUpdate.getNewBroadcast());
                         LOGGER.warning(() -> String.format("Failed Broadcast Save %s", failure));
+                    },
+                    () -> {
+                        settings.setUnsavedFirebaseId(firebaseUpdate.getNewBroadcast());
+                        LOGGER.warning(() -> "Failed Broadcast Save Because Unauthenticated");
                     }
             );
         } catch (
