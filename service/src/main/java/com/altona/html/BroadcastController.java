@@ -4,23 +4,19 @@ import com.altona.facade.BroadcastFacade;
 import com.altona.security.User;
 import com.altona.security.UserService;
 import com.altona.service.broadcast.Broadcast;
+import com.altona.service.broadcast.BroadcastDelete;
 import com.altona.service.broadcast.BroadcastUpdate;
-import com.altona.service.project.model.Project;
-import com.altona.service.time.model.control.TimeStatus;
-import com.altona.service.time.model.summary.TimeSummary;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @AllArgsConstructor
@@ -38,37 +34,35 @@ public class BroadcastController {
         return new ResponseEntity<>(broadcastFacade.update(user, broadcastUpdate), HttpStatus.OK);
     }
 
+    @RequestMapping(path = "/broadcast/delete", method = RequestMethod.POST, produces = "application/json")
+    public ResponseEntity<Broadcast> delete(
+            Authentication authentication,
+            @RequestBody BroadcastDelete broadcastDelete
+    ) {
+        User user = userService.getUser(authentication);
+        return broadcastFacade.delete(user, broadcastDelete)
+                .map(broadcast -> new ResponseEntity<>(broadcast, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
     @RequestMapping(path = "/broadcast", method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<List<Broadcast>> update(
+    public ResponseEntity<List<Broadcast>> get(
             Authentication authentication
     ) {
         User user = userService.getUser(authentication);
         return new ResponseEntity<>(broadcastFacade.broadcasts(user), HttpStatus.OK);
     }
 
-
-    @AllArgsConstructor
-    public static class TimeScreen {
-
-        private Project project;
-
-        @Getter
-        @NonNull
-        private List<Project> projects;
-
-        @Getter
-        @NonNull
-        private TimeStatus timeStatus;
-
-        private TimeSummary timeSummary;
-
-        public Optional<Project> getProject() {
-            return Optional.ofNullable(project);
-        }
-
-        public Optional<TimeSummary> getTimeSummary() {
-            return Optional.ofNullable(timeSummary);
-        }
+    @RequestMapping(path = "/broadcast/{broadcastId}", method = RequestMethod.GET, produces = "application/json")
+    public ResponseEntity<Broadcast> get(
+            Authentication authentication,
+            @PathVariable int broadcastId
+    ) {
+        User user = userService.getUser(authentication);
+        return broadcastFacade.broadcast(user, broadcastId)
+                .map(broadcast -> new ResponseEntity<>(broadcast, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
+
 
 }

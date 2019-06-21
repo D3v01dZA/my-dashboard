@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -24,13 +25,26 @@ public class BroadcastService {
     private ObjectMapper objectMapper;
 
     public Broadcast update(User user, BroadcastUpdate broadcastUpdate) {
-        broadcastUpdate.getOldBroadcast().ifPresent(broadcastId -> broadcastRepository.delete(user, broadcastId));
-        int id = broadcastRepository.insert(user, broadcastUpdate.getNewBroadcast());
-        return broadcastRepository.select(user, id).get();
+        broadcastUpdate.getOldBroadcast().ifPresent(broadcast -> delete(user, new BroadcastDelete(broadcast)));
+        return broadcastRepository.selectByBroadcast(user, broadcastUpdate.getNewBroadcast())
+                .orElseGet(() -> {
+                    int id = broadcastRepository.insert(user, broadcastUpdate.getNewBroadcast());
+                    return broadcastRepository.select(user, id).get();
+                });
     }
 
     public List<Broadcast> broadcasts(User user) {
         return broadcastRepository.select(user);
+    }
+
+    public Optional<Broadcast> delete(User user, BroadcastDelete broadcastDelete) {
+        Optional<Broadcast> broadcast = broadcastRepository.selectByBroadcast(user, broadcastDelete.getBroadcast());
+        broadcast.ifPresent(value -> broadcastRepository.delete(user, value.getId()));
+        return broadcast;
+    }
+
+    public Optional<Broadcast> broadcast(User user, int broadcastId) {
+        return broadcastRepository.select(user, broadcastId);
     }
 
     public void broadcast(User user, BroadcastMessage<?> broadcastMessage) {
@@ -46,7 +60,7 @@ public class BroadcastService {
                 data.put("message", objectMapper.writeValueAsString(broadcastMessage.getMessage()));
                 firebaseInteractor.send(user, broadcasts, data);
             } catch (JsonProcessingException e) {
-                log.error("Exception while serializing" ,e);
+                log.error("Exception while serializing", e);
                 throw new RuntimeException(e);
             }
         });

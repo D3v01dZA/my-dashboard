@@ -1,7 +1,6 @@
 package com.altona.dashboard.view.login;
 
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.TextView;
 
 import com.altona.dashboard.R;
@@ -25,9 +24,17 @@ public class LoginActivity extends InsecureAppActivity {
 
     @Override
     public void onEnter() {
-        loginService().getStoredCredentials().ifPresent(this::tryLogin);
-        usernameField().setText(TestSetting.CURRENT.getSavedUsername());
-        passwordField().setText(TestSetting.CURRENT.getSavedPassword());
+        Optional<Credentials> storedCredentials = loginService().getStoredCredentials();
+        String username = "";
+        String password = "";
+        if (storedCredentials.isPresent()) {
+            Credentials credentials = storedCredentials.get();
+            username = credentials.getUsername();
+            password = credentials.getPassword();
+            tryLogin(credentials);
+        }
+        usernameField().setText(TestSetting.CURRENT.getSavedUsername(username));
+        passwordField().setText(TestSetting.CURRENT.getSavedPassword(password));
     }
 
     @Override
@@ -42,10 +49,6 @@ public class LoginActivity extends InsecureAppActivity {
 
     private Button loginButton() {
         return findViewById(R.id.login_button);
-    }
-
-    private CheckBox rememberCheckbox() {
-        return findViewById(R.id.login_remember);
     }
 
     private TextView usernameField() {
@@ -64,7 +67,6 @@ public class LoginActivity extends InsecureAppActivity {
         Button loginButton = loginButton();
         loginButton.setEnabled(false);
         loginService().tryLogin(
-                rememberCheckbox().isChecked(),
                 credentials,
                 () -> {
                     hideKeyboard();

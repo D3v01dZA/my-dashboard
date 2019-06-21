@@ -29,12 +29,12 @@ public class BroadcastRepository {
                 .usingGeneratedKeyColumns("id");
     }
 
-    public void delete(User user, String broadcast) {
+    public void delete(User user, int broadcastId) {
         namedJdbc.update(
-                "DELETE FROM broadcast WHERE user_id = :user_id AND broadcast = :broadcast",
+                "DELETE FROM broadcast WHERE user_id = :userId AND id = :broadcastId",
                 new MapSqlParameterSource()
-                        .addValue("user_id", user.getId())
-                        .addValue("broadcast", broadcast)
+                        .addValue("userId", user.getId())
+                        .addValue("broadcastId", broadcastId)
         );
     }
 
@@ -45,12 +45,26 @@ public class BroadcastRepository {
                 .intValue();
     }
 
-    public Optional<Broadcast> select(User user, int id) {
+    public Optional<Broadcast> selectByBroadcast(User user, String broadcast) {
+        try {
+            return Optional.of(namedJdbc.queryForObject(
+                    "SELECT id, broadcast FROM broadcast WHERE user_id = :userId AND broadcast = :broadcast",
+                    new MapSqlParameterSource()
+                            .addValue("broadcast", broadcast)
+                            .addValue("userId", user.getId()),
+                    BROADCAST_ROW_MAPPER
+            ));
+        } catch (IncorrectResultSizeDataAccessException ex) {
+            return Optional.empty();
+        }
+    }
+
+    public Optional<Broadcast> select(User user, int broadcastId) {
         try {
             return Optional.of(namedJdbc.queryForObject(
                     "SELECT id, broadcast FROM broadcast WHERE user_id = :userId AND id = :broadcastId",
                     new MapSqlParameterSource()
-                            .addValue("broadcastId", id)
+                            .addValue("broadcastId", broadcastId)
                             .addValue("userId", user.getId()),
                     BROADCAST_ROW_MAPPER
             ));

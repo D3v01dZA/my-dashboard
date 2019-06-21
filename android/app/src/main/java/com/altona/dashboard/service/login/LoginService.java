@@ -160,7 +160,6 @@ public class LoginService implements CookieJar {
 
     // Executes onSuccess and onFailure directly on main thread
     public void tryLogin(
-            boolean remember,
             Credentials credentials,
             Runnable onSuccess,
             Consumer<String> onFailure
@@ -183,10 +182,8 @@ public class LoginService implements CookieJar {
                     if (response.code() == 200) {
                         String string = response.body().string();
                         if (string.startsWith("Root Controller")) {
-                            if (remember) {
-                                settings.setCredentials(credentials);
-                            }
-                            foregroundExecutor.accept(() -> onSuccess.run());
+                            settings.setCredentials(credentials);
+                            foregroundExecutor.accept(onSuccess);
                         } else {
                             settings.clearCredentials();
                             foregroundExecutor.accept(() -> onFailure.accept("Wrong value received: " + string));
@@ -238,7 +235,7 @@ public class LoginService implements CookieJar {
     }
 
     public boolean isLoggedIn() {
-        return session.getCookie().isPresent();
+        return settings.getCredentials().isPresent();
     }
 
     public Optional<Credentials> getStoredCredentials() {

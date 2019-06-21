@@ -2,6 +2,7 @@ package com.altona.html;
 
 import com.altona.SpringTest;
 import com.altona.service.broadcast.Broadcast;
+import com.altona.service.broadcast.BroadcastDelete;
 import com.altona.service.broadcast.BroadcastUpdate;
 import com.altona.service.broadcast.FirebaseInteractor;
 import com.altona.service.project.model.Project;
@@ -291,6 +292,17 @@ class IntegrationTests extends SpringTest {
         );
         assertEquals("A", broadcast.getBroadcast());
 
+        Broadcast broadcastDuplicated = read(
+                mvc.perform(post("/broadcast/update", new BroadcastUpdate("B", "A")))
+                        .andExpect(status().isOk())
+                        .andExpect(content().contentType(APPLICATION_JSON_UTF8))
+                        .andReturn()
+                        .getResponse().getContentAsByteArray(),
+                Broadcast.class
+        );
+        assertEquals("A", broadcastDuplicated.getBroadcast());
+        assertEquals(broadcast.getId(), broadcastDuplicated.getId());
+
         List<Broadcast> broadcastsAfterCreate = read(
                 mvc.perform(get("/broadcast"))
                         .andExpect(status().isOk())
@@ -324,6 +336,20 @@ class IntegrationTests extends SpringTest {
         );
         assertEquals(1, broadcastsAfterUpdate.size());
         assertTrue(broadcastsAfterUpdate.stream().anyMatch(b -> b.getBroadcast().equals("B")));
+
+        Broadcast broadcastDelete = read(
+                mvc.perform(post("/broadcast/delete", new BroadcastDelete("B")))
+                        .andExpect(status().isOk())
+                        .andExpect(content().contentType(APPLICATION_JSON_UTF8))
+                        .andReturn()
+                        .getResponse().getContentAsByteArray(),
+                Broadcast.class
+        );
+        assertEquals("B", broadcastDelete.getBroadcast());
+        assertEquals(broadcastUpdate.getId(), broadcastDelete.getId());
+
+        mvc.perform(get("/broadcast/" + broadcastDelete.getId()))
+                .andExpect(status().isNotFound());
     }
 
     private void assertNoTimeStatus() throws Exception {

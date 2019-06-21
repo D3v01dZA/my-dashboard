@@ -4,12 +4,12 @@ public enum TestSetting {
 
     TEST_EMULATOR {
         @Override
-        public String getSavedUsername() {
+        public String getSavedUsername(String actual) {
             return "test";
         }
 
         @Override
-        public String getSavedPassword() {
+        public String getSavedPassword(String actual) {
             return "password";
         }
 
@@ -25,12 +25,12 @@ public enum TestSetting {
     },
     TEST_PHONE {
         @Override
-        public String getSavedUsername() {
+        public String getSavedUsername(String actual) {
             return "test";
         }
 
         @Override
-        public String getSavedPassword() {
+        public String getSavedPassword(String actual) {
             return "password";
         }
 
@@ -46,13 +46,13 @@ public enum TestSetting {
     },
     PHONE {
         @Override
-        public String getSavedUsername() {
-            return "";
+        public String getSavedUsername(String actual) {
+            return actual;
         }
 
         @Override
-        public String getSavedPassword() {
-            return "";
+        public String getSavedPassword(String actual) {
+            return actual;
         }
 
         @Override
@@ -68,9 +68,9 @@ public enum TestSetting {
 
     public static final TestSetting CURRENT = TEST_EMULATOR;
 
-    public abstract String getSavedUsername();
+    public abstract String getSavedUsername(String actual);
 
-    public abstract String getSavedPassword();
+    public abstract String getSavedPassword(String actual);
 
     public abstract String getHost(String preferencesHost);
 
