@@ -133,11 +133,11 @@ public class LoginService implements CookieJar {
                                                 onSuccessBackgroundThread,
                                                 onSuccessUiThread,
                                                 failure -> {
-                                                    settings.clearCredentials();
+                                                    logout();
                                                     onFailure.accept(failure);
                                                 },
                                                 () -> {
-                                                    settings.clearCredentials();
+                                                    logout();
                                                     onUnauthenticated.run();
                                                 }
                                         );
@@ -194,11 +194,11 @@ public class LoginService implements CookieJar {
                             FirebaseInstanceId.getInstance().getInstanceId()
                                     .addOnSuccessListener(result -> updateFirebaseToken(result.getToken()));
                         } else {
-                            settings.clearCredentials();
+                            logout();
                             foregroundExecutor.accept(() -> onFailure.accept("Wrong value received: " + string));
                         }
                     } else {
-                        settings.clearCredentials();
+                        logout();
                         foregroundExecutor.accept(() -> onFailure.accept("Wrong response code received: " + response.code()));
                     }
                 }
@@ -246,9 +246,9 @@ public class LoginService implements CookieJar {
     }
 
     public void logout() {
-        deleteFirebaseId();
         session.clearCookie();
         settings.clearCredentials();
+        deleteFirebaseId();
     }
 
     private void deleteFirebaseId() {
