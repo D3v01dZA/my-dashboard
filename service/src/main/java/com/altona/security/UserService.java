@@ -33,6 +33,7 @@ public class UserService {
                 .orElseThrow(() -> new InsufficientAuthenticationException("Couldn't determine current user"));
     }
 
+    @Transactional(readOnly = true)
     public Optional<User> getUserByUsername(String username) {
         List<User> users = namedJdbcTemplate.query(
                 "SELECT id, username, password, salt FROM users WHERE username = :username",

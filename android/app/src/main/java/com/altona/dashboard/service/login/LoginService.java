@@ -190,6 +190,8 @@ public class LoginService implements CookieJar {
                         if (string.startsWith("Root Controller")) {
                             settings.setCredentials(credentials);
                             foregroundExecutor.accept(onSuccess);
+                            FirebaseInstanceId.getInstance().getInstanceId()
+                                    .addOnSuccessListener(result -> updateFirebaseToken(result.getToken()));
                         } else {
                             settings.clearCredentials();
                             foregroundExecutor.accept(() -> onFailure.accept("Wrong value received: " + string));
@@ -205,7 +207,14 @@ public class LoginService implements CookieJar {
         }
     }
 
-    public void updateFirebaseToken(FirebaseUpdate firebaseUpdate) {
+    public void updateFirebaseToken(String newId) {
+        FirebaseUpdate firebaseUpdate = settings.getFirebaseId()
+                .map(oldId -> new FirebaseUpdate(oldId, newId))
+                .orElseGet(() -> new FirebaseUpdate(null, newId));
+        updateFirebaseToken(firebaseUpdate);
+    }
+
+    private void updateFirebaseToken(FirebaseUpdate firebaseUpdate) {
         try {
             actuallyTryExecute(
                     new Request.Builder()
