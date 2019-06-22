@@ -53,9 +53,10 @@ public class LoginService implements CookieJar {
         // Effectively make timeouts take forever until they are async
         this.httpClient = new OkHttpClient.Builder()
                 .cookieJar(this)
-                .readTimeout(5, TimeUnit.MINUTES)
-                .connectTimeout(5, TimeUnit.MINUTES)
-                .writeTimeout(5, TimeUnit.MINUTES)
+                .readTimeout(10, TimeUnit.SECONDS)
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .writeTimeout(10, TimeUnit.SECONDS)
+                .callTimeout(15, TimeUnit.SECONDS)
                 .build();
         this.settings = new Settings(context);
         this.session = new Session(context);
