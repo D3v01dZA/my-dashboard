@@ -15,7 +15,7 @@ public class Settings {
     private static final String PASSWORD = "password";
     private static final String FIREBASE_ID = "firebase_id";
     private static final String UNSAVED_FIREBASE_ID = "firebase_unsaved_id";
-
+    private static final String DELETE_FIREBASE_ID = "delete_firebase_id";
 
     private SharedPreferences sharedPreferences;
 
@@ -72,6 +72,16 @@ public class Settings {
             return Optional.of(sharedPreferences.getString(UNSAVED_FIREBASE_ID, ""));
         }
         return Optional.empty();
+    }
+
+    public boolean isDeleteFirebaseId() {
+        return sharedPreferences.getBoolean(DELETE_FIREBASE_ID, false);
+    }
+
+    public void setDeleteFirebaseId(boolean deleteFirebaseId) {
+        sharedPreferences.edit()
+                .putBoolean(DELETE_FIREBASE_ID, deleteFirebaseId)
+                .apply();
     }
 
     public void setUnsavedFirebaseId(String firebaseId) {

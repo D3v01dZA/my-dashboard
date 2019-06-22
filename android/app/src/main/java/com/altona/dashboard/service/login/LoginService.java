@@ -2,6 +2,7 @@ package com.altona.dashboard.service.login;
 
 import android.app.Service;
 import android.content.Context;
+import android.os.AsyncTask;
 import android.util.Base64;
 
 import com.altona.dashboard.Static;
@@ -12,6 +13,7 @@ import com.altona.dashboard.service.firebase.FirebaseUpdate;
 import com.altona.dashboard.view.BaseActivity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -80,12 +82,16 @@ public class LoginService implements CookieJar {
             Consumer<String> onFailure,
             Runnable onUnauthenticated
     ) {
-        Optional<String> unsavedFirebaseId = settings.getUnsavedFirebaseId();
-        if (unsavedFirebaseId.isPresent()) {
-            FirebaseUpdate firebaseUpdate = settings.getFirebaseId()
-                    .map(oldId -> new FirebaseUpdate(oldId, unsavedFirebaseId.get()))
-                    .orElseGet(() -> new FirebaseUpdate(null, unsavedFirebaseId.get()));
-            updateFirebaseToken(firebaseUpdate);
+        if (settings.isDeleteFirebaseId()) {
+            deleteFirebaseId();
+        } else {
+            Optional<String> unsavedFirebaseId = settings.getUnsavedFirebaseId();
+            if (unsavedFirebaseId.isPresent()) {
+                FirebaseUpdate firebaseUpdate = settings.getFirebaseId()
+                        .map(oldId -> new FirebaseUpdate(oldId, unsavedFirebaseId.get()))
+                        .orElseGet(() -> new FirebaseUpdate(null, unsavedFirebaseId.get()));
+                updateFirebaseToken(firebaseUpdate);
+            }
         }
         actuallyTryExecute(builder, subUrl, onSuccessBackgroundThread, onSuccessUiThread, onFailure, onUnauthenticated);
     }
@@ -230,8 +236,20 @@ public class LoginService implements CookieJar {
     }
 
     public void logout() {
+        deleteFirebaseId();
         session.clearCookie();
         settings.clearCredentials();
+    }
+
+    private void deleteFirebaseId() {
+        AsyncTask.execute(() -> {
+            try {
+                FirebaseInstanceId.getInstance().deleteInstanceId();
+                settings.setDeleteFirebaseId(false);
+            } catch (IOException e) {
+                settings.setDeleteFirebaseId(true);
+            }
+        });
     }
 
     public boolean isLoggedIn() {
