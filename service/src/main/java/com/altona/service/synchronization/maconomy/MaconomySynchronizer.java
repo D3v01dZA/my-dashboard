@@ -1,13 +1,14 @@
 package com.altona.service.synchronization.maconomy;
 
 import com.altona.service.synchronization.Screenshot;
-import com.altona.service.synchronization.SynchronizeRequest;
 import com.altona.service.synchronization.Synchronizer;
 import com.altona.service.synchronization.maconomy.model.MaconomyConfiguration;
 import com.altona.service.synchronization.maconomy.model.MaconomyContext;
 import com.altona.service.synchronization.maconomy.model.MaconomyTimeData;
 import com.altona.service.synchronization.maconomy.model.MaconomyTimeDataList;
-import com.altona.service.synchronization.model.SynchronizeResult;
+import com.altona.service.synchronization.model.Synchronization;
+import com.altona.service.synchronization.model.SynchronizationAttempt;
+import com.altona.service.synchronization.model.SynchronizationRequest;
 import com.altona.service.time.TimeService;
 import com.altona.service.time.model.summary.NotStoppedAction;
 import com.altona.service.time.model.summary.SummaryConfiguration;
@@ -34,48 +35,40 @@ public class MaconomySynchronizer implements Synchronizer {
     private MaconomyBrowser maconomyBrowser;
 
     // Configuration
-    private int synchronizationId;
+    private Synchronization synchronization;
 
     @NonNull
-    private SynchronizeRequest request;
+    private SynchronizationRequest request;
 
     @NonNull
     private MaconomyConfiguration configuration;
 
     @Override
-    public int getSynchronizationId() {
-        return synchronizationId;
+    public Synchronization getSynchronization() {
+        return synchronization;
     }
 
     @Override
-    public SynchronizeResult synchronize() {
-        return maconomyBrowser.login(request, configuration)
-                .successf(this::synchronizeTime)
-                .map(
-                        screenshot -> SynchronizeResult.success(
-                                this,
-                                request,
-                                screenshot
-                        ),
-                        error -> SynchronizeResult.failure(this, request, error)
-                );
+    public Result<Screenshot, String> synchronize(SynchronizationAttempt attempt) {
+        return maconomyBrowser.login(attempt, request, configuration)
+                .successf(maconomyContext -> synchronizeTime(attempt, maconomyContext));
     }
 
-    private Result<Screenshot, String> synchronizeTime(MaconomyContext context) {
+    private Result<Screenshot, String> synchronizeTime(SynchronizationAttempt attempt, MaconomyContext context) {
         try {
             log.info("Retrieving time data for requested period");
             for (int i = 0; i < request.getPeriodsBack(); i++) {
-                maconomyBrowser.previousWeeklyTimesheet(context, request);
+                maconomyBrowser.previousWeeklyTimesheet(attempt, context, request);
             }
 
-            return maconomyBrowser.weeklyData(context, request)
-                    .successf(timeData -> synchronizeTime(context, timeData));
+            return maconomyBrowser.weeklyData(attempt, context, request)
+                    .successf(timeData -> synchronizeTime(attempt, context, timeData));
         } finally {
-            maconomyBrowser.close(context, request);
+            maconomyBrowser.close(attempt, context, request);
         }
     }
 
-    private Result<Screenshot, String> synchronizeTime(MaconomyContext context, MaconomyTimeDataList currentData) {
+    private Result<Screenshot, String> synchronizeTime(SynchronizationAttempt attempt, MaconomyContext context, MaconomyTimeDataList currentData) {
         SummaryConfiguration configuration = new SummaryConfiguration(
                 request.localizedNow(),
                 currentData.getWeekStart(),
@@ -86,10 +79,11 @@ public class MaconomySynchronizer implements Synchronizer {
         );
         return timeService.summary(request, request.getProject(), configuration)
                 .failure(SummaryFailure::getMessage)
-                .successf(timeSummary -> createLine(context, currentData, timeSummary));
+                .successf(timeSummary -> createLine(attempt, context, currentData, timeSummary));
     }
 
     private Result<Screenshot, String> createLine(
+            SynchronizationAttempt attempt,
             MaconomyContext context,
             MaconomyTimeDataList currentData,
             TimeSummary timeSummary
@@ -109,7 +103,7 @@ public class MaconomySynchronizer implements Synchronizer {
                     );
                     if (difference.hasTime()) {
                         log.info("Time difference found");
-                        return maconomyBrowser.addLine(context, request, difference.getFromDate(), difference.getToDate(), timeData)
+                        return maconomyBrowser.addLine(attempt, context, request, difference.getFromDate(), difference.getToDate(), timeData)
                                 .<Result<Screenshot, String>>map(Result::failure)
                                 .orElseGet(() -> Result.success(Screenshot.take(context)));
                     } else {

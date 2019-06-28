@@ -1,6 +1,6 @@
 package com.altona.service.synchronization.model;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.altona.service.synchronization.Screenshot;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
@@ -11,17 +11,12 @@ public class SynchronizationTrace {
 
     private int id;
 
-    private int projectId;
-
-    private int synchronizationId;
-
-    @NonNull
-    private String atttemptId;
+    private int synchronizationAttemptId;
 
     @NonNull
     private String stage;
 
     @NonNull
-    private JsonNode value;
+    private Screenshot screenshot;
 
 }

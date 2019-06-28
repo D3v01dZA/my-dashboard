@@ -1,6 +1,7 @@
 package com.altona.service.synchronization;
 
 import com.altona.security.Encryptor;
+import com.altona.service.project.model.Project;
 import com.altona.service.synchronization.model.Synchronization;
 import com.altona.util.ObjectMapperHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,7 +33,7 @@ public class SynchronizationRepository {
                 .usingGeneratedKeyColumns("id");
     }
 
-    public int insert(Encryptor encryptor, int projectId, Synchronization synchronization) {
+    public int insert(Encryptor encryptor, Project project, Synchronization synchronization) {
         return synchronizationJdbcInsert.executeAndReturnKey(new MapSqlParameterSource()
                 .addValue("service", synchronization.getService().name())
                 .addValue("configuration",
@@ -40,11 +41,11 @@ public class SynchronizationRepository {
                                 ObjectMapperHelper.serialize(objectMapper, synchronization.getConfiguration())
                         )
                 )
-                .addValue("projectId", projectId)
+                .addValue("projectId", project.getId())
         ).intValue();
     }
 
-    public void update(Encryptor encryptor, int projectId, Synchronization synchronization) {
+    public void update(Encryptor encryptor, Project project, Synchronization synchronization) {
         int updated = namedJdbc.update(
                 "UPDATE synchronization SET service = :service, configuration = :configuration WHERE project_id = :projectId AND id = :synchronizationId",
                 new MapSqlParameterSource()
@@ -53,7 +54,7 @@ public class SynchronizationRepository {
                                 encryptor.encrypt(
                                         ObjectMapperHelper.serialize(objectMapper, synchronization.getConfiguration())
                                 ))
-                        .addValue("projectId", projectId)
+                        .addValue("projectId", project.getId())
                         .addValue("synchronizationId", synchronization.getId())
         );
         if (updated != 1) {
@@ -61,20 +62,20 @@ public class SynchronizationRepository {
         }
     }
 
-    public List<Synchronization> select(Encryptor encryptor, int projectId) {
+    public List<Synchronization> select(Encryptor encryptor, Project project) {
         return namedJdbc.query(
                 "SELECT id, service, configuration FROM synchronization WHERE project_id = :projectId",
-                new MapSqlParameterSource("projectId", projectId),
+                new MapSqlParameterSource("projectId", project.getId()),
                 rowMapper(encryptor, objectMapper)
         );
     }
 
-    public Optional<Synchronization> select(Encryptor encryptor, int projectId, int id) {
+    public Optional<Synchronization> select(Encryptor encryptor, Project project, int id) {
         try {
             return Optional.of(namedJdbc.queryForObject(
                     "SELECT id, service, configuration FROM synchronization WHERE project_id = :projectId and id = :id",
                     new MapSqlParameterSource()
-                            .addValue("projectId", projectId)
+                            .addValue("projectId", project.getId())
                             .addValue("id", id),
                     rowMapper(encryptor, objectMapper)
             ));

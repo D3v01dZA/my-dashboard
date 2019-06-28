@@ -1,9 +1,10 @@
 package com.altona.service.synchronization.netsuite;
 
 import com.altona.service.synchronization.Screenshot;
-import com.altona.service.synchronization.SynchronizeRequest;
 import com.altona.service.synchronization.Synchronizer;
-import com.altona.service.synchronization.model.SynchronizeResult;
+import com.altona.service.synchronization.model.Synchronization;
+import com.altona.service.synchronization.model.SynchronizationAttempt;
+import com.altona.service.synchronization.model.SynchronizationRequest;
 import com.altona.service.synchronization.netsuite.model.NetsuiteConfiguration;
 import com.altona.service.synchronization.netsuite.model.NetsuiteContext;
 import com.altona.service.synchronization.netsuite.model.NetsuiteTimeData;
@@ -34,42 +35,34 @@ public class NetsuiteSynchronizer implements Synchronizer {
     private final NetsuiteBrowser netsuiteBrowser;
 
     // Configuration
-    private final int synchronizationId;
+    private final Synchronization synchronization;
 
     @NonNull
-    private final SynchronizeRequest request;
+    private final SynchronizationRequest request;
 
     @NonNull
     private final NetsuiteConfiguration netsuiteConfiguration;
 
     @Override
-    public int getSynchronizationId() {
-        return synchronizationId;
+    public Synchronization getSynchronization() {
+        return synchronization;
     }
 
     @Override
-    public SynchronizeResult synchronize() {
-        log.info("Synchronization {}: Synchronizing Netsuite {} periods back", synchronizationId, request.getPeriodsBack());
-        return netsuiteBrowser.login(request, netsuiteConfiguration)
-                .successf(this::synchronizeTime)
-                .map(
-                        screenshot -> SynchronizeResult.success(
-                                this,
-                                request,
-                                screenshot
-                        ),
-                        error -> SynchronizeResult.failure(this, request, error)
-                );
+    public Result<Screenshot, String> synchronize(SynchronizationAttempt attempt) {
+        log.info("Synchronization {}: Synchronizing Netsuite {} periods back", synchronization.getId(), request.getPeriodsBack());
+        return netsuiteBrowser.login(attempt, request, netsuiteConfiguration)
+                .successf(netsuiteContext -> synchronizeTime(attempt, netsuiteContext));
     }
 
-    private Result<Screenshot, String> synchronizeTime(NetsuiteContext netsuiteContext) {
+    private Result<Screenshot, String> synchronizeTime(SynchronizationAttempt attempt, NetsuiteContext netsuiteContext) {
         try {
             log.info("Retrieving time data for requested period");
-            netsuiteBrowser.weeklyTimesheets(netsuiteContext, request);
+            netsuiteBrowser.weeklyTimesheets(attempt, netsuiteContext, request);
             for (int i = 0; i < request.getPeriodsBack(); i++) {
-                netsuiteBrowser.previousWeeklyTimesheet(netsuiteContext, request);
+                netsuiteBrowser.previousWeeklyTimesheet(attempt, netsuiteContext, request);
             }
-            NetsuiteTimeDataList data = netsuiteBrowser.weeklyData(netsuiteContext, request);
+            NetsuiteTimeDataList data = netsuiteBrowser.weeklyData(attempt, netsuiteContext, request);
 
             SummaryConfiguration configuration = new SummaryConfiguration(
                     request.localize(request.now()),
@@ -81,13 +74,13 @@ public class NetsuiteSynchronizer implements Synchronizer {
             );
             return timeService.summary(request, request.getProject(), configuration)
                     .failure(SummaryFailure::getMessage)
-                    .successf(summary -> createLine(netsuiteContext, data, summary));
+                    .successf(summary -> createLine(attempt, netsuiteContext, data, summary));
         } finally {
-            netsuiteBrowser.close(netsuiteContext, request);
+            netsuiteBrowser.close(attempt, netsuiteContext, request);
         }
     }
 
-    private Result<Screenshot, String> createLine(NetsuiteContext netsuiteContext, NetsuiteTimeDataList data, TimeSummary timeSummary) {
+    private Result<Screenshot, String> createLine(SynchronizationAttempt attempt, NetsuiteContext netsuiteContext, NetsuiteTimeDataList data, TimeSummary timeSummary) {
         TimeSummary current = data.getAllData();
         return timeSummary.getDifference(current)
                 .map(
@@ -103,7 +96,7 @@ public class NetsuiteSynchronizer implements Synchronizer {
                             );
                             if (difference.hasTime()) {
                                 log.info("Time Difference Found");
-                                netsuiteBrowser.addLine(netsuiteContext, request, difference.getFromDate(), difference.getToDate(), line);
+                                netsuiteBrowser.addLine(attempt, netsuiteContext, request, difference.getFromDate(), difference.getToDate(), line);
                             } else {
                                 log.info("No Time Difference Found");
                             }

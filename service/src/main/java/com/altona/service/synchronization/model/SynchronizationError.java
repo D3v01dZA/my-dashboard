@@ -5,9 +5,9 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class SynchronizeError {
+public class SynchronizationError {
 
-    private int synchronizationId;
+    private Synchronization synchronization;
     private String detail;
 
 }

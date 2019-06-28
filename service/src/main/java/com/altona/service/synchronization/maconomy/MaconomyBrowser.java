@@ -1,11 +1,12 @@
 package com.altona.service.synchronization.maconomy;
 
 import com.altona.service.synchronization.SynchronizationTraceRepository;
-import com.altona.service.synchronization.SynchronizeRequest;
+import com.altona.service.synchronization.model.SynchronizationRequest;
 import com.altona.service.synchronization.maconomy.model.MaconomyConfiguration;
 import com.altona.service.synchronization.maconomy.model.MaconomyContext;
 import com.altona.service.synchronization.maconomy.model.MaconomyTimeData;
 import com.altona.service.synchronization.maconomy.model.MaconomyTimeDataList;
+import com.altona.service.synchronization.model.SynchronizationAttempt;
 import com.altona.util.LocalDateIterator;
 import com.altona.util.Result;
 import com.google.common.collect.Lists;
@@ -42,12 +43,13 @@ public class MaconomyBrowser {
 
     private SynchronizationTraceRepository synchronizationTraceRepository;
 
-    public Result<MaconomyContext, String> login(SynchronizeRequest request, MaconomyConfiguration configuration) {
-        MaconomyContext context = new MaconomyContext();
+    public Result<MaconomyContext, String> login(SynchronizationAttempt attempt, SynchronizationRequest request, MaconomyConfiguration configuration) {
+        MaconomyContext context = null;
         try {
+            context = new MaconomyContext();
             log.info("Logging in to Maconomy");
             context.get(configuration.getUrl());
-            synchronizationTraceRepository.trace(request, "Before Login", context);
+            synchronizationTraceRepository.trace(attempt, request, "Before Login", context);
 
             context.findElement(By.id("username")).sendKeys(configuration.getUsername());
             context.findElement(By.id("password")).sendKeys(configuration.getPassword());
@@ -55,16 +57,16 @@ public class MaconomyBrowser {
 
             log.info("Submitting login led to page {}", context.getCurrentUrl());
 
-            return verifyLogin(request, context);
+            return verifyLogin(attempt, request, context);
         } catch (Exception ex) {
             log.error("Exception logging in to Maconomy ", ex);
-            close(context, request);
+            close(attempt, context, request);
             return Result.failure("Exception occurred while logging in");
         }
     }
 
-    public void previousWeeklyTimesheet(MaconomyContext context, SynchronizeRequest request) {
-        synchronizationTraceRepository.trace(request, "Before Previous Timesheet", context);
+    public void previousWeeklyTimesheet(SynchronizationAttempt attempt, MaconomyContext context, SynchronizationRequest request) {
+        synchronizationTraceRepository.trace(attempt, request, "Before Previous Timesheet", context);
         String heading = context.findElement(By.className("heading")).getText();
         log.info("Going to the previous period from {}", heading);
         context.findElement(By.className("icon-recordarrow-left")).click();
@@ -80,8 +82,8 @@ public class MaconomyBrowser {
         log.info("Arrived at period {}", periodHeading);
     }
 
-    public Result<MaconomyTimeDataList, String> weeklyData(MaconomyContext context, SynchronizeRequest request) {
-        synchronizationTraceRepository.trace(request, "Before Getting Weekly Data", context);
+    public Result<MaconomyTimeDataList, String> weeklyData(SynchronizationAttempt attempt, MaconomyContext context, SynchronizationRequest request) {
+        synchronizationTraceRepository.trace(attempt, request, "Before Getting Weekly Data", context);
         log.info("Reading Weekly Time Data");
 
         String heading = context.findElement(By.className("heading")).getText();
@@ -136,8 +138,8 @@ public class MaconomyBrowser {
         return Result.success(new MaconomyTimeDataList(weekStart, weekEnd, maconomyTimeDataList));
     }
 
-    public Optional<String> addLine(MaconomyContext context, SynchronizeRequest request, LocalDate from, LocalDate to, MaconomyTimeData data) {
-        synchronizationTraceRepository.trace(request, "Before Adding Line", context);
+    public Optional<String> addLine(SynchronizationAttempt attempt, MaconomyContext context, SynchronizationRequest request, LocalDate from, LocalDate to, MaconomyTimeData data) {
+        synchronizationTraceRepository.trace(attempt, request, "Before Adding Line", context);
         log.info("Adding Time Data Line");
 
         context.findElement(By.className("action-bar")).findElement(By.tagName("button")).click();
@@ -188,26 +190,28 @@ public class MaconomyBrowser {
         return Optional.empty();
     }
 
-    public void close(MaconomyContext context, SynchronizeRequest request) {
+    public void close(SynchronizationAttempt attempt, MaconomyContext context, SynchronizationRequest request) {
         log.info("Closing");
-        synchronizationTraceRepository.trace(request, "Before Close", context);
-        try {
-            log.info("Trying to log out");
-            context.findElement(By.className("icon-settings")).click();
-            context.findElements(By.className("dropdown-menu-right")).stream()
-                    .flatMap(element -> element.findElements(By.tagName("a")).stream())
-                    .filter(element -> element.getText().startsWith("Log Out"))
-                    .collect(MoreCollectors.onlyElement())
-                    .click();
-        } catch (Exception ex) {
-            log.error("Error encountered logging out", ex);
-        } finally {
-            context.quit();
+        if (context != null) {
+            synchronizationTraceRepository.trace(attempt, request, "Before Close", context);
+            try {
+                log.info("Trying to log out");
+                context.findElement(By.className("icon-settings")).click();
+                context.findElements(By.className("dropdown-menu-right")).stream()
+                        .flatMap(element -> element.findElements(By.tagName("a")).stream())
+                        .filter(element -> element.getText().startsWith("Log Out"))
+                        .collect(MoreCollectors.onlyElement())
+                        .click();
+            } catch (Exception ex) {
+                log.error("Error encountered logging out", ex);
+            } finally {
+                context.quit();
+            }
         }
     }
 
-    private Result<MaconomyContext, String> verifyLogin(SynchronizeRequest request, MaconomyContext context) {
-        synchronizationTraceRepository.trace(request, "Before Verifying Login", context);
+    private Result<MaconomyContext, String> verifyLogin(SynchronizationAttempt attempt, SynchronizationRequest request, MaconomyContext context) {
+        synchronizationTraceRepository.trace(attempt, request, "Before Verifying Login", context);
         try {
             new WebDriverWait(context, 30)
                     .until(webDriver -> webDriver.findElement(By.className("calendar-text")));
@@ -215,7 +219,7 @@ public class MaconomyBrowser {
         } catch (NoSuchElementException ex) {
             String msg = String.format("Login failed at page %s", context.getCurrentUrl());
             log.info(msg);
-            close(context, request);
+            close(attempt, context, request);
             return Result.failure(msg);
         }
     }

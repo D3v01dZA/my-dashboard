@@ -1,6 +1,5 @@
 package com.altona.service.synchronization.model;
 
-import com.altona.service.synchronization.SynchronizeRequest;
 import com.altona.service.synchronization.Synchronizer;
 import com.altona.service.synchronization.maconomy.MaconomyBrowser;
 import com.altona.service.synchronization.maconomy.MaconomySynchronizer;
@@ -9,6 +8,7 @@ import com.altona.service.synchronization.netsuite.NetsuiteBrowser;
 import com.altona.service.synchronization.netsuite.NetsuiteSynchronizer;
 import com.altona.service.synchronization.netsuite.model.NetsuiteConfiguration;
 import com.altona.service.synchronization.test.FailingSynchronizer;
+import com.altona.service.synchronization.test.SucceedingBrowser;
 import com.altona.service.synchronization.test.SucceedingSynchronizer;
 import com.altona.service.time.TimeService;
 import com.altona.util.Result;
@@ -29,7 +29,7 @@ public enum SynchronizationServiceType {
         }
 
         @Override
-        public Result<Synchronizer, SynchronizeError> createService(ApplicationContext applicationContext, Synchronization synchronization, SynchronizeRequest request) {
+        public Result<Synchronizer, SynchronizationError> createService(ApplicationContext applicationContext, Synchronization synchronization, SynchronizationRequest request) {
             return SynchronizationServiceType.readJson(
                     applicationContext,
                     synchronization,
@@ -38,7 +38,7 @@ public enum SynchronizationServiceType {
                             new MaconomySynchronizer(
                                     applicationContext.getBean(TimeService.class),
                                     applicationContext.getBean(MaconomyBrowser.class),
-                                    synchronization.getId(),
+                                    synchronization,
                                     request,
                                     maconomyConfiguration
                             )
@@ -52,7 +52,7 @@ public enum SynchronizationServiceType {
         }
 
         @Override
-        public Result<Synchronizer, SynchronizeError> createService(ApplicationContext applicationContext, Synchronization synchronization, SynchronizeRequest request) {
+        public Result<Synchronizer, SynchronizationError> createService(ApplicationContext applicationContext, Synchronization synchronization, SynchronizationRequest request) {
             return SynchronizationServiceType.readJson(
                     applicationContext,
                     synchronization,
@@ -60,7 +60,7 @@ public enum SynchronizationServiceType {
                     netsuiteConfiguration -> new NetsuiteSynchronizer(
                             applicationContext.getBean(TimeService.class),
                             applicationContext.getBean(NetsuiteBrowser.class),
-                            synchronization.getId(),
+                            synchronization,
                             request,
                             netsuiteConfiguration
                     )
@@ -74,10 +74,11 @@ public enum SynchronizationServiceType {
         }
 
         @Override
-        public Result<Synchronizer, SynchronizeError> createService(ApplicationContext applicationContext, Synchronization synchronization, SynchronizeRequest request) {
+        public Result<Synchronizer, SynchronizationError> createService(ApplicationContext applicationContext, Synchronization synchronization, SynchronizationRequest request) {
             return Result.success(new SucceedingSynchronizer(
                     applicationContext.getBean(TimeService.class),
-                    synchronization.getId(),
+                    applicationContext.getBean(SucceedingBrowser.class),
+                    synchronization,
                     request
             ));
         }
@@ -89,8 +90,8 @@ public enum SynchronizationServiceType {
         }
 
         @Override
-        public Result<Synchronizer, SynchronizeError> createService(ApplicationContext applicationContext, Synchronization synchronization, SynchronizeRequest request) {
-            return Result.success(new FailingSynchronizer(synchronization.getId(), request));
+        public Result<Synchronizer, SynchronizationError> createService(ApplicationContext applicationContext, Synchronization synchronization, SynchronizationRequest request) {
+            return Result.success(new FailingSynchronizer(synchronization));
         }
     };
 
@@ -98,7 +99,7 @@ public enum SynchronizationServiceType {
 
     public abstract boolean hasValidConfiguration(ObjectMapper objectMapper, Synchronization synchronization);
 
-    public abstract Result<Synchronizer, SynchronizeError> createService(ApplicationContext applicationContext, Synchronization synchronization, SynchronizeRequest request);
+    public abstract Result<Synchronizer, SynchronizationError> createService(ApplicationContext applicationContext, Synchronization synchronization, SynchronizationRequest request);
 
     private static <C> boolean checkConfiguration(ObjectMapper objectMapper, Synchronization synchronization, Class<C> configurationClazz) {
         try {
@@ -114,7 +115,7 @@ public enum SynchronizationServiceType {
         }
     }
 
-    private static <T extends Synchronizer, C> Result<T, SynchronizeError> readJson(
+    private static <T extends Synchronizer, C> Result<T, SynchronizationError> readJson(
             ApplicationContext applicationContext,
             Synchronization synchronization,
             Class<C> configurationClazz,
@@ -126,7 +127,7 @@ public enum SynchronizationServiceType {
             return Result.success(synchronizerCreator.apply(configuration));
         } catch (IOException e) {
             LOGGER.warn("Invalid Configuration", e);
-            return Result.failure(new SynchronizeError(synchronization.getId(), "Could not read saved configuration"));
+            return Result.failure(new SynchronizationError(synchronization, "Could not read saved configuration"));
         }
     }
 

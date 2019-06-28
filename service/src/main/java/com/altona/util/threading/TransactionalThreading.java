@@ -6,13 +6,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 @Service
 public class TransactionalThreading {
@@ -26,24 +21,8 @@ public class TransactionalThreading {
         this.executorService = Executors.newFixedThreadPool(threads);
     }
 
-    public <T> List<T> executeInReadOnlyTransaction(List<Supplier<T>> suppliers) {
-        List<Callable<T>> callables = suppliers.stream()
-                .<Callable<T>>map(supplier -> () -> transactionalExecutor.executeInReadOnlyTransaction(supplier))
-                .collect(Collectors.toList());
-        try {
-            return executorService.invokeAll(callables).stream()
-                    .map(future -> {
-                        try {
-                            return future.get();
-                        } catch (InterruptedException | ExecutionException e) {
-                            throw new RuntimeException(e);
-                        }
-                    })
-                    .collect(Collectors.toList());
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
+    public void executeInTransaction(Runnable runnable) {
+        executorService.execute(() -> transactionalExecutor.executeInTransaction(runnable));
     }
 
     public void executeInReadOnlyTransaction(Runnable runnable) {
@@ -54,12 +33,12 @@ public class TransactionalThreading {
     public static class TransactionalExecutor {
 
         @Transactional(readOnly = true)
-        public <T> T executeInReadOnlyTransaction(Supplier<T> supplier) {
-            return supplier.get();
+        public void executeInReadOnlyTransaction(Runnable runnable) {
+            runnable.run();
         }
 
-        @Transactional(readOnly = true)
-        public void executeInReadOnlyTransaction(Runnable runnable) {
+        @Transactional
+        public void executeInTransaction(Runnable runnable) {
             runnable.run();
         }
 

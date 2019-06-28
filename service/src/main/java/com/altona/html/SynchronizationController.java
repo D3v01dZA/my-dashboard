@@ -5,8 +5,8 @@ import com.altona.security.UserContext;
 import com.altona.service.synchronization.model.Synchronization;
 import com.altona.security.UserService;
 import com.altona.service.synchronization.model.SynchronizationTrace;
-import com.altona.service.synchronization.model.SynchronizeCommand;
-import com.altona.service.synchronization.model.SynchronizeResult;
+import com.altona.service.synchronization.model.SynchronizationCommand;
+import com.altona.service.synchronization.model.SynchronizationAttempt;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -68,7 +68,7 @@ public class SynchronizationController {
     }
 
     @RequestMapping(path = "/time/project/{projectId}/synchronize", method = RequestMethod.POST, produces = "application/json")
-    public ResponseEntity<List<SynchronizeResult>> synchronize(
+    public ResponseEntity<List<SynchronizationAttempt>> synchronize(
             Authentication authentication,
             TimeZone timeZone,
             @PathVariable Integer projectId
@@ -79,26 +79,40 @@ public class SynchronizationController {
     }
 
     @RequestMapping(path = "/time/project/{projectId}/synchronization/{synchronizationId}/synchronize", method = RequestMethod.POST, produces = "application/json")
-    public ResponseEntity<SynchronizeResult> synchronize(
+    public ResponseEntity<SynchronizationAttempt> synchronize(
             Authentication authentication,
             TimeZone timeZone,
             @PathVariable Integer projectId,
             @PathVariable Integer synchronizationId,
             @RequestParam(required = false) Integer periodsBack
     ) {
-        SynchronizeCommand command = periodsBack == null ? SynchronizeCommand.current() : SynchronizeCommand.previous(periodsBack);
+        SynchronizationCommand command = periodsBack == null ? SynchronizationCommand.current() : SynchronizationCommand.previous(periodsBack);
         return synchronizationFacade.synchronize(userService.getUserContext(authentication, timeZone), projectId, synchronizationId, command)
                 .map(synchronizeResult -> new ResponseEntity<>(synchronizeResult, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @RequestMapping(path = "/time/project/{projectId}/synchronization/{synchronizationId}/trace/{attemptId}", method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<List<SynchronizationTrace>> synchronizeTrace(
+    @RequestMapping(path = "/time/project/{projectId}/synchronization/{synchronizationId}/attempt/{attemptId}", method = RequestMethod.GET, produces = "application/json")
+    public ResponseEntity<SynchronizationAttempt> synchronizeAttempt(
             Authentication authentication,
             TimeZone timeZone,
             @PathVariable Integer projectId,
             @PathVariable Integer synchronizationId,
-            @PathVariable String attemptId
+            @PathVariable Integer attemptId
+    ) {
+        UserContext userContext = userService.getUserContext(authentication, timeZone);
+        return synchronizationFacade.attempt(userContext, projectId, synchronizationId, attemptId)
+                .map(traces -> new ResponseEntity<>(traces, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @RequestMapping(path = "/time/project/{projectId}/synchronization/{synchronizationId}/attempt/{attemptId}/trace", method = RequestMethod.GET, produces = "application/json")
+    public ResponseEntity<List<SynchronizationTrace>> synchronizeAttemptTrace(
+            Authentication authentication,
+            TimeZone timeZone,
+            @PathVariable Integer projectId,
+            @PathVariable Integer synchronizationId,
+            @PathVariable Integer attemptId
     ) {
         UserContext userContext = userService.getUserContext(authentication, timeZone);
         return synchronizationFacade.traces(userContext, projectId, synchronizationId, attemptId)

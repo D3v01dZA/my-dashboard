@@ -1,7 +1,8 @@
 package com.altona.service.synchronization.netsuite;
 
 import com.altona.service.synchronization.SynchronizationTraceRepository;
-import com.altona.service.synchronization.SynchronizeRequest;
+import com.altona.service.synchronization.model.SynchronizationRequest;
+import com.altona.service.synchronization.model.SynchronizationAttempt;
 import com.altona.service.synchronization.netsuite.model.NetsuiteConfiguration;
 import com.altona.service.synchronization.netsuite.model.NetsuiteContext;
 import com.altona.service.synchronization.netsuite.model.NetsuiteTimeData;
@@ -36,12 +37,13 @@ public class NetsuiteBrowser {
     public static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("H:mm");
     private SynchronizationTraceRepository synchronizationTraceRepository;
 
-    public Result<NetsuiteContext, String> login(SynchronizeRequest request, NetsuiteConfiguration configuration) {
-        NetsuiteContext context = new NetsuiteContext();
+    public Result<NetsuiteContext, String> login(SynchronizationAttempt attempt, SynchronizationRequest request, NetsuiteConfiguration configuration) {
+        NetsuiteContext context = null;
         try {
+            context = new NetsuiteContext();
             log.info("Logging in to Netsuite");
             context.get("https://system.netsuite.com/pages/customerlogin.jsp?country=US");
-            synchronizationTraceRepository.trace(request, "Before Login", context);
+            synchronizationTraceRepository.trace(attempt, request, "Before Login", context);
 
             context.findElement(By.id("userName")).sendKeys(configuration.getUsername());
             context.findElement(By.id("password")).sendKeys(configuration.getPassword());
@@ -50,18 +52,18 @@ public class NetsuiteBrowser {
             log.info("Submitting login led to page {}", context.getCurrentUrl());
             if (context.getCurrentUrl().contains("securityquestions")) {
                 log.info("Answering security question");
-                return answerSecurityQuestion(context, request, configuration);
+                return answerSecurityQuestion(attempt, context, request, configuration);
             }
-            return verifyLoggedIn(request, context);
+            return verifyLoggedIn(attempt, request, context);
         } catch (Exception ex) {
             log.error("Exception logging in to Netsuite ", ex);
-            close(context, request);
+            close(attempt, context, request);
             return Result.failure("Exception occurred while logging in");
         }
     }
 
-    public void weeklyTimesheets(NetsuiteContext context, SynchronizeRequest request) {
-        synchronizationTraceRepository.trace(request, "Before Weekly Link Click", context);
+    public void weeklyTimesheets(SynchronizationAttempt attempt, NetsuiteContext context, SynchronizationRequest request) {
+        synchronizationTraceRepository.trace(attempt, request, "Before Weekly Link Click", context);
         log.info("Clicking weekly timesheets");
         sleep();
         context.findElements(By.className("ns-searchable-value")).stream()
@@ -71,14 +73,14 @@ public class NetsuiteBrowser {
         log.info("Clicking weekly timesheets led to page {}", context.getCurrentUrl());
     }
 
-    public void previousWeeklyTimesheet(NetsuiteContext context, SynchronizeRequest request) {
-        synchronizationTraceRepository.trace(request, "Before Previous Timesheet", context);
+    public void previousWeeklyTimesheet(SynchronizationAttempt attempt, NetsuiteContext context, SynchronizationRequest request) {
+        synchronizationTraceRepository.trace(attempt, request, "Before Previous Timesheet", context);
         context.findElement(By.id("prev")).click();
         log.info("Clicking previous weekly timesheets led to page {}", context.getCurrentUrl());
     }
 
-    public NetsuiteTimeDataList weeklyData(NetsuiteContext context, SynchronizeRequest request) {
-        synchronizationTraceRepository.trace(request, "Before Getting Weekly Data", context);
+    public NetsuiteTimeDataList weeklyData(SynchronizationAttempt attempt, NetsuiteContext context, SynchronizationRequest request) {
+        synchronizationTraceRepository.trace(attempt, request, "Before Getting Weekly Data", context);
         log.info("Reading Weekly Time Data");
 
         LocalDate weekStart = LocalDate.parse(context.findElement(By.id("trandate")).getAttribute("value"), TRANSACTION_DATE_FORMATTER);
@@ -109,8 +111,8 @@ public class NetsuiteBrowser {
         return new NetsuiteTimeDataList(weekStart, netsuiteTimeDataList);
     }
 
-    public void addLine(NetsuiteContext context, SynchronizeRequest request, LocalDate from, LocalDate to, NetsuiteTimeData data) {
-        synchronizationTraceRepository.trace(request, "Before Adding Line", context);
+    public void addLine(SynchronizationAttempt attempt, NetsuiteContext context, SynchronizationRequest request, LocalDate from, LocalDate to, NetsuiteTimeData data) {
+        synchronizationTraceRepository.trace(attempt, request, "Before Adding Line", context);
         log.info("Adding time data line");
 
         context.findElement(By.id("timeitem_customer_display"))
@@ -145,22 +147,24 @@ public class NetsuiteBrowser {
                     time -> input.sendKeys(time.toString())
             );
         }
-        synchronizationTraceRepository.trace(request, "Before Submitting Line", context);
+        synchronizationTraceRepository.trace(attempt, request, "Before Submitting Line", context);
         context.findElement(By.id("btn_secondarymultibutton_submitter")).click();
     }
 
-    public void close(NetsuiteContext context, SynchronizeRequest request) {
+    public void close(SynchronizationAttempt attempt, NetsuiteContext context, SynchronizationRequest request) {
         log.info("Closing");
-        synchronizationTraceRepository.trace(request, "Before Close", context);
-        context.quit();
+        if (context != null) {
+            synchronizationTraceRepository.trace(attempt, request, "Before Close", context);
+            context.quit();
+        }
     }
 
     private WebElement getTable(NetsuiteContext context) {
         return context.findElement(By.id("timeitem_splits"));
     }
 
-    private Result<NetsuiteContext, String> answerSecurityQuestion(NetsuiteContext context, SynchronizeRequest request, NetsuiteConfiguration configuration) {
-        synchronizationTraceRepository.trace(request, "Before Security Question", context);
+    private Result<NetsuiteContext, String> answerSecurityQuestion(SynchronizationAttempt attempt, NetsuiteContext context, SynchronizationRequest request, NetsuiteConfiguration configuration) {
+        synchronizationTraceRepository.trace(attempt, request, "Before Security Question", context);
         WebElement question = context.findElements(By.className("smalltextnolink")).stream()
                 .filter(webElement -> webElement.getText().endsWith("?"))
                 .collect(MoreCollectors.onlyElement());
@@ -180,21 +184,21 @@ public class NetsuiteBrowser {
                     answer.sendKeys(actualAnswer);
                     submit.click();
                     log.info("Submitting answer led to page {}", context.getCurrentUrl());
-                    return verifyLoggedIn(request, context);
+                    return verifyLoggedIn(attempt, request, context);
                 }).orElseGet(() -> {
                     log.info("No answer found");
                     return Result.failure(String.format("No answer found for %s", question.getText()));
                 });
     }
 
-    private Result<NetsuiteContext, String> verifyLoggedIn(SynchronizeRequest request, NetsuiteContext context) {
-        synchronizationTraceRepository.trace(request, "Before Verifying Login", context);
+    private Result<NetsuiteContext, String> verifyLoggedIn(SynchronizationAttempt attempt, SynchronizationRequest request, NetsuiteContext context) {
+        synchronizationTraceRepository.trace(attempt, request, "Before Verifying Login", context);
         if (context.getTitle().contains("Home")) {
             return Result.success(context);
         }
         String msg = String.format("Login failed at page %s", context.getCurrentUrl());
         log.info(msg);
-        close(context, request);
+        close(attempt, context, request);
         return Result.failure(msg);
     }
 

@@ -1,5 +1,6 @@
 package com.altona.service.broadcast;
 
+import com.altona.service.synchronization.model.SynchronizationAttemptBroadcast;
 import com.altona.service.time.model.control.TimeStatus;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -14,6 +15,10 @@ public class BroadcastMessage<T> {
         return new BroadcastMessage<>(Type.TIME, timeStatus);
     }
 
+    public static BroadcastMessage<SynchronizationAttemptBroadcast> synchronization(SynchronizationAttemptBroadcast attempt) {
+        return new BroadcastMessage<>(Type.SYNCHRONIZE_ATTEMPT, attempt);
+    }
+
     @NonNull
     private Type type;
 
@@ -22,7 +27,8 @@ public class BroadcastMessage<T> {
 
     public enum Type {
 
-        TIME
+        TIME,
+        SYNCHRONIZE_ATTEMPT
 
     }
 

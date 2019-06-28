@@ -1,11 +1,10 @@
 package com.altona.service.synchronization;
 
-import com.altona.security.UserContext;
+import com.altona.security.Encryptor;
+import com.altona.service.synchronization.model.SynchronizationAttempt;
+import com.altona.service.synchronization.model.SynchronizationRequest;
 import com.altona.service.synchronization.model.SynchronizationTrace;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -17,9 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.sql.DataSource;
 import java.util.List;
-
-import static com.altona.util.ObjectMapperHelper.deserialize;
-import static com.altona.util.ObjectMapperHelper.serialize;
+import java.util.Optional;
 
 @Repository
 public class SynchronizationTraceRepository {
@@ -38,44 +35,29 @@ public class SynchronizationTraceRepository {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void trace(SynchronizeRequest request, String stage, String value) {
+    public void trace(SynchronizationAttempt attempt, SynchronizationRequest request, String stage, TakesScreenshot state) {
+        trace(request, new SynchronizationTrace(-1, attempt.getId(), stage, Screenshot.take(state)));
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void trace(Encryptor encryptor, SynchronizationTrace synchronizationTrace) {
         synchronizationTraceJdbcInsert.execute(new MapSqlParameterSource()
-                .addValue("project_id", request.getProject().getId())
-                .addValue("synchronization_id", request.getSynchronizationId())
-                .addValue("attempt_id", request.getAttemptId())
-                .addValue("stage", stage)
-                .addValue("value", request.encrypt(value)));
+                .addValue("synchronization_attempt_id", synchronizationTrace.getSynchronizationAttemptId())
+                .addValue("stage", synchronizationTrace.getStage())
+                .addValue("screenshot", encryptor.encrypt(synchronizationTrace.getScreenshot().getBase64())));
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void trace(SynchronizeRequest request, String stage, TakesScreenshot state) {
-        ObjectNode root = objectMapper.createObjectNode();
-        root.put("image", state.getScreenshotAs(OutputType.BASE64));
-        trace(request, stage, root);
-    }
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void trace(SynchronizeRequest request, String stage, Object value) {
-        trace(request, stage, serialize(objectMapper, value));
-    }
-
-    public List<SynchronizationTrace> traces(UserContext userContext, int projectId, int synchronizationId, String attemptId) {
-        return namedJdbc.query("SELECT id, project_id, synchronization_id, attempt_id, time, stage, value" +
+    public List<SynchronizationTrace> traces(Encryptor encryptor, SynchronizationAttempt synchronizationAttempt) {
+        return namedJdbc.query("SELECT id, synchronization_attempt_id, stage, screenshot" +
                         " FROM synchronization_trace" +
-                        " WHERE project_id = :projectId" +
-                        " AND synchronization_id = :synchronizationId" +
-                        " AND attempt_id = :attemptId",
+                        " WHERE synchronization_attempt_id = :synchronizationAttemptId",
                 new MapSqlParameterSource()
-                        .addValue("projectId", projectId)
-                        .addValue("synchronizationId", synchronizationId)
-                        .addValue("attemptId", attemptId),
+                        .addValue("synchronizationAttemptId", synchronizationAttempt.getId()),
                 (rs, rn) -> new SynchronizationTrace(
                         rs.getInt("id"),
-                        rs.getInt("project_id"),
-                        rs.getInt("synchronization_id"),
-                        rs.getString("attempt_id"),
+                        rs.getInt("synchronization_attempt_id"),
                         rs.getString("stage"),
-                        deserialize(objectMapper, userContext.decrypt(rs.getString("value")), JsonNode.class)
+                        Optional.ofNullable(encryptor.decrypt(rs.getString("screenshot"))).map(Screenshot::new).orElse(null)
                 )
         );
     }

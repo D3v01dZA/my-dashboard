@@ -1,12 +1,10 @@
 package com.altona.service.synchronization.model;
 
 import com.altona.service.synchronization.Synchronizer;
-import com.altona.service.synchronization.SynchronizeRequest;
 import com.altona.util.Result;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
@@ -16,7 +14,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 @Getter
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor
 public class Synchronization {
 
     private int id;
@@ -45,7 +43,7 @@ public class Synchronization {
         return new Synchronization(id, service, newConfiguration);
     }
 
-    public Result<Synchronizer, SynchronizeError> createService(ApplicationContext applicationContext, SynchronizeRequest request) {
+    public Result<Synchronizer, SynchronizationError> createService(ApplicationContext applicationContext, SynchronizationRequest request) {
         return service.createService(applicationContext, this, request);
     }
 

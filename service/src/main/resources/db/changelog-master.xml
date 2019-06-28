@@ -148,4 +148,40 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="create_synchronize_attempt" author="chris">
+
+        <createTable tableName="synchronization_attempt">
+            <column name="id" type="integer" autoIncrement="true">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="status" type="varchar">
+                <constraints nullable="false"/>
+            </column>
+            <column name="message" type="varchar"/>
+            <column name="screenshot" type="varchar"/>
+            <column name="synchronization_id" type="integer">
+                <constraints nullable="false" foreignKeyName="fk_synchronization_attempt_synchronization"/>
+            </column>
+        </createTable>
+
+        <!-- #BakulDrop -->
+        <delete tableName="synchronization_trace"/>
+        <dropColumn tableName="synchronization_trace" columnName="project_id"/>
+        <dropColumn tableName="synchronization_trace" columnName="synchronization_id"/>
+        <dropColumn tableName="synchronization_trace" columnName="attempt_id"/>
+        <dropColumn tableName="synchronization_trace" columnName="value"/>
+        <addColumn tableName="synchronization_trace">
+            <column name="synchronization_attempt_id" type="integer">
+                <constraints nullable="false"/>
+            </column>
+            <column name="screenshot" type="varchar">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <addForeignKeyConstraint baseTableName="synchronization_trace" baseColumnNames="synchronization_attempt_id"
+                                 constraintName="fk_synchronization_trace_synchronization_attempt"
+                                 referencedTableName="synchronization_attempt" referencedColumnNames="id"/>
+    </changeSet>
+
 </databaseChangeLog>

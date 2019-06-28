@@ -1,18 +1,18 @@
 package com.altona.service.synchronization.test;
 
 import com.altona.service.synchronization.Screenshot;
-import com.altona.service.synchronization.SynchronizeRequest;
 import com.altona.service.synchronization.Synchronizer;
-import com.altona.service.synchronization.model.SynchronizeResult;
+import com.altona.service.synchronization.model.Synchronization;
+import com.altona.service.synchronization.model.SynchronizationAttempt;
+import com.altona.service.synchronization.model.SynchronizationRequest;
 import com.altona.service.time.TimeService;
 import com.altona.service.time.model.summary.NotStoppedAction;
 import com.altona.service.time.model.summary.SummaryConfiguration;
 import com.altona.service.time.model.summary.TimeRounding;
-import com.altona.util.Driver;
+import com.altona.util.Result;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.openqa.selenium.chrome.ChromeDriver;
 
 @Slf4j
 @AllArgsConstructor
@@ -21,18 +21,22 @@ public class SucceedingSynchronizer implements Synchronizer {
     @NonNull
     private TimeService timeService;
 
-    private int synchronizationId;
+    @NonNull
+    private SucceedingBrowser succeedingBrowser;
 
     @NonNull
-    private SynchronizeRequest request;
+    private Synchronization synchronization;
+
+    @NonNull
+    private SynchronizationRequest request;
 
     @Override
-    public int getSynchronizationId() {
-        return synchronizationId;
+    public Synchronization getSynchronization() {
+        return synchronization;
     }
 
     @Override
-    public SynchronizeResult synchronize() {
+    public Result<Screenshot, String> synchronize(SynchronizationAttempt attempt) {
         log.info("Synchronizing");
         SummaryConfiguration configuration = new SummaryConfiguration(
                 request.localize(request.now()),
@@ -42,17 +46,16 @@ public class SucceedingSynchronizer implements Synchronizer {
                 NotStoppedAction.INCLUDE,
                 false
         );
-        ChromeDriver chromeDriver = Driver.getChromeDriver();
-        try {
-            chromeDriver.get("https://www.google.com");
-            return timeService.summary(request, request.getProject(), configuration)
-                    .map(
-                            summary -> SynchronizeResult.success(this, request, Screenshot.take(chromeDriver)),
-                            summaryFailure -> SynchronizeResult.failure(this, request, summaryFailure.getMessage())
-                    );
-        } finally {
-            chromeDriver.close();
-        }
+        return succeedingBrowser.login(attempt, request)
+                .successf(chromeDriver -> timeService.summary(request, request.getProject(), configuration)
+                        .map(
+                                summary -> {
+                                    Result<Screenshot, String> success = Result.success(Screenshot.take(chromeDriver));
+                                    chromeDriver.close();
+                                    return success;
+                                },
+                                summaryFailure -> Result.failure(summaryFailure.getMessage())
+                        ));
     }
 
 }
