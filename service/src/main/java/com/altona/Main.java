@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import sun.awt.HeadlessToolkit;
 
 import java.awt.*;
 
@@ -33,7 +32,7 @@ public class Main {
             log.info("Decided on Windows");
             return "windows";
         } else if (SystemUtils.IS_OS_LINUX) {
-            if (Toolkit.getDefaultToolkit() instanceof HeadlessToolkit) {
+            if (GraphicsEnvironment.isHeadless()) {
                 log.info("Decided on Linux Headless");
                 return "linuxheadless";
             } else {
