@@ -2,6 +2,7 @@ package com.altona.dashboard.service.time;
 
 import com.altona.dashboard.Static;
 import com.altona.dashboard.service.login.LoginService;
+import com.altona.dashboard.service.time.synchronization.SynchronizationAttempt;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -39,7 +40,7 @@ public class TimeService {
             .toFormatter();
 
     private static final Logger LOGGER = Logger.getLogger(TimeService.class.getName());
-    private static final TypeReference<List<SynchronizationResult>> SYNCHRONIZATION_RESULT_LIST = new TypeReference<List<SynchronizationResult>>() {};
+    private static final TypeReference<List<SynchronizationAttempt>> SYNCHRONIZATION_RESULT_LIST = new TypeReference<List<SynchronizationAttempt>>() {};
 
     private LoginService loginService;
 
@@ -71,8 +72,12 @@ public class TimeService {
         request(emptyPost(), projectUrl(project) + "/stop-break", ObjectNode.class, onSuccess, onFailure, unauthenticated(onFailure));
     }
 
-    public void synchronize(Project project, Consumer<List<SynchronizationResult>> onSuccess, Consumer<String> onFailure) {
+    public void synchronize(Project project, Consumer<List<SynchronizationAttempt>> onSuccess, Consumer<String> onFailure) {
         request(emptyPost(), projectUrl(project) + "/synchronize", SYNCHRONIZATION_RESULT_LIST, onSuccess, onFailure, unauthenticated(onFailure));
+    }
+
+    public void download(int projectId, int synchronizationId, int attemptId, Consumer<SynchronizationAttempt> onSuccess, Consumer<String> onFailure) {
+        request(get(), projectUrl(projectId) + "/synchronization/" + synchronizationId + "/attempt/" + attemptId, SynchronizationAttempt.class, onSuccess, onFailure, unauthenticated(onFailure));
     }
 
     public void queryStatus(Consumer<TimeStatus> onSuccess, Consumer<String> onFailure, Runnable onUnauthenticated) {
@@ -97,7 +102,11 @@ public class TimeService {
     }
 
     private static String projectUrl(Project project) {
-        return "/time/project/" + project.getId();
+        return projectUrl(project.getId());
+    }
+
+    private static String projectUrl(int projectId) {
+        return "/time/project/" + projectId;
     }
 
     private <T> void request(

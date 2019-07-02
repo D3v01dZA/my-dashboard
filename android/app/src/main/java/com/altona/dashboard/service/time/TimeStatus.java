@@ -3,6 +3,7 @@ package com.altona.dashboard.service.time;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.altona.dashboard.service.time.synchronization.NotificationData;
 import com.altona.dashboard.view.time.TimeActivity;
 import com.altona.dashboard.view.time.TimeNotification;
 import com.altona.dashboard.view.time.TimeStatusEnum;

@@ -3,18 +3,14 @@ package com.altona.dashboard.view.time;
 import android.view.View;
 
 import com.altona.dashboard.R;
-import com.altona.dashboard.service.time.NotificationData;
+import com.altona.dashboard.service.time.SynchronizationAttemptNotificationData;
 import com.altona.dashboard.service.time.Project;
 import com.altona.dashboard.service.time.TimeStatus;
+import com.altona.dashboard.service.time.synchronization.NotificationData;
 
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
 
 import static com.altona.dashboard.service.time.TimeService.LONG_TIME_FORMATTER;
-import static java.time.temporal.ChronoField.HOUR_OF_DAY;
-import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
-import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
 
 public enum TimeStatusEnum {
 

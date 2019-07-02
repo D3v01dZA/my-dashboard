@@ -59,7 +59,7 @@ public class SynchronizationService {
     
     public Optional<SynchronizationAttempt> attempt(UserContext userContext, Project project, int synchronizationId, int attemptId) {
         return synchronizationRepository.select(userContext, project, synchronizationId)
-                .flatMap(synchronization -> synchronizationAttemptRepository.select(synchronization, attemptId));
+                .flatMap(synchronization -> synchronizationAttemptRepository.select(userContext, synchronization, attemptId));
     }
 
     public Optional<List<SynchronizationTrace>> traces(UserContext userContext, Project project, int synchronizationId, int attemptId) {
@@ -71,13 +71,13 @@ public class SynchronizationService {
         SynchronizationRequest request = new SynchronizationRequest(synchronizationId, userContext, project, command);
         return synchronizationRepository.select(userContext, project, synchronizationId)
                 .map(synchronization -> createService(synchronization, request))
-                .map(result -> synchronize(userContext, result));
+                .map(result -> synchronize(userContext, project, result));
     }
 
     public List<SynchronizationAttempt> synchronize(UserContext userContext, Project project) {
         return synchronizationRepository.select(userContext, project).stream()
                 .map(synchronization -> createService(synchronization, new SynchronizationRequest(synchronization.getId(), userContext, project, SynchronizationCommand.current())))
-                .map(result -> synchronize(userContext, result))
+                .map(result -> synchronize(userContext, project, result))
                 .collect(Collectors.toList());
     }
 
@@ -85,12 +85,12 @@ public class SynchronizationService {
         return synchronization.createService(applicationContext, request);
     }
 
-    private SynchronizationAttempt synchronize(UserContext userContext, Result<Synchronizer, SynchronizationError> synchronizationResult) {
+    private SynchronizationAttempt synchronize(UserContext userContext, Project project, Result<Synchronizer, SynchronizationError> synchronizationResult) {
         return synchronizationResult.map(
                 synchronizer -> {
                     SynchronizationAttempt pending = SynchronizationAttempt.pending(synchronizer);
                     SynchronizationAttempt inserted = synchronizationAttemptRepository.insert(userContext, synchronizer.getSynchronization(), pending);
-                    synchronizeInBackground(userContext, synchronizer, inserted);
+                    synchronizeInBackground(userContext, synchronizer, inserted, project);
                     return inserted;
                 },
                 error -> {
@@ -100,12 +100,12 @@ public class SynchronizationService {
         );
     }
 
-    private void synchronizeInBackground(UserContext userContext, Synchronizer synchronizer, SynchronizationAttempt attempt) {
+    private void synchronizeInBackground(UserContext userContext, Synchronizer synchronizer, SynchronizationAttempt attempt, Project project) {
         transactionalThreading.executeInTransaction(() -> {
             Result<Screenshot, String> result = synchronizer.synchronize(attempt);
             SynchronizationAttempt update = result.map(attempt::succeeded, attempt::failed);
             synchronizationAttemptRepository.update(userContext, update);
-            broadcastService.broadcast(userContext, BroadcastMessage.synchronization(SynchronizationAttemptBroadcast.of(update)));
+            broadcastService.broadcast(userContext, BroadcastMessage.synchronization(SynchronizationAttemptBroadcast.of(update, synchronizer, project)));
         });
     }
 

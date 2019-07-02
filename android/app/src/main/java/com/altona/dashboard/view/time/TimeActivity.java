@@ -9,20 +9,13 @@ import android.widget.TextView;
 import com.altona.dashboard.R;
 import com.altona.dashboard.component.UsableRecycler;
 import com.altona.dashboard.service.time.Project;
-import com.altona.dashboard.service.time.SynchronizationResult;
-import com.altona.dashboard.service.time.TimeScreen;
 import com.altona.dashboard.service.time.TimeService;
 import com.altona.dashboard.service.time.TimeStatus;
-import com.altona.dashboard.service.time.TimeSummary;
 import com.altona.dashboard.service.time.TimeSummaryEntry;
 import com.altona.dashboard.view.SecureAppActivity;
-import com.altona.dashboard.view.settings.RecyclerSettingRow;
 import com.altona.dashboard.view.util.UserInputDialog;
 
-import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -161,12 +154,11 @@ public class TimeActivity extends SecureAppActivity {
                 project,
                 synchronizationResults -> {
                     boolean failure = synchronizationResults.stream()
-                            .peek(synchronizationResult -> synchronizationResult.saveScreenshot(this))
-                            .anyMatch(synchronizationResult -> !synchronizationResult.isSuccess());
+                            .anyMatch(synchronizationResult -> !synchronizationResult.isPending());
                     if (failure) {
                         toast("Synchronization Failed");
                     } else {
-                        toast("Synchronization Succeeded");
+                        toast("Synchronization Started");
                     }
                     enableInteractionAndUpdate();
                 },

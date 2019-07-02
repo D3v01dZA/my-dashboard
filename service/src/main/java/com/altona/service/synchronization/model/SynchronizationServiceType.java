@@ -10,6 +10,7 @@ import com.altona.service.synchronization.netsuite.model.NetsuiteConfiguration;
 import com.altona.service.synchronization.test.FailingSynchronizer;
 import com.altona.service.synchronization.test.SucceedingBrowser;
 import com.altona.service.synchronization.test.SucceedingSynchronizer;
+import com.altona.service.synchronization.test.model.SucceedingConfiguration;
 import com.altona.service.time.TimeService;
 import com.altona.util.Result;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -70,17 +71,23 @@ public enum SynchronizationServiceType {
     SUCCEEDING {
         @Override
         public boolean hasValidConfiguration(ObjectMapper objectMapper, Synchronization synchronization) {
-            return true;
+            return SynchronizationServiceType.checkConfiguration(objectMapper, synchronization, SucceedingConfiguration.class);
         }
 
         @Override
         public Result<Synchronizer, SynchronizationError> createService(ApplicationContext applicationContext, Synchronization synchronization, SynchronizationRequest request) {
-            return Result.success(new SucceedingSynchronizer(
-                    applicationContext.getBean(TimeService.class),
-                    applicationContext.getBean(SucceedingBrowser.class),
+            return SynchronizationServiceType.readJson(
+                    applicationContext,
                     synchronization,
-                    request
-            ));
+                    SucceedingConfiguration.class,
+                    succeedingConfiguration -> new SucceedingSynchronizer(
+                            applicationContext.getBean(TimeService.class),
+                            applicationContext.getBean(SucceedingBrowser.class),
+                            synchronization,
+                            request,
+                            succeedingConfiguration
+                    )
+            );
         }
     },
     FAILING {

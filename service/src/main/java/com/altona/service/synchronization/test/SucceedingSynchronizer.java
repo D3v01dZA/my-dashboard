@@ -5,6 +5,7 @@ import com.altona.service.synchronization.Synchronizer;
 import com.altona.service.synchronization.model.Synchronization;
 import com.altona.service.synchronization.model.SynchronizationAttempt;
 import com.altona.service.synchronization.model.SynchronizationRequest;
+import com.altona.service.synchronization.test.model.SucceedingConfiguration;
 import com.altona.service.time.TimeService;
 import com.altona.service.time.model.summary.NotStoppedAction;
 import com.altona.service.time.model.summary.SummaryConfiguration;
@@ -30,6 +31,9 @@ public class SucceedingSynchronizer implements Synchronizer {
     @NonNull
     private SynchronizationRequest request;
 
+    @NonNull
+    private SucceedingConfiguration succeedingConfiguration;
+
     @Override
     public Synchronization getSynchronization() {
         return synchronization;
@@ -46,12 +50,12 @@ public class SucceedingSynchronizer implements Synchronizer {
                 NotStoppedAction.INCLUDE,
                 false
         );
-        return succeedingBrowser.login(attempt, request)
+        return succeedingBrowser.login(attempt, request, succeedingConfiguration)
                 .successf(chromeDriver -> timeService.summary(request, request.getProject(), configuration)
                         .map(
                                 summary -> {
                                     Result<Screenshot, String> success = Result.success(Screenshot.take(chromeDriver));
-                                    chromeDriver.close();
+                                    chromeDriver.quit();
                                     return success;
                                 },
                                 summaryFailure -> Result.failure(summaryFailure.getMessage())

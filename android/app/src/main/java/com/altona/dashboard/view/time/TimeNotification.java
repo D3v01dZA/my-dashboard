@@ -11,8 +11,9 @@ import android.os.Build;
 import android.os.IBinder;
 import androidx.core.app.NotificationCompat;
 
-import com.altona.dashboard.service.time.NotificationData;
+import com.altona.dashboard.service.time.SynchronizationAttemptNotificationData;
 import com.altona.dashboard.service.time.TimeStatus;
+import com.altona.dashboard.service.time.synchronization.NotificationData;
 
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
@@ -66,17 +67,17 @@ public class TimeNotification extends Service {
             // or other notification behaviors after this
             notificationManager.createNotificationChannel(channel);
         }
-        NotificationData notificationData = timeStatus.notificationData();
+        NotificationData synchronizationAttemptNotificationData = timeStatus.notificationData();
         long current = new Date().getTime();
-        long back = ChronoUnit.MILLIS.between(LocalTime.of(0, 0), notificationData.getTime());
+        long back = ChronoUnit.MILLIS.between(LocalTime.of(0, 0), synchronizationAttemptNotificationData.getTime());
         Intent intent = new Intent(context, TimeActivity.class);
         // TODO: This is supposed to clear the navigation stack but its not working
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent time = PendingIntent.getActivity(context, TIME_INTENT_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         return new NotificationCompat.Builder(context, TIME_CHANNEL_ID)
-                .setContentTitle(notificationData.getTitle())
-                .setContentText(notificationData.getSubTitle())
-                .setSmallIcon(notificationData.getIcon())
+                .setContentTitle(synchronizationAttemptNotificationData.getTitle())
+                .setContentText(synchronizationAttemptNotificationData.getSubTitle())
+                .setSmallIcon(synchronizationAttemptNotificationData.getIcon())
                 .setOnlyAlertOnce(true)
                 .setSound(null)
                 .setContentIntent(time)

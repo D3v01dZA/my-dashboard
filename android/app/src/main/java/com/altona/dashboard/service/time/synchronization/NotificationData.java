@@ -1,4 +1,4 @@
-package com.altona.dashboard.service.time;
+package com.altona.dashboard.service.time.synchronization;
 
 import java.time.LocalTime;
 

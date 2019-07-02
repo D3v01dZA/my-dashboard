@@ -4,6 +4,6 @@ public enum SynchronizationStatus {
 
     SUCCESS,
     FAILURE,
-    PENDING;
+    PENDING
 
 }

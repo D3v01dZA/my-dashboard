@@ -3,6 +3,7 @@ package com.altona.service.synchronization.test;
 import com.altona.service.synchronization.SynchronizationTraceRepository;
 import com.altona.service.synchronization.model.SynchronizationAttempt;
 import com.altona.service.synchronization.model.SynchronizationRequest;
+import com.altona.service.synchronization.test.model.SucceedingConfiguration;
 import com.altona.util.Driver;
 import com.altona.util.Result;
 import lombok.AllArgsConstructor;
@@ -17,11 +18,11 @@ public class SucceedingBrowser {
 
     private SynchronizationTraceRepository synchronizationTraceRepository;
 
-    public Result<ChromeDriver, String> login(SynchronizationAttempt attempt, SynchronizationRequest request) {
+    public Result<ChromeDriver, String> login(SynchronizationAttempt attempt, SynchronizationRequest request, SucceedingConfiguration configuration) {
         ChromeDriver chromeDriver = null;
         try {
             chromeDriver = Driver.getChromeDriver();
-            chromeDriver.get("https://www.google.com");
+            chromeDriver.get(configuration.getWebsite());
             synchronizationTraceRepository.trace(attempt, request, "Load", chromeDriver);
             return Result.success(chromeDriver);
         } catch (Exception ex) {

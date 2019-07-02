@@ -1,4 +1,4 @@
-package com.altona.dashboard.service.time;
+package com.altona.dashboard.service.time.synchronization;
 
 import android.content.Context;
 import android.content.Intent;
@@ -23,15 +23,14 @@ public class Screenshot {
         this.base64 = base64;
     }
 
-    public void save(Context context, String attemptId) {
+    public void save(Context context, int attemptId) {
         byte[] decoded = Base64.decode(base64, Base64.DEFAULT);
         Bitmap bitmap = BitmapFactory.decodeByteArray(decoded, 0, decoded.length);
 
-        String root = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString();
-        File directory = new File(root + "/Dashboard/Synchronizations");
+        File directory = new File(root());
         directory.mkdirs();
 
-        File file = new File(directory, attemptId + ".jpg");
+        File file = new File(total(attemptId));
         if (file.exists()) {
             file.delete();
         }
@@ -47,6 +46,18 @@ public class Screenshot {
         Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
         intent.setData(Uri.fromFile(file));
         context.sendBroadcast(intent);
+    }
+
+    public String file(int attemptId) {
+        return total(attemptId);
+    }
+
+    private String root() {
+        return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/Dashboard/Synchronizations";
+    }
+
+    private String total(int attemptId) {
+        return root() + "/" + attemptId + ".jpg";
     }
 
 }

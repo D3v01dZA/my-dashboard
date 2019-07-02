@@ -28,7 +28,7 @@ public class SynchronizationAttemptRepository {
                 .usingGeneratedKeyColumns("id");
     }
 
-    public Optional<SynchronizationAttempt> select(Synchronization synchronization, int id) {
+    public Optional<SynchronizationAttempt> select(Encryptor encryptor, Synchronization synchronization, int id) {
         try {
             return Optional.of(jdbcTemplate.queryForObject(
                     "SELECT id, synchronization_id, status, message, screenshot FROM synchronization_attempt WHERE id = :id AND synchronization_id = :synchronizationId",
@@ -39,7 +39,7 @@ public class SynchronizationAttemptRepository {
                             rs.getInt("id"),
                             SynchronizationStatus.valueOf(rs.getString("status")),
                             rs.getString("message"),
-                            Optional.ofNullable(rs.getString("screenshot")).map(Screenshot::new).orElse(null),
+                            Optional.ofNullable(rs.getString("screenshot")).map(encryptor::decrypt).map(Screenshot::new).orElse(null),
                             rs.getInt("synchronization_id")
                     )
             ));
@@ -76,7 +76,7 @@ public class SynchronizationAttemptRepository {
                         .orElse(null))
                 .addValue("synchronization_id", synchronizationAttempt.getSynchronizationId()))
                 .intValue();
-        return select(synchronization, id).get();
+        return select(encryptor, synchronization, id).get();
     }
 
 }
