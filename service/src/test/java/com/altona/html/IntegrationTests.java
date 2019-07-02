@@ -13,6 +13,7 @@ import com.altona.service.synchronization.model.SynchronizationAttemptBroadcast;
 import com.altona.service.synchronization.model.SynchronizationServiceType;
 import com.altona.service.synchronization.model.SynchronizationStatus;
 import com.altona.service.synchronization.model.SynchronizationTrace;
+import com.altona.service.synchronization.test.model.SucceedingConfiguration;
 import com.altona.service.time.model.control.BreakStart;
 import com.altona.service.time.model.control.BreakStop;
 import com.altona.service.time.model.control.TimeStatus;
@@ -21,6 +22,7 @@ import com.altona.service.time.model.control.WorkStop;
 import com.altona.service.time.util.TimeInfo;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Iterables;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -346,13 +348,14 @@ class IntegrationTests extends SpringTest {
         assertEquals("Test Project", project.getName());
 
         // Create a succeeding synchronizer
+        SucceedingConfiguration succeedingConfiguration = new SucceedingConfiguration("https://www.google.com");
         Synchronization synchronization = read(
-                mvc.perform(post("/time/project/" + project.getId() + "/synchronization", new Synchronization(12, SynchronizationServiceType.SUCCEEDING, objectMapper.createObjectNode())))
+                mvc.perform(post("/time/project/" + project.getId() + "/synchronization", new Synchronization(12, SynchronizationServiceType.SUCCEEDING, objectMapper.valueToTree(succeedingConfiguration))))
                         .andExpect(status().isCreated()),
                 Synchronization.class
         );
         assertEquals(SynchronizationServiceType.SUCCEEDING, synchronization.getService());
-        assertEquals(objectMapper.createObjectNode(), synchronization.getConfiguration());
+        assertEquals(objectMapper.valueToTree(succeedingConfiguration), synchronization.getConfiguration());
 
         // Attempt to synchronize
         SynchronizationAttempt synchronizationAttempt = read(
