@@ -5,7 +5,6 @@ import com.altona.service.synchronization.model.SynchronizationAttempt;
 import com.altona.service.synchronization.model.SynchronizationRequest;
 import com.altona.service.synchronization.model.SynchronizationTrace;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.openqa.selenium.TakesScreenshot;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -35,7 +34,7 @@ public class SynchronizationTraceRepository {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void trace(SynchronizationAttempt attempt, SynchronizationRequest request, String stage, TakesScreenshot state) {
+    public void trace(SynchronizationAttempt attempt, SynchronizationRequest request, String stage, Screenshotter state) {
         trace(request, new SynchronizationTrace(-1, attempt.getId(), stage, Screenshot.take(state)));
     }
 

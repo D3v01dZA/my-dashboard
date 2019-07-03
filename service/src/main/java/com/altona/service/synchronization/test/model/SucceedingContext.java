@@ -1,4 +1,4 @@
-package com.altona.service.synchronization.netsuite.model;
+package com.altona.service.synchronization.test.model;
 
 import com.altona.service.synchronization.Screenshotter;
 import com.altona.util.Driver;
@@ -9,7 +9,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 
 @RequiredArgsConstructor
-public class NetsuiteContext implements WebDriver, TakesScreenshot, Screenshotter {
+public class SucceedingContext implements WebDriver, TakesScreenshot, Screenshotter {
 
     @Delegate(types = { WebDriver.class, TakesScreenshot.class })
     private ChromeDriver webDriver = Driver.getChromeDriver();

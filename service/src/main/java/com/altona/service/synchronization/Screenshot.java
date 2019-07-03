@@ -3,8 +3,6 @@ package com.altona.service.synchronization;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
 
 @AllArgsConstructor
 public class Screenshot {
@@ -13,8 +11,8 @@ public class Screenshot {
     @NonNull
     private String base64;
 
-    public static Screenshot take(TakesScreenshot takesScreenshot) {
-        return new Screenshot(takesScreenshot.getScreenshotAs(OutputType.BASE64));
+    public static Screenshot take(Screenshotter screenshotter) {
+        return new Screenshot(screenshotter.takeScreenshot());
     }
 
 }

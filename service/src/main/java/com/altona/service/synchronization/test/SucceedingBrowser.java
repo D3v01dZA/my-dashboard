@@ -4,11 +4,10 @@ import com.altona.service.synchronization.SynchronizationTraceRepository;
 import com.altona.service.synchronization.model.SynchronizationAttempt;
 import com.altona.service.synchronization.model.SynchronizationRequest;
 import com.altona.service.synchronization.test.model.SucceedingConfiguration;
-import com.altona.util.Driver;
+import com.altona.service.synchronization.test.model.SucceedingContext;
 import com.altona.util.Result;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.openqa.selenium.chrome.ChromeDriver;
 import org.springframework.stereotype.Repository;
 
 @Slf4j
@@ -18,17 +17,17 @@ public class SucceedingBrowser {
 
     private SynchronizationTraceRepository synchronizationTraceRepository;
 
-    public Result<ChromeDriver, String> login(SynchronizationAttempt attempt, SynchronizationRequest request, SucceedingConfiguration configuration) {
-        ChromeDriver chromeDriver = null;
+    public Result<SucceedingContext, String> login(SynchronizationAttempt attempt, SynchronizationRequest request, SucceedingConfiguration configuration) {
+        SucceedingContext succeedingContext = null;
         try {
-            chromeDriver = Driver.getChromeDriver();
-            chromeDriver.get(configuration.getWebsite());
-            synchronizationTraceRepository.trace(attempt, request, "Load", chromeDriver);
-            return Result.success(chromeDriver);
+            succeedingContext = new SucceedingContext();
+            succeedingContext.get(configuration.getWebsite());
+            synchronizationTraceRepository.trace(attempt, request, "Load", succeedingContext);
+            return Result.success(succeedingContext);
         } catch (Exception ex) {
-            log.error("Exception opening google", ex);
-            if (chromeDriver != null) {
-                chromeDriver.quit();
+            log.error("Exception opening " + configuration.getWebsite(), ex);
+            if (succeedingContext != null) {
+                succeedingContext.quit();
             }
             return Result.failure("Exception occurred while logging in");
         }
