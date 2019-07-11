@@ -7,7 +7,6 @@ import android.util.Base64;
 
 import com.altona.dashboard.Static;
 import com.altona.dashboard.service.ServiceResponse;
-import com.altona.dashboard.service.Session;
 import com.altona.dashboard.service.Settings;
 import com.altona.dashboard.service.firebase.FirebaseUpdate;
 import com.altona.dashboard.view.BaseActivity;
@@ -46,7 +45,6 @@ public class LoginService implements CookieJar {
     private Consumer<Runnable> foregroundExecutor;
 
     private Settings settings;
-    private Session session;
 
     private LoginService(Context context, Consumer<Runnable> foregroundExecutor) {
         this.foregroundExecutor = foregroundExecutor;
@@ -59,7 +57,6 @@ public class LoginService implements CookieJar {
                 .callTimeout(15, TimeUnit.SECONDS)
                 .build();
         this.settings = new Settings(context);
-        this.session = new Session(context);
     }
 
     public LoginService(BaseActivity activity) {
@@ -126,7 +123,7 @@ public class LoginService implements CookieJar {
                                     Optional<Credentials> credentials = getStoredCredentials();
                                     if (credentials.isPresent()) {
                                         LOGGER.warning(() -> "Retrying to call " + subUrl);
-                                        session.clearCookie();
+                                        settings.clearCookie();
                                         tryExecute(
                                                 builder.header("Authorization", basicAuth(credentials.get())),
                                                 subUrl,
@@ -246,7 +243,7 @@ public class LoginService implements CookieJar {
     }
 
     public void logout() {
-        session.clearCookie();
+        settings.clearCookie();
         settings.clearCredentials();
         deleteFirebaseId();
     }
@@ -274,14 +271,14 @@ public class LoginService implements CookieJar {
     public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
         for (Cookie cookie : cookies) {
             if (cookie.name().equalsIgnoreCase("JSESSIONID")) {
-                session.setCookie(cookie.toString());
+                settings.setCookie(cookie.toString());
             }
         }
     }
 
     @Override
     public List<Cookie> loadForRequest(HttpUrl url) {
-        return session.getCookie()
+        return settings.getCookie()
                 .map(session -> Collections.singletonList(Cookie.parse(url, session)))
                 .orElseGet(Collections::emptyList);
     }

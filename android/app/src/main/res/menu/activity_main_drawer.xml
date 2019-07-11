@@ -21,4 +21,11 @@
             android:title="@string/action_configuration" />
     </group>
 
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_logout"
+            android:icon="@drawable/ic_menu_logout"
+            android:title="@string/action_logout" />
+    </group>
+
 </menu>

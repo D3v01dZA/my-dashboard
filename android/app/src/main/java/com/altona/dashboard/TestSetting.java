@@ -14,13 +14,8 @@ public enum TestSetting {
         }
 
         @Override
-        public String getHost(String preferencesHost) {
+        public String getHost() {
             return "http://10.0.2.2:8080";
-        }
-
-        @Override
-        public String getHostToSave(String preferencesHost) {
-            throw new IllegalStateException("Build is for test only");
         }
     },
     TEST_PHONE {
@@ -35,16 +30,11 @@ public enum TestSetting {
         }
 
         @Override
-        public String getHost(String preferencesHost) {
+        public String getHost() {
             return "http://192.168.1.80:8080";
         }
-
-        @Override
-        public String getHostToSave(String preferencesHost) {
-            throw new IllegalStateException("Build is for test only");
-        }
     },
-    PHONE {
+    PROD {
         @Override
         public String getSavedUsername(String actual) {
             return actual;
@@ -56,13 +46,24 @@ public enum TestSetting {
         }
 
         @Override
-        public String getHost(String preferencesHost) {
-            return preferencesHost;
+        public String getHost() {
+            return "https://caltona.net:1337";
+        }
+    },
+    TEST {
+        @Override
+        public String getSavedUsername(String actual) {
+            return actual;
         }
 
         @Override
-        public String getHostToSave(String preferencesHost) {
-            return preferencesHost;
+        public String getSavedPassword(String actual) {
+            return actual;
+        }
+
+        @Override
+        public String getHost() {
+            return "https://caltona.net:1336";
         }
     };
 
@@ -72,8 +73,6 @@ public enum TestSetting {
 
     public abstract String getSavedPassword(String actual);
 
-    public abstract String getHost(String preferencesHost);
-
-    public abstract String getHostToSave(String preferencesHost);
+    public abstract String getHost();
 
 }

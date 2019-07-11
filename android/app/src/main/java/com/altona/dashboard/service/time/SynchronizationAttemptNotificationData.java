@@ -10,7 +10,6 @@ import lombok.NonNull;
 @AllArgsConstructor
 public class SynchronizationAttemptNotificationData {
 
-    @NonNull
     private int icon;
 
     @NonNull

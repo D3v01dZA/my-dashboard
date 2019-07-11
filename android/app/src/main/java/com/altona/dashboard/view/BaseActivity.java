@@ -3,7 +3,6 @@ package com.altona.dashboard.view;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
@@ -20,7 +19,6 @@ import com.altona.dashboard.R;
 import com.altona.dashboard.Static;
 import com.altona.dashboard.service.login.LoginService;
 import com.altona.dashboard.view.login.LoginActivity;
-import com.altona.dashboard.view.settings.SettingsActivity;
 import com.google.android.material.navigation.NavigationView;
 
 public abstract class BaseActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -58,14 +56,12 @@ public abstract class BaseActivity extends AppCompatActivity implements Navigati
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         int id = item.getItemId();
+        if (id == R.id.nav_logout) {
+            logout();
+            return true;
+        }
         boolean returned = enter(Static.NAV_ID_TO_CLASS.get(id));
         drawer().closeDrawer(GravityCompat.START);
         return returned;
@@ -76,11 +72,6 @@ public abstract class BaseActivity extends AppCompatActivity implements Navigati
         int id = item.getItemId();
         if (id == R.id.home) {
             onBackPressed();
-            return true;
-        } else if (id == R.id.action_settings) {
-            return enter(SettingsActivity.class);
-        } else if (id == R.id.action_logout) {
-            logout();
             return true;
         }
 

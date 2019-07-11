@@ -1,6 +1,5 @@
 package com.altona.dashboard.service.time.synchronization;
 
-import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -22,7 +21,7 @@ public class SynchronizationNotification {
         showNotification(
                 context,
                 new SynchronizationAttemptNotificationData(
-                        R.drawable.ic_menu_http,
+                        R.drawable.ic_success,
                         String.format("Synchronization %s complete", synchronizationAttemptBroadcast.getId()),
                         String.format("Saved to %s", location),
                         location
@@ -35,7 +34,7 @@ public class SynchronizationNotification {
         showNotification(
                 context,
                 new SynchronizationAttemptNotificationData(
-                        R.drawable.ic_menu_http,
+                        R.drawable.ic_failure,
                         String.format("Synchronization %s failed", synchronizationAttemptBroadcast.getId()),
                         "Reason: " + failure,
                         null

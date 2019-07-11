@@ -24,12 +24,22 @@ public class Settings {
     }
 
     public String getHost() {
-        return TestSetting.CURRENT.getHost(sharedPreferences.getString(HOST, "localhost:8080"));
+        return TestSetting.CURRENT.getHost();
     }
 
-    public void setHost(String host) {
+    public Optional<String> getCookie() {
+        return Optional.ofNullable(sharedPreferences.getString("cookie", null));
+    }
+
+    public void setCookie(String sessionCookie) {
         sharedPreferences.edit()
-                .putString(HOST, TestSetting.CURRENT.getHostToSave(host))
+                .putString("cookie", sessionCookie)
+                .apply();
+    }
+
+    public void clearCookie() {
+        sharedPreferences.edit()
+                .remove("cookie")
                 .apply();
     }
 
