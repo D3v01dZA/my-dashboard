@@ -1,7 +1,11 @@
 package com.altona.dashboard.service;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+
+import androidx.core.content.ContextCompat;
 
 import com.altona.dashboard.TestSetting;
 import com.altona.dashboard.service.login.Credentials;
@@ -10,16 +14,18 @@ import java.util.Optional;
 
 public class Settings {
 
-    private static final String HOST = "host";
     private static final String USERNAME = "username";
     private static final String PASSWORD = "password";
     private static final String FIREBASE_ID = "firebase_id";
     private static final String UNSAVED_FIREBASE_ID = "firebase_unsaved_id";
     private static final String DELETE_FIREBASE_ID = "delete_firebase_id";
+    private static final String SAVE_IMAGES = "save_images";
 
+    private Context context;
     private SharedPreferences sharedPreferences;
 
     public Settings(Context context) {
+        this.context = context;
         this.sharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE);
     }
 
@@ -104,6 +110,24 @@ public class Settings {
         sharedPreferences.edit()
                 .remove(UNSAVED_FIREBASE_ID)
                 .apply();
+    }
+
+    public boolean haveWritePermission() {
+        return ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    public void setSaveImages(boolean image) {
+        sharedPreferences.edit()
+                .putBoolean(SAVE_IMAGES, image)
+                .apply();
+    }
+
+    public boolean isSaveImages() {
+        return preferenceIsSaveImages() && haveWritePermission();
+    }
+
+    private boolean preferenceIsSaveImages() {
+        return sharedPreferences.getBoolean(SAVE_IMAGES, false);
     }
 
 }

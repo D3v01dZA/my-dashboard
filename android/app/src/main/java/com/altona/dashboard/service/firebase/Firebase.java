@@ -24,28 +24,10 @@ public class Firebase extends FirebaseMessagingService {
             LOGGER.info(() -> "Received background message of type " + type);
             if ("TIME".equals(type)) {
                 TimeStatus timeStatus = Static.OBJECT_MAPPER.readValue(remoteMessage.getData().get("message"), TimeStatus.class);
-                TimeNotification.notify(this, timeStatus);
+                handleTimeStatus(timeStatus);
             } else if ("SYNCHRONIZE_ATTEMPT".equals(type)) {
                 SynchronizationAttemptBroadcast synchronizationAttemptBroadcast = Static.OBJECT_MAPPER.readValue(remoteMessage.getData().get("message"), SynchronizationAttemptBroadcast.class);
-                if (synchronizationAttemptBroadcast.isSuccess()) {
-                    timeService().download(
-                            synchronizationAttemptBroadcast.getProjectId(),
-                            synchronizationAttemptBroadcast.getSynchronizationId(),
-                            synchronizationAttemptBroadcast.getId(),
-                            synchronizationAttempt -> synchronizationAttempt.saveScreenshot(this,
-                                    screenShotLocation -> SynchronizationNotification.success(this, synchronizationAttemptBroadcast, screenShotLocation)
-                            ),
-                            failure -> SynchronizationNotification.failure(this, synchronizationAttemptBroadcast, failure)
-                    );
-                } else {
-                    timeService().download(
-                            synchronizationAttemptBroadcast.getProjectId(),
-                            synchronizationAttemptBroadcast.getSynchronizationId(),
-                            synchronizationAttemptBroadcast.getId(),
-                            synchronizationAttempt -> SynchronizationNotification.failure(this, synchronizationAttemptBroadcast, synchronizationAttempt.getMessage()),
-                            failure -> SynchronizationNotification.failure(this, synchronizationAttemptBroadcast, failure)
-                    );
-                }
+                handleAttemptBroadcast(synchronizationAttemptBroadcast);
             } else {
                 LOGGER.info(() -> "Cannot handle message type " + type);
             }
@@ -57,6 +39,33 @@ public class Firebase extends FirebaseMessagingService {
     @Override
     public void onNewToken(String newId) {
         loginService().updateFirebaseToken(newId);
+    }
+
+    private void handleTimeStatus(TimeStatus timeStatus) {
+        TimeNotification.notify(this, timeStatus);
+    }
+
+    private void handleAttemptBroadcast(SynchronizationAttemptBroadcast synchronizationAttemptBroadcast) {
+        if (synchronizationAttemptBroadcast.isSuccess()) {
+            timeService().download(
+                    synchronizationAttemptBroadcast.getProjectId(),
+                    synchronizationAttemptBroadcast.getSynchronizationId(),
+                    synchronizationAttemptBroadcast.getId(),
+                    synchronizationAttempt -> synchronizationAttempt.saveIfEnabled(this,
+                            screenShotLocation -> SynchronizationNotification.success(this, synchronizationAttemptBroadcast, screenShotLocation),
+                            () -> SynchronizationNotification.success(this, synchronizationAttemptBroadcast)
+                    ),
+                    failure -> SynchronizationNotification.failure(this, synchronizationAttemptBroadcast, failure)
+            );
+        } else {
+            timeService().download(
+                    synchronizationAttemptBroadcast.getProjectId(),
+                    synchronizationAttemptBroadcast.getSynchronizationId(),
+                    synchronizationAttemptBroadcast.getId(),
+                    synchronizationAttempt -> SynchronizationNotification.failure(this, synchronizationAttemptBroadcast, synchronizationAttempt.getMessage()),
+                    failure -> SynchronizationNotification.failure(this, synchronizationAttemptBroadcast, failure)
+            );
+        }
     }
 
     private LoginService loginService() {

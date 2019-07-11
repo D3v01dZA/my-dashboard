@@ -30,6 +30,19 @@ public class SynchronizationNotification {
         );
     }
 
+    public static void success(Context context, SynchronizationAttemptBroadcast synchronizationAttemptBroadcast) {
+        showNotification(
+                context,
+                new SynchronizationAttemptNotificationData(
+                        R.drawable.ic_success,
+                        String.format("Synchronization %s complete", synchronizationAttemptBroadcast.getId()),
+                        "Screenshot not saved",
+                        null
+                ),
+                synchronizationAttemptBroadcast
+        );
+    }
+
     public static void failure(Context context, SynchronizationAttemptBroadcast synchronizationAttemptBroadcast, String failure) {
         showNotification(
                 context,

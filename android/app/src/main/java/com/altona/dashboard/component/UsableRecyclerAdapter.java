@@ -9,29 +9,32 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
-import lombok.AllArgsConstructor;
+public class UsableRecyclerAdapter extends RecyclerView.Adapter<UsableViewHolder> {
 
-@AllArgsConstructor
-public class UsableRecyclerAdapter<T> extends RecyclerView.Adapter<UsableViewHolder> {
+    private List<UsableRow> items;
 
-    private int rowLayout;
-    private List<T> items;
-    private UsableRowRenderer<T> viewRenderer;
-    private UsableClickHandler<T> rowClickHandler;
-    private UsableClickHandler<T> rowLongClickHandler;
+    public UsableRecyclerAdapter(List<UsableRow> items) {
+        this.items = items;
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        UsableRow item = items.get(position);
+        return item.view();
+    }
 
     @NonNull
     @Override
-    public UsableViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int i) {
+    public UsableViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())
-                .inflate(rowLayout, parent, false);
+                .inflate(viewType, parent, false);
         return new UsableViewHolder(itemView);
     }
 
     @Override
     public void onBindViewHolder(@NonNull UsableViewHolder usableViewHolder, int i) {
-        T item = items.get(i);
-        viewRenderer.render(usableViewHolder.itemView, item);
+        UsableRow item = items.get(i);
+        item.render(usableViewHolder.itemView);
     }
 
     @Override
@@ -40,13 +43,13 @@ public class UsableRecyclerAdapter<T> extends RecyclerView.Adapter<UsableViewHol
     }
 
     void onItemClick(int i) {
-        T item = items.get(i);
-        rowClickHandler.handle(item, this::notifyDataSetChanged);
+        UsableRow item = items.get(i);
+        item.onClick(this::notifyDataSetChanged);
     }
 
     void onItemLongClick(int i) {
-        T item = items.get(i);
-        rowLongClickHandler.handle(item, this::notifyDataSetChanged);
+        UsableRow item = items.get(i);
+        item.onLongClick(this::notifyDataSetChanged);
     }
 
 }

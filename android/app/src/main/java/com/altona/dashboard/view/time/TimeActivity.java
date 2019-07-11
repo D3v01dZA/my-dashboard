@@ -1,6 +1,5 @@
 package com.altona.dashboard.view.time;
 
-import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
@@ -11,15 +10,13 @@ import com.altona.dashboard.component.UsableRecycler;
 import com.altona.dashboard.service.time.Project;
 import com.altona.dashboard.service.time.TimeService;
 import com.altona.dashboard.service.time.TimeStatus;
-import com.altona.dashboard.service.time.TimeSummaryEntry;
 import com.altona.dashboard.view.SecureAppActivity;
 import com.altona.dashboard.view.util.UserInputDialog;
 
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-
-import static com.altona.dashboard.service.time.TimeService.SHORT_TIME_FORMATTER;
+import java.util.stream.Collectors;
 
 public class TimeActivity extends SecureAppActivity {
 
@@ -70,20 +67,15 @@ public class TimeActivity extends SecureAppActivity {
                         projectSpinner().setAdapter(new TimeSpinnerAdapter(this, currentProjects));
                         setCurrentStatus(timeScreen.getTimeStatus());
                         recycler().setup(
-                                R.layout.basic_row,
-                                timeScreen.getTimeSummary().get().getTimes(),
-                                this::renderRow
+                                timeScreen.getTimeSummary().get().getTimes().stream()
+                                        .map(TimeRow::new)
+                                        .collect(Collectors.toList())
                         );
                         enableInteractionAndUpdate();
                     }
                 },
                 this::logoutErrorHandler
         );
-    }
-
-    private void renderRow(View view, TimeSummaryEntry timeSummaryEntry) {
-        view.<TextView>findViewById(R.id.setting_name).setText(timeSummaryEntry.getDate().toString());
-        view.<TextView>findViewById(R.id.setting_value).setText(timeSummaryEntry.getTime().format(SHORT_TIME_FORMATTER));
     }
 
     private void createProject() {
@@ -93,7 +85,8 @@ public class TimeActivity extends SecureAppActivity {
                         serviceResponse -> onEnter(),
                         this::logoutErrorHandler
                 ),
-                () -> { });
+                () -> {
+                });
     }
 
     private TimeService timeService() {
@@ -252,7 +245,7 @@ public class TimeActivity extends SecureAppActivity {
         return findViewById(R.id.time_pause_button);
     }
 
-    protected UsableRecycler<TimeSummaryEntry> recycler() {
+    protected UsableRecycler recycler() {
         return findViewById(R.id.recycler_view_time);
     }
 

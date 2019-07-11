@@ -12,7 +12,7 @@ public class UsableRecyclerTouchListener<T> implements RecyclerView.OnItemTouchL
 
     private GestureDetector gestureDetector;
 
-    UsableRecyclerTouchListener(Context context, final UsableRecycler<T> recyclerView) {
+    UsableRecyclerTouchListener(Context context, final UsableRecycler recyclerView) {
         this.gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
             @Override
             public boolean onSingleTapUp(MotionEvent e) {

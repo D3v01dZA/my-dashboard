@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
-public class UsableRecycler<T> extends RecyclerView {
+public class UsableRecycler extends RecyclerView {
 
     public UsableRecycler(@NonNull Context context) {
         super(context);
@@ -26,31 +26,10 @@ public class UsableRecycler<T> extends RecyclerView {
     }
 
     public void setup(
-            int rowLayout,
-            List<T> items,
-            UsableRowRenderer<T> rowRenderer
-    ) {
-        setup(rowLayout, items, rowRenderer, (view, timeSummaryEntry) -> { }, (view, timeSummaryEntry) -> { });
-    }
-
-    public void setup(
-            int rowLayout,
-            List<T> items,
-            UsableRowRenderer<T> rowRenderer,
-            UsableClickHandler<T> rowClickHandler
-    ) {
-        setup(rowLayout, items, rowRenderer, rowClickHandler, (view, timeSummaryEntry) -> { });
-    }
-
-    public void setup(
-            int rowLayout,
-            List<T> items,
-            UsableRowRenderer<T> rowRenderer,
-            UsableClickHandler<T> rowClickHandler,
-            UsableClickHandler<T> rowLongClickHandler
+            List<UsableRow> items
     ) {
         setLayoutManager(new LinearLayoutManager(getContext()));
-        setAdapter(new UsableRecyclerAdapter<>(rowLayout, items, rowRenderer, rowClickHandler, rowLongClickHandler));
+        setAdapter(new UsableRecyclerAdapter(items));
         setItemAnimator(new DefaultItemAnimator());
         addOnItemTouchListener(new UsableRecyclerTouchListener<>(getContext(), this));
     }

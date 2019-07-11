@@ -32,12 +32,6 @@
             android:launchMode="singleTop"
             android:label="@string/action_login"/>
         <activity
-            android:name=".view.settings.SettingsActivity"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:launchMode="singleTop"
-            android:label="@string/action_settings"
-            android:parentActivityName=".view.main.MainActivity" />
-        <activity
             android:name=".view.configuration.ConfigurationActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:launchMode="singleTop"

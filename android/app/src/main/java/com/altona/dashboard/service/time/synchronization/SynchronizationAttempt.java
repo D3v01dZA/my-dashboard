@@ -2,10 +2,10 @@ package com.altona.dashboard.service.time.synchronization;
 
 import android.content.Context;
 
+import com.altona.dashboard.service.Settings;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.Optional;
 import java.util.function.Consumer;
 
 import lombok.Getter;
@@ -42,10 +42,12 @@ public class SynchronizationAttempt {
         return status.equals(SynchronizationStatus.PENDING);
     }
 
-    public void saveScreenshot(Context context, Consumer<String> screenshotLocation) {
-        if (screenshot != null) {
+    public void saveIfEnabled(Context context, Consumer<String> savedListener, Runnable notSavedListener) {
+        if (screenshot != null && new Settings(context).isSaveImages()) {
             screenshot.save(context, id);
-            screenshotLocation.accept(screenshot.file(id));
+            savedListener.accept(screenshot.file(id));
+        } else {
+
         }
     }
 }
