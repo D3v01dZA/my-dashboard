@@ -1,7 +1,7 @@
 package com.altona;
 
-import com.altona.service.broadcast.MockBroadcast;
-import com.altona.service.broadcast.MockFirebaseInteractor;
+import com.altona.html.MockBroadcast;
+import com.altona.html.MockBroadcastInteractor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,7 +37,7 @@ public class SpringTest {
     private ObjectMapper objectMapper;
 
     @Autowired
-    protected MockFirebaseInteractor mockFirebaseInteractor;
+    protected MockBroadcastInteractor mockFirebaseInteractor;
 
     protected MockHttpServletRequestBuilder get(String url) {
         return MockMvcRequestBuilders.get(url)

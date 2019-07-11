@@ -1,9 +1,9 @@
 package com.altona.service.synchronization;
 
+import com.altona.broadcast.broadcaster.Broadcaster;
 import com.altona.security.Encryptor;
 import com.altona.security.UserContext;
-import com.altona.service.broadcast.BroadcastMessage;
-import com.altona.service.broadcast.BroadcastService;
+import com.altona.broadcast.broadcaster.BroadcastMessage;
 import com.altona.service.project.model.Project;
 import com.altona.service.synchronization.model.Synchronization;
 import com.altona.service.synchronization.model.SynchronizationAttempt;
@@ -28,8 +28,8 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class SynchronizationService {
 
+    private Broadcaster broadcaster;
     private ObjectMapper objectMapper;
-    private BroadcastService broadcastService;
     private ApplicationContext applicationContext;
     private TransactionalThreading transactionalThreading;
     private SynchronizationRepository synchronizationRepository;
@@ -105,7 +105,7 @@ public class SynchronizationService {
             Result<Screenshot, String> result = synchronizer.synchronize(attempt);
             SynchronizationAttempt update = result.map(attempt::succeeded, attempt::failed);
             synchronizationAttemptRepository.update(userContext, update);
-            broadcastService.broadcast(userContext, BroadcastMessage.synchronization(SynchronizationAttemptBroadcast.of(update, synchronizer, project)));
+            broadcaster.broadcast(userContext, BroadcastMessage.synchronization(SynchronizationAttemptBroadcast.of(update, synchronizer, project)));
         });
     }
 

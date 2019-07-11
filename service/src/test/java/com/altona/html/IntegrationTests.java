@@ -1,11 +1,11 @@
 package com.altona.html;
 
 import com.altona.SpringTest;
-import com.altona.service.broadcast.Broadcast;
-import com.altona.service.broadcast.BroadcastDelete;
-import com.altona.service.broadcast.BroadcastMessage;
-import com.altona.service.broadcast.BroadcastUpdate;
-import com.altona.service.broadcast.MockBroadcast;
+import com.altona.broadcast.broadcaster.BroadcastMessage;
+import com.altona.broadcast.service.view.BroadcastDeleteView;
+import com.altona.broadcast.service.view.BroadcastUpdateView;
+import com.altona.broadcast.service.view.BroadcastView;
+import com.altona.broadcast.service.view.UnsavedBroadcastView;
 import com.altona.service.project.model.Project;
 import com.altona.service.synchronization.model.Synchronization;
 import com.altona.service.synchronization.model.SynchronizationAttempt;
@@ -267,71 +267,70 @@ class IntegrationTests extends SpringTest {
     @Test
     void basicBroadcastSequence() throws Exception {
         // Get all broadcasts
-        List<Broadcast> broadcasts = read(
+        List<BroadcastView> broadcastViews = read(
                 mvc.perform(get("/broadcast"))
                         .andExpect(status().isOk()),
-                new TypeReference<List<Broadcast>>() {
+                new TypeReference<List<BroadcastView>>() {
                 }
         );
-        assertTrue(broadcasts.isEmpty());
+        assertTrue(broadcastViews.isEmpty());
 
         // Change broadcast
-        Broadcast broadcast = read(
-                mvc.perform(post("/broadcast/update", new BroadcastUpdate("B", "A")))
+        BroadcastView broadcastView = read(
+                mvc.perform(post("/broadcast/update", new BroadcastUpdateView("B", "A")))
                         .andExpect(status().isOk()),
-                Broadcast.class
+                BroadcastView.class
         );
-        assertEquals("A", broadcast.getBroadcast());
+        assertEquals("A", broadcastView.getBroadcast());
 
         // Change broadcast to same
-        Broadcast broadcastDuplicated = read(
-                mvc.perform(post("/broadcast/update", new BroadcastUpdate("B", "A")))
+        BroadcastView broadcastViewDuplicated = read(
+                mvc.perform(post("/broadcast/update", new BroadcastUpdateView("B", "A")))
                         .andExpect(status().isOk()),
-                Broadcast.class
+                BroadcastView.class
         );
-        assertEquals("A", broadcastDuplicated.getBroadcast());
-        assertEquals(broadcast.getId(), broadcastDuplicated.getId());
+        assertEquals("A", broadcastViewDuplicated.getBroadcast());
+        assertEquals(broadcastView.getId(), broadcastViewDuplicated.getId());
 
         // Get all broadcasts
-        List<Broadcast> broadcastsAfterCreate = read(
+        List<BroadcastView> broadcastsAfterCreate = read(
                 mvc.perform(get("/broadcast"))
                         .andExpect(status().isOk()),
-                new TypeReference<List<Broadcast>>() {
+                new TypeReference<List<BroadcastView>>() {
                 }
         );
         assertEquals(1, broadcastsAfterCreate.size());
         assertTrue(broadcastsAfterCreate.stream().anyMatch(b -> b.getBroadcast().equals("A")));
 
         // Change broadcast, removing old
-        Broadcast broadcastUpdate = read(
-                mvc.perform(post("/broadcast/update", new BroadcastUpdate("A", "B")))
+        BroadcastView broadcastViewUpdate = read(
+                mvc.perform(post("/broadcast/update", new BroadcastUpdateView("A", "B")))
                         .andExpect(status().isOk()),
-                Broadcast.class
+                BroadcastView.class
         );
-        assertEquals("B", broadcastUpdate.getBroadcast());
+        assertEquals("B", broadcastViewUpdate.getBroadcast());
 
         //
-        List<Broadcast> broadcastsAfterUpdate = read(
+        List<BroadcastView> broadcastsAfterUpdate = read(
                 mvc.perform(get("/broadcast"))
                         .andExpect(status().isOk()),
-                new TypeReference<List<Broadcast>>() {
+                new TypeReference<List<BroadcastView>>() {
                 }
         );
         assertEquals(1, broadcastsAfterUpdate.size());
         assertTrue(broadcastsAfterUpdate.stream().anyMatch(b -> b.getBroadcast().equals("B")));
 
-        Broadcast broadcastDelete = read(
-                mvc.perform(post("/broadcast/delete", new BroadcastDelete("B")))
+        UnsavedBroadcastView broadcastViewDelete = read(
+                mvc.perform(post("/broadcast/delete", new BroadcastDeleteView("B")))
                         .andExpect(status().isOk())
                         .andExpect(content().contentType(APPLICATION_JSON_UTF8))
                         .andReturn()
                         .getResponse().getContentAsByteArray(),
-                Broadcast.class
+                UnsavedBroadcastView.class
         );
-        assertEquals("B", broadcastDelete.getBroadcast());
-        assertEquals(broadcastUpdate.getId(), broadcastDelete.getId());
+        assertEquals("B", broadcastViewDelete.getBroadcast());
 
-        mvc.perform(get("/broadcast/" + broadcastDelete.getId()))
+        mvc.perform(get("/broadcast/" + broadcastViewUpdate.getId()))
                 .andExpect(status().isNotFound());
     }
 

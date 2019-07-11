@@ -1,4 +1,4 @@
-package com.altona.service.broadcast;
+package com.altona.broadcast.broadcaster;
 
 import com.altona.security.User;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -7,7 +7,11 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.collect.Maps;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
-import com.google.firebase.messaging.*;
+import com.google.firebase.messaging.AndroidConfig;
+import com.google.firebase.messaging.BatchResponse;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.FirebaseMessagingException;
+import com.google.firebase.messaging.MulticastMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
@@ -17,16 +21,17 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
 @Profile("!test")
-public class DefaultFirebaseInteractor implements FirebaseInteractor {
+public class DefaultBroadcastInteractor implements BroadcastInteractor {
 
     private FirebaseMessaging firebaseMessaging;
     private ObjectMapper objectMapper;
 
-    public DefaultFirebaseInteractor(@Value("${firebase.key}") String firebaseKeyLocation, ObjectMapper objectMapper) throws IOException {
+    public DefaultBroadcastInteractor(@Value("${firebase.key}") String firebaseKeyLocation, ObjectMapper objectMapper) throws IOException {
         FileInputStream file = new FileInputStream(firebaseKeyLocation);
         FirebaseOptions options = new FirebaseOptions.Builder()
                 .setCredentials(GoogleCredentials.fromStream(file))
@@ -36,7 +41,7 @@ public class DefaultFirebaseInteractor implements FirebaseInteractor {
     }
 
     @Override
-    public void send(User user, List<String> tokens, BroadcastMessage<?> broadcastMessage) {
+    public void send(User user, List<BroadcastToken> tokens, BroadcastMessage<?> broadcastMessage) {
         try {
             Map<String, String> data = Maps.newHashMap();
             data.put("type", broadcastMessage.getType().name());
@@ -47,7 +52,11 @@ public class DefaultFirebaseInteractor implements FirebaseInteractor {
                                     .putAllData(data)
                                     .build()
                     )
-                    .addAllTokens(tokens)
+                    .addAllTokens(
+                            tokens.stream()
+                                    .map(BroadcastToken::getToken)
+                                    .collect(Collectors.toList())
+                    )
                     .build();
 
             BatchResponse response = firebaseMessaging.sendMulticast(message);

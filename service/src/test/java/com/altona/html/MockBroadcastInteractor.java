@@ -1,5 +1,8 @@
-package com.altona.service.broadcast;
+package com.altona.html;
 
+import com.altona.broadcast.broadcaster.BroadcastInteractor;
+import com.altona.broadcast.broadcaster.BroadcastMessage;
+import com.altona.broadcast.broadcaster.BroadcastToken;
 import com.altona.security.User;
 import com.altona.util.Result;
 import org.springframework.stereotype.Service;
@@ -7,7 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class MockFirebaseInteractor implements FirebaseInteractor {
+public class MockBroadcastInteractor implements BroadcastInteractor {
 
     private static final int TIMEOUT = 30000;
 
@@ -15,7 +18,7 @@ public class MockFirebaseInteractor implements FirebaseInteractor {
     private volatile RuntimeException exception;
 
     @Override
-    public void send(User user, List<String> tokens, BroadcastMessage<?> broadcastMessage) {
+    public void send(User user, List<BroadcastToken> tokens, BroadcastMessage<?> broadcastMessage) {
         if (mockBroadcast != null) {
             exception = new RuntimeException("Received multiple broadcasts");
         }

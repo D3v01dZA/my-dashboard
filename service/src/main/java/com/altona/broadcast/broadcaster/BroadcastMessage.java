@@ -1,4 +1,4 @@
-package com.altona.service.broadcast;
+package com.altona.broadcast.broadcaster;
 
 import com.altona.service.synchronization.model.SynchronizationAttemptBroadcast;
 import com.altona.service.time.model.control.TimeStatus;
