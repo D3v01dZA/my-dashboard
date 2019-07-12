@@ -7,11 +7,13 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioManager;
 import android.os.Build;
 import android.os.IBinder;
+
 import androidx.core.app.NotificationCompat;
 
-import com.altona.dashboard.service.time.SynchronizationAttemptNotificationData;
+import com.altona.dashboard.service.Settings;
 import com.altona.dashboard.service.time.TimeStatus;
 import com.altona.dashboard.service.time.synchronization.NotificationData;
 
@@ -30,12 +32,19 @@ public class TimeNotification extends Service {
     private static final int TIME_INTENT_CODE = 123981290;
 
     public static void notify(Context context, TimeStatus timeStatus) {
+        Settings settings = new Settings(context);
         if (!timeStatus.requiresNotification()) {
             context.stopService(new Intent(context, TimeNotification.class));
+            if (settings.isDoNotDisturb()) {
+                disableDoNotDisturb(context, settings);
+            }
         } else {
             Intent intent = new Intent(context, TimeNotification.class);
             intent.putExtra(TIME_STATUS, timeStatus);
             context.startForegroundService(intent);
+            if (settings.isDoNotDisturb()) {
+                enableDoNotDisturb(context, settings);
+            }
         }
     }
 
@@ -54,6 +63,20 @@ public class TimeNotification extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+    }
+
+    private static void enableDoNotDisturb(Context context, Settings settings) {
+        if (!settings.hasPriorDoNotDisturbState()) {
+            AudioManager audioManager = context.getSystemService(AudioManager.class);
+            settings.setPriorDoNotDisturbState(audioManager.getRingerMode());
+            audioManager.setRingerMode(AudioManager.RINGER_MODE_VIBRATE);
+        }
+    }
+
+    private static void disableDoNotDisturb(Context context, Settings settings) {
+        AudioManager audioManager = context.getSystemService(AudioManager.class);
+        settings.getPriorDoNotDisturbState().ifPresent(audioManager::setRingerMode);
+        settings.clearPriorDoNotDisturbState();
     }
 
     private static Notification showNotification(Context context, TimeStatus timeStatus) {

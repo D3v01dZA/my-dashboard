@@ -38,7 +38,7 @@ public class ConfigurationActivity extends SecureAppActivity {
     }
 
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-
+        forceRefresh();
     }
 
     private UsableRecycler recycler() {
@@ -50,6 +50,7 @@ public class ConfigurationActivity extends SecureAppActivity {
         UsableRecycler recycler = recycler();
         List<UsableRow> usableRows = new ArrayList<>();
         usableRows.add(new StorageRow(this, settings));
+        usableRows.add(new DisturbRow(this, settings));
         recycler.setup(usableRows);
     }
 

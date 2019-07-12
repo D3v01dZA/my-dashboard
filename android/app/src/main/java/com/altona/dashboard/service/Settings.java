@@ -1,6 +1,7 @@
 package com.altona.dashboard.service;
 
 import android.Manifest;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -20,6 +21,8 @@ public class Settings {
     private static final String UNSAVED_FIREBASE_ID = "firebase_unsaved_id";
     private static final String DELETE_FIREBASE_ID = "delete_firebase_id";
     private static final String SAVE_IMAGES = "save_images";
+    private static final String DO_NOT_DISTURB = "do_not_disturb";
+    private static final String PRIOR_DO_NOT_DISTURB_STATE = "prior_do_not_disturb";
 
     private Context context;
     private SharedPreferences sharedPreferences;
@@ -123,11 +126,46 @@ public class Settings {
     }
 
     public boolean isSaveImages() {
-        return preferenceIsSaveImages() && haveWritePermission();
+        return sharedPreferences.getBoolean(SAVE_IMAGES, false) && haveWritePermission();
     }
 
-    private boolean preferenceIsSaveImages() {
-        return sharedPreferences.getBoolean(SAVE_IMAGES, false);
+    public boolean haveDoNotDisturbPermission() {
+        NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+        return notificationManager.isNotificationPolicyAccessGranted();
+    }
+
+    public void setDoNotDisturb(boolean doNotDisturb) {
+        sharedPreferences.edit()
+                .putBoolean(DO_NOT_DISTURB, doNotDisturb)
+                .apply();
+    }
+
+    public boolean isDoNotDisturb() {
+        return sharedPreferences.getBoolean(DO_NOT_DISTURB, false) && haveDoNotDisturbPermission();
+    }
+
+    public void setPriorDoNotDisturbState(int mode) {
+        sharedPreferences.edit()
+                .putInt(PRIOR_DO_NOT_DISTURB_STATE, mode)
+                .apply();
+    }
+
+    public boolean hasPriorDoNotDisturbState() {
+        return getPriorDoNotDisturbState().isPresent();
+    }
+
+    public Optional<Integer> getPriorDoNotDisturbState() {
+        int value = sharedPreferences.getInt(PRIOR_DO_NOT_DISTURB_STATE, -1);
+        if (value == -1) {
+            return Optional.empty();
+        }
+        return Optional.of(value);
+    }
+
+    public void clearPriorDoNotDisturbState() {
+        sharedPreferences.edit()
+                .remove(PRIOR_DO_NOT_DISTURB_STATE)
+                .apply();
     }
 
 }

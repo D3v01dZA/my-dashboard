@@ -157,6 +157,11 @@ public abstract class BaseActivity extends AppCompatActivity implements Navigati
         return false;
     }
 
+    protected void forceRefresh() {
+        finish();
+        startActivity(getIntent());
+    }
+
     protected abstract void create();
 
     protected abstract void enter();
