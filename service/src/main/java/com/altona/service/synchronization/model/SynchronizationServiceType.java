@@ -7,6 +7,9 @@ import com.altona.service.synchronization.maconomy.model.MaconomyConfiguration;
 import com.altona.service.synchronization.netsuite.NetsuiteBrowser;
 import com.altona.service.synchronization.netsuite.NetsuiteSynchronizer;
 import com.altona.service.synchronization.netsuite.model.NetsuiteConfiguration;
+import com.altona.service.synchronization.openair.OpenairBrowser;
+import com.altona.service.synchronization.openair.OpenairSynchronizer;
+import com.altona.service.synchronization.openair.model.OpenairConfiguration;
 import com.altona.service.synchronization.test.FailingSynchronizer;
 import com.altona.service.synchronization.test.SucceedingBrowser;
 import com.altona.service.synchronization.test.SucceedingSynchronizer;
@@ -64,6 +67,28 @@ public enum SynchronizationServiceType {
                             synchronization,
                             request,
                             netsuiteConfiguration
+                    )
+            );
+        }
+    },
+    OPENAIR {
+        @Override
+        public boolean hasValidConfiguration(ObjectMapper objectMapper, Synchronization synchronization) {
+            return SynchronizationServiceType.checkConfiguration(objectMapper, synchronization, OpenairConfiguration.class);
+        }
+
+        @Override
+        public Result<Synchronizer, SynchronizationError> createService(ApplicationContext applicationContext, Synchronization synchronization, SynchronizationRequest request) {
+            return SynchronizationServiceType.readJson(
+                    applicationContext,
+                    synchronization,
+                    OpenairConfiguration.class,
+                    openairConfiguration -> new OpenairSynchronizer(
+                            applicationContext.getBean(TimeService.class),
+                            applicationContext.getBean(OpenairBrowser.class),
+                            synchronization,
+                            request,
+                            openairConfiguration
                     )
             );
         }

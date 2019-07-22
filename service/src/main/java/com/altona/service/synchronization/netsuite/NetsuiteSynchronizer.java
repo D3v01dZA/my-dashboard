@@ -1,6 +1,7 @@
 package com.altona.service.synchronization.netsuite;
 
 import com.altona.service.synchronization.Screenshot;
+import com.altona.service.synchronization.SynchronizationException;
 import com.altona.service.synchronization.Synchronizer;
 import com.altona.service.synchronization.model.Synchronization;
 import com.altona.service.synchronization.model.SynchronizationAttempt;
@@ -35,6 +36,7 @@ public class NetsuiteSynchronizer implements Synchronizer {
     private final NetsuiteBrowser netsuiteBrowser;
 
     // Configuration
+    @NonNull
     private final Synchronization synchronization;
 
     @NonNull
@@ -49,10 +51,11 @@ public class NetsuiteSynchronizer implements Synchronizer {
     }
 
     @Override
-    public Result<Screenshot, String> synchronize(SynchronizationAttempt attempt) {
+    public Screenshot synchronize(SynchronizationAttempt attempt) throws SynchronizationException {
         log.info("Synchronization {}: Synchronizing Netsuite {} periods back", synchronization.getId(), request.getPeriodsBack());
         return netsuiteBrowser.login(attempt, request, netsuiteConfiguration)
-                .successf(netsuiteContext -> synchronizeTime(attempt, netsuiteContext));
+                .successf(netsuiteContext -> synchronizeTime(attempt, netsuiteContext))
+                .orElseThrow(SynchronizationException::withoutScreenshot);
     }
 
     private Result<Screenshot, String> synchronizeTime(SynchronizationAttempt attempt, NetsuiteContext netsuiteContext) {
@@ -100,7 +103,7 @@ public class NetsuiteSynchronizer implements Synchronizer {
                             } else {
                                 log.info("No Time Difference Found");
                             }
-                            return Result.success(Screenshot.take(netsuiteContext));
+                            return Result.success(netsuiteContext.takeScreenshot());
                         },
                         summaryFailure -> Result.failure(summaryFailure.getMessage())
                 );

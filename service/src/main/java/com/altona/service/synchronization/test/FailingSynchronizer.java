@@ -1,10 +1,10 @@
 package com.altona.service.synchronization.test;
 
 import com.altona.service.synchronization.Screenshot;
+import com.altona.service.synchronization.SynchronizationException;
 import com.altona.service.synchronization.Synchronizer;
 import com.altona.service.synchronization.model.Synchronization;
 import com.altona.service.synchronization.model.SynchronizationAttempt;
-import com.altona.util.Result;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,7 +20,7 @@ public class FailingSynchronizer implements Synchronizer {
     }
 
     @Override
-    public Result<Screenshot, String> synchronize(SynchronizationAttempt attempt) {
+    public Screenshot synchronize(SynchronizationAttempt attempt) throws SynchronizationException {
         log.info("Synchronizing");
         try {
             // Just give us some time
@@ -28,7 +28,7 @@ public class FailingSynchronizer implements Synchronizer {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        return Result.failure("This synchronizer always fails");
+        throw SynchronizationException.withoutScreenshot("This synchronizer always fails");
     }
 
 }

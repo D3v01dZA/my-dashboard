@@ -7,9 +7,9 @@ import org.openqa.selenium.WebDriver;
 
 public interface Screenshotter extends TakesScreenshot, WebDriver {
 
-    default String takeScreenshot() {
+    default Screenshot takeScreenshot() {
         manage().window().setSize(new Dimension(3000, 3000));
-        return getScreenshotAs(OutputType.BASE64);
+        return new Screenshot(getScreenshotAs(OutputType.BASE64));
     }
 
 }

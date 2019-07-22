@@ -102,8 +102,15 @@ public class SynchronizationService {
 
     private void synchronizeInBackground(UserContext userContext, Synchronizer synchronizer, SynchronizationAttempt attempt, Project project) {
         transactionalThreading.executeInTransaction(() -> {
-            Result<Screenshot, String> result = synchronizer.synchronize(attempt);
-            SynchronizationAttempt update = result.map(attempt::succeeded, attempt::failed);
+            SynchronizationAttempt update;
+            try {
+                Screenshot result = synchronizer.synchronize(attempt);
+                update = attempt.succeeded(result);
+            } catch (SynchronizationException ex) {
+                update = attempt.failed(ex);
+            } catch (RuntimeException ex) {
+                update = attempt.failed(ex);
+            }
             synchronizationAttemptRepository.update(userContext, update);
             broadcaster.broadcast(userContext, BroadcastMessage.synchronization(SynchronizationAttemptBroadcast.of(update, synchronizer, project)));
         });

@@ -55,7 +55,7 @@ public class NetsuiteBrowser {
                 return answerSecurityQuestion(attempt, context, request, configuration);
             }
             return verifyLoggedIn(attempt, request, context);
-        } catch (Exception ex) {
+        } catch (RuntimeException ex) {
             log.error("Exception logging in to Netsuite ", ex);
             close(attempt, context, request);
             return Result.failure("Exception occurred while logging in");

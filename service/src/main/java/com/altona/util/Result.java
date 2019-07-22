@@ -60,4 +60,11 @@ public class Result<T, E> {
         return whenError.apply(error);
     }
 
+    public <R extends Exception> T orElseThrow(Function<? super E, ? extends R> exceptionFunction) throws R {
+        if (success != null) {
+            return success;
+        }
+        throw exceptionFunction.apply(error);
+    }
+
 }

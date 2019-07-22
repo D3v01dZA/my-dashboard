@@ -1,6 +1,7 @@
 package com.altona.service.synchronization.model;
 
 import com.altona.service.synchronization.Screenshot;
+import com.altona.service.synchronization.SynchronizationException;
 import com.altona.service.synchronization.Synchronizer;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -37,8 +38,24 @@ public class SynchronizationAttempt {
         return new SynchronizationAttempt(id, SynchronizationStatus.SUCCESS, null, screenshot, synchronizationId);
     }
 
-    public SynchronizationAttempt failed(String message) {
-        return new SynchronizationAttempt(id, SynchronizationStatus.FAILURE, message, null, synchronizationId);
+    public SynchronizationAttempt failed(SynchronizationException ex) {
+        return new SynchronizationAttempt(
+                id,
+                SynchronizationStatus.FAILURE,
+                message,
+                ex.getScreenshot().orElse(null),
+                synchronizationId
+        );
+    }
+
+    public SynchronizationAttempt failed(Exception ex) {
+        return new SynchronizationAttempt(
+                id,
+                SynchronizationStatus.FAILURE,
+                message,
+                null,
+                synchronizationId
+        );
     }
 
 }

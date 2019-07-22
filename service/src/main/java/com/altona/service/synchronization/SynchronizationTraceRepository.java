@@ -2,9 +2,7 @@ package com.altona.service.synchronization;
 
 import com.altona.security.Encryptor;
 import com.altona.service.synchronization.model.SynchronizationAttempt;
-import com.altona.service.synchronization.model.SynchronizationRequest;
 import com.altona.service.synchronization.model.SynchronizationTrace;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -20,13 +18,11 @@ import java.util.Optional;
 @Repository
 public class SynchronizationTraceRepository {
 
-    private ObjectMapper objectMapper;
     private NamedParameterJdbcTemplate namedJdbc;
     private SimpleJdbcInsert synchronizationTraceJdbcInsert;
 
     @Autowired
-    public SynchronizationTraceRepository(ObjectMapper objectMapper, NamedParameterJdbcTemplate namedJdbc, DataSource dataSource) {
-        this.objectMapper = objectMapper;
+    public SynchronizationTraceRepository(NamedParameterJdbcTemplate namedJdbc, DataSource dataSource) {
         this.namedJdbc = namedJdbc;
         this.synchronizationTraceJdbcInsert = new SimpleJdbcInsert(dataSource)
                 .withTableName("synchronization_trace")
@@ -34,8 +30,8 @@ public class SynchronizationTraceRepository {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void trace(SynchronizationAttempt attempt, SynchronizationRequest request, String stage, Screenshotter state) {
-        trace(request, new SynchronizationTrace(-1, attempt.getId(), stage, Screenshot.take(state)));
+    public void trace(SynchronizationAttempt attempt, Encryptor encryptor, String stage, Screenshotter state) {
+        trace(encryptor, new SynchronizationTrace(-1, attempt.getId(), stage, state.takeScreenshot()));
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)

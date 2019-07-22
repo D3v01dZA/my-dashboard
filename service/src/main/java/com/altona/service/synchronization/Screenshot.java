@@ -11,8 +11,4 @@ public class Screenshot {
     @NonNull
     private String base64;
 
-    public static Screenshot take(Screenshotter screenshotter) {
-        return new Screenshot(screenshotter.takeScreenshot());
-    }
-
 }

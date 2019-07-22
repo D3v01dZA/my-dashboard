@@ -58,7 +58,7 @@ public class MaconomyBrowser {
             log.info("Submitting login led to page {}", context.getCurrentUrl());
 
             return verifyLogin(attempt, request, context);
-        } catch (Exception ex) {
+        } catch (RuntimeException ex) {
             log.error("Exception logging in to Maconomy ", ex);
             close(attempt, context, request);
             return Result.failure("Exception occurred while logging in");
@@ -202,7 +202,7 @@ public class MaconomyBrowser {
                         .filter(element -> element.getText().startsWith("Log Out"))
                         .collect(MoreCollectors.onlyElement())
                         .click();
-            } catch (Exception ex) {
+            } catch (RuntimeException ex) {
                 log.error("Error encountered logging out", ex);
             } finally {
                 context.quit();

@@ -1,6 +1,7 @@
 package com.altona.service.synchronization.maconomy;
 
 import com.altona.service.synchronization.Screenshot;
+import com.altona.service.synchronization.SynchronizationException;
 import com.altona.service.synchronization.Synchronizer;
 import com.altona.service.synchronization.maconomy.model.MaconomyConfiguration;
 import com.altona.service.synchronization.maconomy.model.MaconomyContext;
@@ -49,9 +50,10 @@ public class MaconomySynchronizer implements Synchronizer {
     }
 
     @Override
-    public Result<Screenshot, String> synchronize(SynchronizationAttempt attempt) {
+    public Screenshot synchronize(SynchronizationAttempt attempt) throws SynchronizationException {
         return maconomyBrowser.login(attempt, request, configuration)
-                .successf(maconomyContext -> synchronizeTime(attempt, maconomyContext));
+                .successf(maconomyContext -> synchronizeTime(attempt, maconomyContext))
+                .orElseThrow(SynchronizationException::withoutScreenshot);
     }
 
     private Result<Screenshot, String> synchronizeTime(SynchronizationAttempt attempt, MaconomyContext context) {
@@ -105,11 +107,11 @@ public class MaconomySynchronizer implements Synchronizer {
                         log.info("Time difference found");
                         return maconomyBrowser.addLine(attempt, context, request, difference.getFromDate(), difference.getToDate(), timeData)
                                 .<Result<Screenshot, String>>map(Result::failure)
-                                .orElseGet(() -> Result.success(Screenshot.take(context)));
+                                .orElseGet(() -> Result.success(context.takeScreenshot()));
                     } else {
                         log.info("No time difference found");
                     }
-                    return Result.success(Screenshot.take(context));
+                    return Result.success(context.takeScreenshot());
                 });
     }
 
