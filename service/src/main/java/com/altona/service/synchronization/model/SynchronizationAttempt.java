@@ -42,7 +42,7 @@ public class SynchronizationAttempt {
         return new SynchronizationAttempt(
                 id,
                 SynchronizationStatus.FAILURE,
-                message,
+                ex.getMessage(),
                 ex.getScreenshot().orElse(null),
                 synchronizationId
         );
