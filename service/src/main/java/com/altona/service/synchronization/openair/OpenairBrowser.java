@@ -104,7 +104,7 @@ public class OpenairBrowser {
             timeSummary.getActualTime(date)
                     .ifPresent(time -> writeTime(day, time));
         }
-        context.waitForElement(By.id("save_grid_submit")).click();
+        context.waitForElement(By.id("timesheet_savebutton")).click();
     }
 
     public void close(SynchronizationAttempt attempt, OpenairContext context, SynchronizationRequest request) {
