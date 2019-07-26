@@ -221,7 +221,7 @@ public class OpenairBrowser {
 
         // Somehow there's something on top of this at a late stage
         Util.sleep();
-        context.get("https://www.openair.com/" + sheet.getAttribute("href"));
+        sheet.click();
         return new TimeSheetDates(from, to);
     }
 
