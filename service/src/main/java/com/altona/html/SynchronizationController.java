@@ -39,7 +39,7 @@ public class SynchronizationController {
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @RequestMapping(path = "/time/project/{projectId}/synchronization/{synchronizationId}", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(path = "/time/project/{projectId}/synchronization", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<List<Synchronization>> getSynchronizations(
             Authentication authentication,
             TimeZone timeZone,
