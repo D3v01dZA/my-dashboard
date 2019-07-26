@@ -17,6 +17,7 @@ import com.altona.util.threading.TransactionalThreading;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class SynchronizationService {
@@ -105,11 +107,14 @@ public class SynchronizationService {
             SynchronizationAttempt update;
             try {
                 Screenshot result = synchronizer.synchronize(attempt);
+                log.info("Successfully synchronized {} {}", synchronizer.getSynchronization().getService(), synchronizer.getSynchronization().getId());
                 update = attempt.succeeded(result);
             } catch (SynchronizationException ex) {
                 update = attempt.failed(ex);
+                log.info("Synchronization exception {} {}", synchronizer.getSynchronization().getService(), synchronizer.getSynchronization().getId(), ex);
             } catch (RuntimeException ex) {
                 update = attempt.failed(ex);
+                log.info("Runtime exception {} {}", synchronizer.getSynchronization().getService(), synchronizer.getSynchronization().getId(), ex);
             }
             synchronizationAttemptRepository.update(userContext, update);
             broadcaster.broadcast(userContext, BroadcastMessage.synchronization(SynchronizationAttemptBroadcast.of(update, synchronizer, project)));

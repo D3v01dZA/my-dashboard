@@ -52,7 +52,7 @@ public class SynchronizationAttempt {
         return new SynchronizationAttempt(
                 id,
                 SynchronizationStatus.FAILURE,
-                message,
+                ex.getMessage(),
                 null,
                 synchronizationId
         );
