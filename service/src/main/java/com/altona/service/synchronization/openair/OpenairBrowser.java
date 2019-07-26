@@ -11,7 +11,6 @@ import com.altona.service.synchronization.openair.model.OpenairTimeData;
 import com.altona.service.synchronization.openair.model.OpenairTimeDataList;
 import com.altona.service.time.model.summary.TimeSummary;
 import com.altona.util.LocalDateIterator;
-import com.altona.util.Util;
 import com.google.common.collect.Maps;
 import com.google.common.collect.MoreCollectors;
 import lombok.AllArgsConstructor;
@@ -20,7 +19,9 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -220,8 +221,9 @@ public class OpenairBrowser {
         LocalDate to = LocalDate.parse(matcher.group(2), TIMESHEET_NAME_DATE);
 
         // Somehow there's something on top of this at a late stage
-        Util.sleep();
-        sheet.click();
+        new WebDriverWait(context, 30)
+                .until(ExpectedConditions.elementToBeClickable(sheet))
+                .click();
         return new TimeSheetDates(from, to);
     }
 
