@@ -46,6 +46,10 @@ public class SynchronizationService {
         return Result.success(synchronizationRepository.select(encryptor, project, id).get());
     }
 
+    public List<Synchronization> getSynchronizations(Encryptor encryptor, Project project) {
+        return synchronizationRepository.select(encryptor, project);
+    }
+
     public Optional<Synchronization> getSynchronization(Encryptor encryptor, Project project, int synchronizationId) {
         return synchronizationRepository.select(encryptor, project, synchronizationId);
     }

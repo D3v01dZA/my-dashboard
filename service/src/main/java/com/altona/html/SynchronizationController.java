@@ -40,6 +40,17 @@ public class SynchronizationController {
     }
 
     @RequestMapping(path = "/time/project/{projectId}/synchronization/{synchronizationId}", method = RequestMethod.GET, produces = "application/json")
+    public ResponseEntity<List<Synchronization>> getSynchronizations(
+            Authentication authentication,
+            TimeZone timeZone,
+            @PathVariable Integer projectId
+    ) {
+        return synchronizationFacade.getSynchronizations(userService.getUserContext(authentication, timeZone), projectId)
+                .map(found -> new ResponseEntity<>(found, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @RequestMapping(path = "/time/project/{projectId}/synchronization/{synchronizationId}", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<Synchronization> getSynchronization(
             Authentication authentication,
             TimeZone timeZone,

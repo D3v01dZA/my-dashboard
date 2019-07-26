@@ -29,7 +29,13 @@ public class SynchronizationFacade {
                 .map(project -> synchronizationService.createSynchronization(userContext, project, synchronization));
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
+    public Optional<List<Synchronization>> getSynchronizations(UserContext userContext, int projectId) {
+        return projectService.project(userContext, projectId)
+                .map(project -> synchronizationService.getSynchronizations(userContext, project));
+    }
+
+    @Transactional(readOnly = true)
     public Optional<Synchronization> getSynchronization(UserContext userContext, int projectId, int synchronizationId) {
         return projectService.project(userContext, projectId)
                 .flatMap(project -> synchronizationService.getSynchronization(userContext, project, synchronizationId));
