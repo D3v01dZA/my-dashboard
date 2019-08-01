@@ -36,6 +36,7 @@ public class SynchronizationRepository {
     public int insert(Encryptor encryptor, Project project, Synchronization synchronization) {
         return synchronizationJdbcInsert.executeAndReturnKey(new MapSqlParameterSource()
                 .addValue("service", synchronization.getService().name())
+                .addValue("enabled", synchronization.isEnabled())
                 .addValue("configuration",
                         encryptor.encrypt(
                                 ObjectMapperHelper.serialize(objectMapper, synchronization.getConfiguration())
@@ -47,9 +48,10 @@ public class SynchronizationRepository {
 
     public void update(Encryptor encryptor, Project project, Synchronization synchronization) {
         int updated = namedJdbc.update(
-                "UPDATE synchronization SET service = :service, configuration = :configuration WHERE project_id = :projectId AND id = :synchronizationId",
+                "UPDATE synchronization SET enabled = :enabled, service = :service, configuration = :configuration WHERE project_id = :projectId AND id = :synchronizationId",
                 new MapSqlParameterSource()
                         .addValue("service", synchronization.getService().name())
+                        .addValue("enabled", synchronization.isEnabled())
                         .addValue("configuration",
                                 encryptor.encrypt(
                                         ObjectMapperHelper.serialize(objectMapper, synchronization.getConfiguration())
@@ -64,7 +66,7 @@ public class SynchronizationRepository {
 
     public List<Synchronization> select(Encryptor encryptor, Project project) {
         return namedJdbc.query(
-                "SELECT id, service, configuration FROM synchronization WHERE project_id = :projectId",
+                "SELECT id, enabled, service, configuration FROM synchronization WHERE project_id = :projectId",
                 new MapSqlParameterSource("projectId", project.getId()),
                 rowMapper(encryptor, objectMapper)
         );
@@ -73,7 +75,7 @@ public class SynchronizationRepository {
     public Optional<Synchronization> select(Encryptor encryptor, Project project, int id) {
         try {
             return Optional.of(namedJdbc.queryForObject(
-                    "SELECT id, service, configuration FROM synchronization WHERE project_id = :projectId and id = :id",
+                    "SELECT id, enabled, service, configuration FROM synchronization WHERE project_id = :projectId and id = :id",
                     new MapSqlParameterSource()
                             .addValue("projectId", project.getId())
                             .addValue("id", id),
@@ -93,6 +95,7 @@ public class SynchronizationRepository {
             try {
                 return new Synchronization(
                         rs.getInt("id"),
+                        rs.getBoolean("enabled"),
                         rs.getString("service"),
                         objectMapper.readValue(
                                 encryptor.decrypt(rs.getString("configuration")),

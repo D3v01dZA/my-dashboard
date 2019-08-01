@@ -22,7 +22,6 @@ import com.altona.service.time.model.control.WorkStop;
 import com.altona.service.time.util.TimeInfo;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Iterables;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -349,7 +348,7 @@ class IntegrationTests extends SpringTest {
         // Create a succeeding synchronizer
         SucceedingConfiguration succeedingConfiguration = new SucceedingConfiguration("https://www.google.com");
         Synchronization synchronization = read(
-                mvc.perform(post("/time/project/" + project.getId() + "/synchronization", new Synchronization(12, SynchronizationServiceType.SUCCEEDING, objectMapper.valueToTree(succeedingConfiguration))))
+                mvc.perform(post("/time/project/" + project.getId() + "/synchronization", new Synchronization(12, true, SynchronizationServiceType.SUCCEEDING, objectMapper.valueToTree(succeedingConfiguration))))
                         .andExpect(status().isCreated()),
                 Synchronization.class
         );
@@ -413,7 +412,7 @@ class IntegrationTests extends SpringTest {
 
         // Create a failing synchronizer
         Synchronization failingSynchronization = read(
-                mvc.perform(post("/time/project/" + project.getId() + "/synchronization", new Synchronization(12, SynchronizationServiceType.FAILING, objectMapper.createObjectNode())))
+                mvc.perform(post("/time/project/" + project.getId() + "/synchronization", new Synchronization(12, true, SynchronizationServiceType.FAILING, objectMapper.createObjectNode())))
                         .andExpect(status().isCreated()),
                 Synchronization.class
         );

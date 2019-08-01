@@ -184,4 +184,16 @@
                                  referencedTableName="synchronization_attempt" referencedColumnNames="id"/>
     </changeSet>
 
+    <changeSet id="add_enabled_column_synchronization" author="chris">
+
+        <addColumn tableName="synchronization">
+            <column name="enabled" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <dropDefaultValue tableName="synchronization" columnName="enabled"/>
+
+    </changeSet>
+
 </databaseChangeLog>

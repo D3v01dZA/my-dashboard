@@ -82,6 +82,7 @@ public class SynchronizationService {
 
     public List<SynchronizationAttempt> synchronize(UserContext userContext, Project project) {
         return synchronizationRepository.select(userContext, project).stream()
+                .filter(Synchronization::isEnabled)
                 .map(synchronization -> createService(synchronization, new SynchronizationRequest(synchronization.getId(), userContext, project, SynchronizationCommand.current())))
                 .map(result -> synchronize(userContext, project, result))
                 .collect(Collectors.toList());
