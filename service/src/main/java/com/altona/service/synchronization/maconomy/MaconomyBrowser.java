@@ -77,6 +77,9 @@ public class MaconomyBrowser {
                     if (heading.equals(newHeading)) {
                         throw new NoSuchElementException(String.format("Heading %s is not different to %s", heading, newHeading));
                     }
+                    if (!WEEK_REGEX.matcher(newHeading).matches()) {
+                        throw new NoSuchElementException(String.format("Heading %s is not yet correct", newHeading));
+                    }
                     return headingElement.getText();
                 });
         log.info("Arrived at period {}", periodHeading);
