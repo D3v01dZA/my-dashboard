@@ -1,13 +1,26 @@
 package com.altona.util;
 
-public interface Util {
+import lombok.extern.slf4j.Slf4j;
 
-    static void sleep() {
+@Slf4j
+public final class Util {
+
+    public static void sleep(int millis) {
         try {
-            Thread.sleep(3000);
+            log.info("Sleeping for {}", millis);
+            Thread.sleep(millis);
+            log.info("Finished sleeping for {}", millis);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static void sleep() {
+        sleep(3000);
+    }
+
+    private Util() {
+        throw new IllegalStateException("Don't Construct Me");
     }
 
 }

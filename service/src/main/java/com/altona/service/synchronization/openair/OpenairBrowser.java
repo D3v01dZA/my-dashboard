@@ -11,7 +11,6 @@ import com.altona.service.synchronization.openair.model.OpenairTimeData;
 import com.altona.service.synchronization.openair.model.OpenairTimeDataList;
 import com.altona.service.time.model.summary.TimeSummary;
 import com.altona.util.LocalDateIterator;
-import com.altona.util.Util;
 import com.google.common.collect.Maps;
 import com.google.common.collect.MoreCollectors;
 import lombok.AllArgsConstructor;
@@ -219,9 +218,8 @@ public class OpenairBrowser {
         LocalDate from = LocalDate.parse(matcher.group(1), TIMESHEET_NAME_DATE);
         LocalDate to = LocalDate.parse(matcher.group(2), TIMESHEET_NAME_DATE);
 
-        // Somehow there's something on top of this at a late stage
-        Util.sleep();
-        sheet.click();
+        // Can't click the anchor so just do that manually
+        context.get(sheet.getAttribute("href"));
         return new TimeSheetDates(from, to);
     }
 

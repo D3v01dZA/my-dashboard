@@ -38,10 +38,6 @@ public class OpenairContext implements WebDriver, TakesScreenshot, Screenshotter
                 });
     }
 
-    public void waitForElementDisappear(By by) {
-
-    }
-
     public List<WebElement> waitForElements(By parent, By child, String text, int size) {
         return new WebDriverWait(this, 30)
                 .until(driver -> {
