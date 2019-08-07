@@ -2,6 +2,7 @@ package com.altona;
 
 import com.altona.html.MockBroadcast;
 import com.altona.html.MockBroadcastInteractor;
+import com.altona.service.time.util.TimeInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,6 +16,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -28,9 +30,11 @@ import java.util.Base64;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -40,7 +44,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public abstract class SpringTest {
 
     @Autowired
-    private ObjectMapper objectMapper;
+    protected MockMvc mvc;
+
+    @Autowired
+    protected ObjectMapper objectMapper;
 
     @Autowired
     protected MockBroadcastInteractor mockFirebaseInteractor;
@@ -48,8 +55,11 @@ public abstract class SpringTest {
     @Autowired
     protected NamedParameterJdbcTemplate jdbcTemplate;
 
+    @Autowired
+    protected TimeInfo timeInfo;
+
     @PostConstruct
-    public void postConstruct() {
+    public void postConstruct() throws Exception {
         String username = getTestUsername();
         Map<String, Object> queryMap = jdbcTemplate.queryForMap(
                 "SELECT count(id) FROM users WHERE username = :username",
@@ -66,6 +76,11 @@ public abstract class SpringTest {
             );
             Assertions.assertNotNull(insertMap.get("id"), "Could not insert username " + username);
         }
+        String root = mvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse().getContentAsString();
+        assertEquals(String.format("Root Controller %s!", getTestUsername()), root);
     }
 
     protected abstract String getTestUsername();

@@ -8,14 +8,10 @@ import com.altona.service.time.model.control.BreakStop;
 import com.altona.service.time.model.control.TimeStatus;
 import com.altona.service.time.model.control.WorkStart;
 import com.altona.service.time.model.control.WorkStop;
-import com.altona.service.time.util.TimeInfo;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalTime;
 import java.util.List;
@@ -31,12 +27,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class TimeTest extends SpringTest {
 
-    @Autowired
-    private MockMvc mvc;
-
-    @MockBean
-    private TimeInfo timeInfo;
-
     @Override
     protected String getTestUsername() {
         return "sequence";
@@ -44,13 +34,6 @@ public class TimeTest extends SpringTest {
 
     @Test
     void basicTimeSequence() throws Exception {
-        String root = mvc.perform(get("/"))
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse().getContentAsString();
-
-        assertEquals("Root Controller test!", root);
-
         Project project = read(
                 mvc.perform(post("/time/project", new Project(11, "Test Project")))
                         .andExpect(status().isCreated()),
@@ -110,7 +93,7 @@ public class TimeTest extends SpringTest {
         );
         assertEquals(WorkStart.Result.WORK_STARTED, workStart.getResult());
         MockBroadcast workStartBroadcast = getBroadcast();
-        assertEquals("test", workStartBroadcast.getUser().getUsername());
+        assertEquals(getTestUsername(), workStartBroadcast.getUser().getUsername());
         assertEquals(BroadcastMessage.Type.TIME, workStartBroadcast.getBroadcastMessage().getType());
         TimeStatus workStartTimeStatus = assertInstanceOf(workStartBroadcast.getBroadcastMessage().getMessage(), TimeStatus.class);
         assertEquals(TimeStatus.Status.WORK, workStartTimeStatus.getStatus());
@@ -147,7 +130,7 @@ public class TimeTest extends SpringTest {
         assertEquals(BreakStart.Result.BREAK_STARTED, breakStart.getResult());
         assertTrue(breakStart.getTimeId().isPresent());
         MockBroadcast breakStartBroadcast = getBroadcast();
-        assertEquals("test", breakStartBroadcast.getUser().getUsername());
+        assertEquals(getTestUsername(), breakStartBroadcast.getUser().getUsername());
         assertEquals(BroadcastMessage.Type.TIME, breakStartBroadcast.getBroadcastMessage().getType());
         TimeStatus breakStartTimeStatus = assertInstanceOf(breakStartBroadcast.getBroadcastMessage().getMessage(), TimeStatus.class);
         assertEquals(TimeStatus.Status.BREAK, breakStartTimeStatus.getStatus());
@@ -174,7 +157,7 @@ public class TimeTest extends SpringTest {
         assertEquals(BreakStop.Result.BREAK_STOPPED, breakStop.getResult());
         assertEquals(breakStop.getTimeId(), breakStart.getTimeId());
         MockBroadcast breakStopBroadcast = getBroadcast();
-        assertEquals("test", breakStopBroadcast.getUser().getUsername());
+        assertEquals(getTestUsername(), breakStopBroadcast.getUser().getUsername());
         assertEquals(BroadcastMessage.Type.TIME, breakStopBroadcast.getBroadcastMessage().getType());
         TimeStatus breakStopTimeStatus = assertInstanceOf(breakStopBroadcast.getBroadcastMessage().getMessage(), TimeStatus.class);
         assertEquals(TimeStatus.Status.WORK, breakStopTimeStatus.getStatus());
@@ -192,7 +175,7 @@ public class TimeTest extends SpringTest {
         assertEquals(Optional.of(workStart.getTimeId()), workStop.getWorkTimeId());
         assertFalse(workStop.getBreakTimeId().isPresent());
         MockBroadcast workStopBroadcast = getBroadcast();
-        assertEquals("test", workStopBroadcast.getUser().getUsername());
+        assertEquals(getTestUsername(), workStopBroadcast.getUser().getUsername());
         assertEquals(BroadcastMessage.Type.TIME, workStopBroadcast.getBroadcastMessage().getType());
         TimeStatus workStopTimeStatus = assertInstanceOf(workStopBroadcast.getBroadcastMessage().getMessage(), TimeStatus.class);
         assertEquals(TimeStatus.Status.NONE, workStopTimeStatus.getStatus());
@@ -208,7 +191,7 @@ public class TimeTest extends SpringTest {
         );
         assertEquals(WorkStart.Result.WORK_STARTED, workStartTwo.getResult());
         MockBroadcast workStartTwoBroadcast = getBroadcast();
-        assertEquals("test", workStartTwoBroadcast.getUser().getUsername());
+        assertEquals(getTestUsername(), workStartTwoBroadcast.getUser().getUsername());
         assertEquals(BroadcastMessage.Type.TIME, workStartTwoBroadcast.getBroadcastMessage().getType());
         TimeStatus workStartTwoTimeStatus = assertInstanceOf(workStartTwoBroadcast.getBroadcastMessage().getMessage(), TimeStatus.class);
         assertEquals(TimeStatus.Status.WORK, workStartTwoTimeStatus.getStatus());
@@ -225,7 +208,7 @@ public class TimeTest extends SpringTest {
         assertEquals(BreakStart.Result.BREAK_STARTED, breakStartTwo.getResult());
         assertTrue(breakStartTwo.getTimeId().isPresent());
         MockBroadcast breakStartTwoBroadcast = getBroadcast();
-        assertEquals("test", breakStartTwoBroadcast.getUser().getUsername());
+        assertEquals(getTestUsername(), breakStartTwoBroadcast.getUser().getUsername());
         assertEquals(BroadcastMessage.Type.TIME, breakStartTwoBroadcast.getBroadcastMessage().getType());
         TimeStatus breakStartTwoTimeStatus = assertInstanceOf(breakStartTwoBroadcast.getBroadcastMessage().getMessage(), TimeStatus.class);
         assertEquals(TimeStatus.Status.BREAK, breakStartTwoTimeStatus.getStatus());
@@ -243,7 +226,7 @@ public class TimeTest extends SpringTest {
         assertEquals(Optional.of(workStartTwo.getTimeId()), workStopTwo.getWorkTimeId());
         assertEquals(breakStartTwo.getTimeId(), workStopTwo.getBreakTimeId());
         MockBroadcast workStopTwoBroadcast = getBroadcast();
-        assertEquals("test", workStopTwoBroadcast.getUser().getUsername());
+        assertEquals(getTestUsername(), workStopTwoBroadcast.getUser().getUsername());
         assertEquals(BroadcastMessage.Type.TIME, workStopTwoBroadcast.getBroadcastMessage().getType());
         TimeStatus workStopTwoTimeStatus = assertInstanceOf(workStopTwoBroadcast.getBroadcastMessage().getMessage(), TimeStatus.class);
         assertEquals(TimeStatus.Status.NONE, workStopTwoTimeStatus.getStatus());

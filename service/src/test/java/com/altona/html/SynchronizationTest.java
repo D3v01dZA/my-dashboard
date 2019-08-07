@@ -10,14 +10,11 @@ import com.altona.service.synchronization.model.SynchronizationServiceType;
 import com.altona.service.synchronization.model.SynchronizationStatus;
 import com.altona.service.synchronization.model.SynchronizationTrace;
 import com.altona.service.synchronization.test.model.SucceedingConfiguration;
-import com.altona.service.time.util.TimeInfo;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Iterables;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 import java.util.Optional;
@@ -31,13 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class SynchronizationTest extends SpringTest {
 
     @Autowired
-    private MockMvc mvc;
-
-    @Autowired
     private ObjectMapper objectMapper;
-
-    @MockBean
-    private TimeInfo timeInfo;
 
     @Override
     protected String getTestUsername() {
@@ -90,7 +81,7 @@ class SynchronizationTest extends SpringTest {
 
         // Fetch the broadcast after synchronizing
         MockBroadcast attemptBroadcast = getBroadcast();
-        assertEquals("test", attemptBroadcast.getUser().getUsername());
+        assertEquals(getTestUsername(), attemptBroadcast.getUser().getUsername());
         assertEquals(BroadcastMessage.Type.SYNCHRONIZE_ATTEMPT, attemptBroadcast.getBroadcastMessage().getType());
         SynchronizationAttemptBroadcast synchronizationAttemptBroadcast = assertInstanceOf(attemptBroadcast.getBroadcastMessage().getMessage(), SynchronizationAttemptBroadcast.class);
         assertEquals(SynchronizationStatus.SUCCESS, synchronizationAttemptBroadcast.getStatus());
@@ -154,7 +145,7 @@ class SynchronizationTest extends SpringTest {
 
         // Fetch the broadcast after failing synchronizing
         MockBroadcast failingAttemptBroadcast = getBroadcast();
-        assertEquals("test", failingAttemptBroadcast.getUser().getUsername());
+        assertEquals(getTestUsername(), failingAttemptBroadcast.getUser().getUsername());
         assertEquals(BroadcastMessage.Type.SYNCHRONIZE_ATTEMPT, failingAttemptBroadcast.getBroadcastMessage().getType());
         SynchronizationAttemptBroadcast failingSynchronizationAttemptBroadcast = assertInstanceOf(failingAttemptBroadcast.getBroadcastMessage().getMessage(), SynchronizationAttemptBroadcast.class);
         assertEquals(SynchronizationStatus.FAILURE, failingSynchronizationAttemptBroadcast.getStatus());

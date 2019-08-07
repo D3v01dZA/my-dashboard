@@ -1,7 +1,10 @@
 package com.altona;
 
+import com.altona.service.time.util.ClockTimeInfo;
+import com.altona.service.time.util.TimeInfo;
 import com.opentable.db.postgres.embedded.EmbeddedPostgres;
 import com.opentable.db.postgres.embedded.LiquibasePreparer;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -21,6 +24,11 @@ public class Configuration {
         new JdbcTemplate(dataSource).execute("CREATE EXTENSION pgcrypto");
         LiquibasePreparer.forClasspathLocation(liquibase.replace("classpath:", "")).prepare(dataSource);
         return dataSource;
+    }
+
+    @Bean
+    public TimeInfo timeInfo() {
+        return Mockito.spy(new ClockTimeInfo());
     }
 
 }

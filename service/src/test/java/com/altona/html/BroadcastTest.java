@@ -7,8 +7,6 @@ import com.altona.broadcast.service.view.BroadcastView;
 import com.altona.broadcast.service.view.UnsavedBroadcastView;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
@@ -19,9 +17,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class BroadcastTest extends SpringTest {
-
-    @Autowired
-    private MockMvc mvc;
 
     @Override
     protected String getTestUsername() {
