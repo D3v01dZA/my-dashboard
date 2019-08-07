@@ -32,6 +32,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -81,6 +82,7 @@ public abstract class SpringTest {
                 .andReturn()
                 .getResponse().getContentAsString();
         assertEquals(String.format("Root Controller %s!", getTestUsername()), root);
+        doCallRealMethod().when(timeInfo).now();
     }
 
     protected abstract String getTestUsername();
