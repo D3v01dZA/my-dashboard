@@ -1,12 +1,11 @@
 package com.altona.broadcast.service.operation;
 
 import com.altona.broadcast.service.Broadcast;
-import com.altona.broadcast.service.Broadcasts;
 import com.altona.broadcast.service.UnsavedBroadcast;
-import com.altona.security.User;
+import com.altona.broadcast.service.query.BroadcastByBroadcast;
+import com.altona.context.Context;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 @AllArgsConstructor
 public class BroadcastUpdate {
@@ -16,13 +15,13 @@ public class BroadcastUpdate {
     @NonNull
     private String newBroadcast;
 
-    public Broadcast execute(Broadcasts broadcasts, NamedParameterJdbcTemplate jdbcTemplate, User user) {
+    public Broadcast execute(Context context) {
         if (oldBroadcast != null) {
-            broadcasts.broadcastByBroadcast(user, oldBroadcast)
+            new BroadcastByBroadcast(oldBroadcast, context).execute()
                     .ifPresent(Broadcast::delete);
         }
-        return broadcasts.broadcastByBroadcast(user, newBroadcast)
-                .orElseGet(() -> new UnsavedBroadcast(newBroadcast, jdbcTemplate).save(user));
+        return new BroadcastByBroadcast(newBroadcast, context).execute()
+                .orElseGet(() -> new UnsavedBroadcast(newBroadcast, context).save());
     }
 
 }

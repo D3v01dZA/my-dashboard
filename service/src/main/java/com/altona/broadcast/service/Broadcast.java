@@ -2,37 +2,33 @@ package com.altona.broadcast.service;
 
 import com.altona.broadcast.broadcaster.BroadcastToken;
 import com.altona.broadcast.service.view.BroadcastView;
-import com.altona.security.User;
+import com.altona.context.Context;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 @AllArgsConstructor
 public class Broadcast {
 
-    private final int id;
+    private int id;
 
     @NonNull
-    private final String broadcast;
+    private String broadcast;
 
     @NonNull
-    private final User user;
-
-    @NonNull
-    private final NamedParameterJdbcTemplate jdbcTemplate;
+    private Context context;
 
     public UnsavedBroadcast delete() {
-        int rows = jdbcTemplate.update(
+        int rows = context.update(
                 "DELETE FROM broadcast WHERE user_id = :userId AND id = :id",
                 new MapSqlParameterSource()
-                        .addValue("userId", user.getId())
+                        .addValue("userId", context.getUserId())
                         .addValue("id", id)
         );
         if (rows != 1) {
             throw new IllegalStateException(String.format("Could not delete broadcast with id %s - %s rows modified", id, rows));
         }
-        return new UnsavedBroadcast(broadcast, jdbcTemplate);
+        return new UnsavedBroadcast(broadcast, context);
     }
 
     public BroadcastView asView() {

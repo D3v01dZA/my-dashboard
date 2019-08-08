@@ -1,6 +1,6 @@
 package com.altona.broadcast.broadcaster;
 
-import com.altona.security.User;
+import com.altona.context.Context;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -41,7 +41,7 @@ public class DefaultBroadcastInteractor implements BroadcastInteractor {
     }
 
     @Override
-    public void send(User user, List<BroadcastToken> tokens, BroadcastMessage<?> broadcastMessage) {
+    public void send(Context context, List<BroadcastToken> tokens, BroadcastMessage<?> broadcastMessage) {
         try {
             Map<String, String> data = Maps.newHashMap();
             data.put("type", broadcastMessage.getType().name());
@@ -60,9 +60,9 @@ public class DefaultBroadcastInteractor implements BroadcastInteractor {
                     .build();
 
             BatchResponse response = firebaseMessaging.sendMulticast(message);
-            log.info("Broadcasted to user {} - {} succeeded and {} failed", user.getId(), response.getSuccessCount(), response.getFailureCount());
+            log.info("Broadcasted to user {} - {} succeeded and {} failed", context.getUserId(), response.getSuccessCount(), response.getFailureCount());
         } catch (FirebaseMessagingException | JsonProcessingException e) {
-            log.error("Broadcast to user {} failed", user.getId(), e);
+            log.error("Broadcast to user {} failed", context.getUserId(), e);
         }
     }
 

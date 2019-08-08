@@ -1,9 +1,9 @@
 package com.altona.broadcast.service.operation;
 
 import com.altona.broadcast.service.Broadcast;
-import com.altona.broadcast.service.Broadcasts;
 import com.altona.broadcast.service.UnsavedBroadcast;
-import com.altona.security.User;
+import com.altona.broadcast.service.query.BroadcastByBroadcast;
+import com.altona.context.Context;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
@@ -15,8 +15,8 @@ public class BroadcastDelete {
     @NonNull
     private String broadcast;
 
-    public Optional<UnsavedBroadcast> execute(Broadcasts broadcasts, User user) {
-        return broadcasts.broadcastByBroadcast(user, broadcast)
+    public Optional<UnsavedBroadcast> execute(Context context) {
+        return new BroadcastByBroadcast(broadcast, context).execute()
                 .map(Broadcast::delete);
     }
 

@@ -2,7 +2,7 @@ package com.altona.html;
 
 import com.altona.broadcast.broadcaster.BroadcastMessage;
 import com.altona.broadcast.broadcaster.BroadcastToken;
-import com.altona.security.User;
+import com.altona.context.Context;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -12,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 public class MockBroadcast {
 
-    private User user;
+    private Context context;
     private List<BroadcastToken> tokens;
     private BroadcastMessage<?> broadcastMessage;
 

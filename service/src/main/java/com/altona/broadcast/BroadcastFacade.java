@@ -1,11 +1,13 @@
 package com.altona.broadcast;
 
 import com.altona.broadcast.service.Broadcast;
-import com.altona.broadcast.service.operation.BroadcastDelete;
-import com.altona.broadcast.service.Broadcasts;
 import com.altona.broadcast.service.UnsavedBroadcast;
-import com.altona.security.User;
+import com.altona.broadcast.service.operation.BroadcastDelete;
 import com.altona.broadcast.service.operation.BroadcastUpdate;
+import com.altona.broadcast.service.query.BroadcastById;
+import com.altona.broadcast.service.query.BroadcastsByUser;
+import com.altona.context.Context;
+import com.altona.security.User;
 import lombok.AllArgsConstructor;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -18,27 +20,26 @@ import java.util.Optional;
 @AllArgsConstructor
 public class BroadcastFacade {
 
-    private Broadcasts broadcasts;
     private NamedParameterJdbcTemplate jdbcTemplate;
 
     @Transactional
     public Broadcast update(User user, BroadcastUpdate broadcastUpdate) {
-        return broadcastUpdate.execute(broadcasts, jdbcTemplate, user);
+        return broadcastUpdate.execute(Context.of(user, jdbcTemplate));
     }
 
     @Transactional
     public Optional<UnsavedBroadcast> delete(User user, BroadcastDelete broadcastDelete) {
-        return broadcastDelete.execute(broadcasts, user);
+        return broadcastDelete.execute(Context.of(user, jdbcTemplate));
     }
 
     @Transactional(readOnly = true)
     public Optional<Broadcast> broadcast(User user, int id) {
-        return broadcasts.broadcast(user, id);
+        return new BroadcastById(id, Context.of(user, jdbcTemplate)).execute();
     }
 
     @Transactional(readOnly = true)
     public List<Broadcast> broadcasts(User user) {
-        return broadcasts.broadcasts(user);
+        return new BroadcastsByUser(Context.of(user, jdbcTemplate)).execute();
     }
 
 }

@@ -81,7 +81,7 @@ class SynchronizationTest extends SpringTest {
 
         // Fetch the broadcast after synchronizing
         MockBroadcast attemptBroadcast = getBroadcast();
-        assertEquals(getTestUsername(), attemptBroadcast.getUser().getUsername());
+        assertEquals(getTestUserId(), attemptBroadcast.getContext().getUserId());
         assertEquals(BroadcastMessage.Type.SYNCHRONIZE_ATTEMPT, attemptBroadcast.getBroadcastMessage().getType());
         SynchronizationAttemptBroadcast synchronizationAttemptBroadcast = assertInstanceOf(attemptBroadcast.getBroadcastMessage().getMessage(), SynchronizationAttemptBroadcast.class);
         assertEquals(SynchronizationStatus.SUCCESS, synchronizationAttemptBroadcast.getStatus());
@@ -145,7 +145,7 @@ class SynchronizationTest extends SpringTest {
 
         // Fetch the broadcast after failing synchronizing
         MockBroadcast failingAttemptBroadcast = getBroadcast();
-        assertEquals(getTestUsername(), failingAttemptBroadcast.getUser().getUsername());
+        assertEquals(getTestUserId(), failingAttemptBroadcast.getContext().getUserId());
         assertEquals(BroadcastMessage.Type.SYNCHRONIZE_ATTEMPT, failingAttemptBroadcast.getBroadcastMessage().getType());
         SynchronizationAttemptBroadcast failingSynchronizationAttemptBroadcast = assertInstanceOf(failingAttemptBroadcast.getBroadcastMessage().getMessage(), SynchronizationAttemptBroadcast.class);
         assertEquals(SynchronizationStatus.FAILURE, failingSynchronizationAttemptBroadcast.getStatus());

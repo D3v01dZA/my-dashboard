@@ -3,7 +3,7 @@ package com.altona.html;
 import com.altona.broadcast.broadcaster.BroadcastInteractor;
 import com.altona.broadcast.broadcaster.BroadcastMessage;
 import com.altona.broadcast.broadcaster.BroadcastToken;
-import com.altona.security.User;
+import com.altona.context.Context;
 import com.altona.util.Result;
 import org.springframework.stereotype.Service;
 
@@ -18,11 +18,11 @@ public class MockBroadcastInteractor implements BroadcastInteractor {
     private volatile RuntimeException exception;
 
     @Override
-    public void send(User user, List<BroadcastToken> tokens, BroadcastMessage<?> broadcastMessage) {
+    public void send(Context context, List<BroadcastToken> tokens, BroadcastMessage<?> broadcastMessage) {
         if (mockBroadcast != null) {
             exception = new RuntimeException("Received multiple broadcasts");
         }
-        mockBroadcast = new MockBroadcast(user, tokens, broadcastMessage);
+        mockBroadcast = new MockBroadcast(context, tokens, broadcastMessage);
     }
 
     public Result<MockBroadcast, RuntimeException> result() {

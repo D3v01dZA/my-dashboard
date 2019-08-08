@@ -27,6 +27,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -59,14 +60,15 @@ public abstract class SpringTest {
     @Autowired
     protected TimeInfo timeInfo;
 
+    private Integer userId;
+
     @PostConstruct
     public void postConstruct() throws Exception {
         String username = getTestUsername();
-        Map<String, Object> queryMap = jdbcTemplate.queryForMap(
-                "SELECT count(id) FROM users WHERE username = :username",
+        List<Map<String, Object>> queryMapList = jdbcTemplate.queryForList(
+                "SELECT id FROM users WHERE username = :username",
                 new MapSqlParameterSource().addValue("username", username));
-        Long count = (Long) queryMap.get("count");
-        Assertions.assertNotNull(count, "Could not count users with username " + username);
+        int count = queryMapList.size();
         if (count == 0) {
             Map<String, Object> insertMap = jdbcTemplate.queryForMap(
                     "INSERT INTO users (username, password, salt) VALUES (:username, :password, :salt) RETURNING id",
@@ -75,7 +77,10 @@ public abstract class SpringTest {
                             .addValue("password", "$2a$10$22t/X7uEYPQxSS7C9aOBYeaNGy4gYzcIX8X/GbuQZ82i6BG/lnR2a")
                             .addValue("salt", UUID.fromString("715814fc-98db-49ab-af16-69617351d382"))
             );
-            Assertions.assertNotNull(insertMap.get("id"), "Could not insert username " + username);
+            userId = (int) insertMap.get("id");
+            Assertions.assertNotNull(userId, "Could not insert username " + username);
+        } else {
+            userId = (int) queryMapList.get(0).get("id");
         }
         String root = mvc.perform(get("/"))
                 .andExpect(status().isOk())
@@ -86,6 +91,11 @@ public abstract class SpringTest {
     }
 
     protected abstract String getTestUsername();
+
+    protected int getTestUserId() {
+        Assertions.assertNotNull(userId, "User Id Not Yet Initialized");
+        return userId;
+    }
 
     protected MockHttpServletRequestBuilder get(String url) {
         return MockMvcRequestBuilders.get(url)
