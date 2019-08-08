@@ -16,7 +16,10 @@ public class UnsavedBroadcast {
     @NonNull
     private String broadcast;
 
-    public Broadcast save(User user, NamedParameterJdbcTemplate jdbcTemplate) {
+    @NonNull
+    private NamedParameterJdbcTemplate jdbcTemplate;
+
+    public Broadcast save(User user) {
         try {
             Map<String, Object> stringObjectMap = jdbcTemplate.queryForMap(
                     "INSERT INTO broadcast (broadcast, user_id) VALUES (:broadcast, :userId) RETURNING id",

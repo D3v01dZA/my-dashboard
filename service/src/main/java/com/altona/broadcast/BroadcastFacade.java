@@ -7,6 +7,7 @@ import com.altona.broadcast.service.UnsavedBroadcast;
 import com.altona.security.User;
 import com.altona.broadcast.service.operation.BroadcastUpdate;
 import lombok.AllArgsConstructor;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,10 +19,11 @@ import java.util.Optional;
 public class BroadcastFacade {
 
     private Broadcasts broadcasts;
+    private NamedParameterJdbcTemplate jdbcTemplate;
 
     @Transactional
     public Broadcast update(User user, BroadcastUpdate broadcastUpdate) {
-        return broadcastUpdate.execute(broadcasts, user);
+        return broadcastUpdate.execute(broadcasts, jdbcTemplate, user);
     }
 
     @Transactional

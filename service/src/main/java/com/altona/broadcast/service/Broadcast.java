@@ -32,7 +32,7 @@ public class Broadcast {
         if (rows != 1) {
             throw new IllegalStateException(String.format("Could not delete broadcast with id %s - %s rows modified", id, rows));
         }
-        return new UnsavedBroadcast(broadcast);
+        return new UnsavedBroadcast(broadcast, jdbcTemplate);
     }
 
     public BroadcastView asView() {

@@ -6,6 +6,7 @@ import com.altona.broadcast.service.UnsavedBroadcast;
 import com.altona.security.User;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 @AllArgsConstructor
 public class BroadcastUpdate {
@@ -15,13 +16,13 @@ public class BroadcastUpdate {
     @NonNull
     private String newBroadcast;
 
-    public Broadcast execute(Broadcasts broadcasts, User user) {
+    public Broadcast execute(Broadcasts broadcasts, NamedParameterJdbcTemplate jdbcTemplate, User user) {
         if (oldBroadcast != null) {
             broadcasts.broadcastByBroadcast(user, oldBroadcast)
                     .ifPresent(Broadcast::delete);
         }
         return broadcasts.broadcastByBroadcast(user, newBroadcast)
-                .orElseGet(() -> broadcasts.save(user, new UnsavedBroadcast(newBroadcast)));
+                .orElseGet(() -> new UnsavedBroadcast(newBroadcast, jdbcTemplate).save(user));
     }
 
 }

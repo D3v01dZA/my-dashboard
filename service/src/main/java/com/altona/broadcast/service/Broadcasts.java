@@ -17,10 +17,6 @@ public class Broadcasts {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
 
-    public Broadcast save(User user, UnsavedBroadcast unsavedBroadcast) {
-        return unsavedBroadcast.save(user, jdbcTemplate);
-    }
-
     public Optional<Broadcast> broadcast(User user, int id) {
         try {
             return Optional.of(
