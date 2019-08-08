@@ -3,6 +3,7 @@ package com.altona.broadcast.service;
 import com.altona.broadcast.service.view.UnsavedBroadcastView;
 import com.altona.security.User;
 import lombok.AllArgsConstructor;
+import lombok.NonNull;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -12,6 +13,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class UnsavedBroadcast {
 
+    @NonNull
     private String broadcast;
 
     public Broadcast save(User user, NamedParameterJdbcTemplate jdbcTemplate) {
