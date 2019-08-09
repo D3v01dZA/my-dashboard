@@ -14,6 +14,7 @@ import com.altona.service.time.model.summary.NotStoppedAction;
 import com.altona.service.time.model.summary.SummaryConfiguration;
 import com.altona.service.time.model.summary.TimeRounding;
 import com.altona.service.time.model.summary.TimeSummary;
+import com.altona.util.Util;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -75,6 +76,7 @@ public class OpenairSynchronizer implements Synchronizer {
             } else {
                 log.info("No time difference found, exiting");
             }
+            Util.sleep();
             return context.takeScreenshot();
         } finally {
             openairBrowser.close(attempt, context, request);
