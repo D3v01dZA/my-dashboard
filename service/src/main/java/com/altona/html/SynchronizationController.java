@@ -1,18 +1,21 @@
 package com.altona.html;
 
 import com.altona.facade.SynchronizationFacade;
-import com.altona.security.UserContext;
 import com.altona.service.synchronization.model.Synchronization;
-import com.altona.security.UserService;
-import com.altona.service.synchronization.model.SynchronizationTrace;
-import com.altona.service.synchronization.model.SynchronizationCommand;
 import com.altona.service.synchronization.model.SynchronizationAttempt;
+import com.altona.service.synchronization.model.SynchronizationCommand;
+import com.altona.service.synchronization.model.SynchronizationTrace;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.TimeZone;
@@ -21,7 +24,6 @@ import java.util.TimeZone;
 @AllArgsConstructor
 public class SynchronizationController {
 
-    private UserService userService;
     private SynchronizationFacade synchronizationFacade;
 
     @RequestMapping(path = "/time/project/{projectId}/synchronization", method = RequestMethod.POST, produces = "application/json")
@@ -31,7 +33,7 @@ public class SynchronizationController {
             @PathVariable Integer projectId,
             @RequestBody Synchronization synchronization
     ) {
-        return synchronizationFacade.createSynchronization(userService.getUserContext(authentication, timeZone), projectId, synchronization)
+        return synchronizationFacade.createSynchronization(authentication, timeZone, projectId, synchronization)
                 .map(created -> created.map(
                         success -> new ResponseEntity<>(success, HttpStatus.CREATED),
                         failure -> new ResponseEntity<Synchronization>(HttpStatus.BAD_REQUEST)
@@ -45,7 +47,7 @@ public class SynchronizationController {
             TimeZone timeZone,
             @PathVariable Integer projectId
     ) {
-        return synchronizationFacade.getSynchronizations(userService.getUserContext(authentication, timeZone), projectId)
+        return synchronizationFacade.getSynchronizations(authentication, timeZone, projectId)
                 .map(found -> new ResponseEntity<>(found, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -57,7 +59,7 @@ public class SynchronizationController {
             @PathVariable Integer projectId,
             @PathVariable Integer synchronizationId
     ) {
-        return synchronizationFacade.getSynchronization(userService.getUserContext(authentication, timeZone), projectId, synchronizationId)
+        return synchronizationFacade.getSynchronization(authentication, timeZone, projectId, synchronizationId)
                 .map(found -> new ResponseEntity<>(found, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -70,7 +72,7 @@ public class SynchronizationController {
             @PathVariable Integer synchronizationId,
             @RequestBody ObjectNode modification
     ) {
-        return synchronizationFacade.modifySynchronization(userService.getUserContext(authentication, timeZone), projectId, synchronizationId, modification)
+        return synchronizationFacade.modifySynchronization(authentication, timeZone, projectId, synchronizationId, modification)
                 .map(modified -> modified.map(
                         success -> new ResponseEntity<>(success, HttpStatus.ACCEPTED),
                         failure -> new ResponseEntity<Synchronization>(HttpStatus.BAD_REQUEST)
@@ -84,7 +86,7 @@ public class SynchronizationController {
             TimeZone timeZone,
             @PathVariable Integer projectId
     ) {
-        return synchronizationFacade.synchronize(userService.getUserContext(authentication, timeZone), projectId)
+        return synchronizationFacade.synchronize(authentication, timeZone, projectId)
                 .map(synchronizeResult -> new ResponseEntity<>(synchronizeResult, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -98,7 +100,7 @@ public class SynchronizationController {
             @RequestParam(required = false) Integer periodsBack
     ) {
         SynchronizationCommand command = periodsBack == null ? SynchronizationCommand.current() : SynchronizationCommand.previous(periodsBack);
-        return synchronizationFacade.synchronize(userService.getUserContext(authentication, timeZone), projectId, synchronizationId, command)
+        return synchronizationFacade.synchronize(authentication, timeZone, projectId, synchronizationId, command)
                 .map(synchronizeResult -> new ResponseEntity<>(synchronizeResult, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -111,8 +113,7 @@ public class SynchronizationController {
             @PathVariable Integer synchronizationId,
             @PathVariable Integer attemptId
     ) {
-        UserContext userContext = userService.getUserContext(authentication, timeZone);
-        return synchronizationFacade.attempt(userContext, projectId, synchronizationId, attemptId)
+        return synchronizationFacade.attempt(authentication, timeZone, projectId, synchronizationId, attemptId)
                 .map(traces -> new ResponseEntity<>(traces, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -125,8 +126,7 @@ public class SynchronizationController {
             @PathVariable Integer synchronizationId,
             @PathVariable Integer attemptId
     ) {
-        UserContext userContext = userService.getUserContext(authentication, timeZone);
-        return synchronizationFacade.traces(userContext, projectId, synchronizationId, attemptId)
+        return synchronizationFacade.traces(authentication, timeZone, projectId, synchronizationId, attemptId)
                 .map(traces -> new ResponseEntity<>(traces, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }

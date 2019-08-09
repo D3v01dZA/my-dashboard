@@ -1,6 +1,6 @@
 package com.altona.service.project;
 
-import com.altona.security.User;
+import com.altona.user.service.User;
 import com.altona.service.project.model.Project;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;

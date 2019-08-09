@@ -16,7 +16,7 @@ public class BroadcastDelete {
     private String broadcast;
 
     public Optional<UnsavedBroadcast> execute(Context context) {
-        return new BroadcastByBroadcast(broadcast, context).execute()
+        return new BroadcastByBroadcast(context, broadcast).execute()
                 .map(Broadcast::delete);
     }
 

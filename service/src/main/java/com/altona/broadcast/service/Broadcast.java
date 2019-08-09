@@ -10,13 +10,13 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 @AllArgsConstructor
 public class Broadcast {
 
+    @NonNull
+    private Context context;
+
     private int id;
 
     @NonNull
     private String broadcast;
-
-    @NonNull
-    private Context context;
 
     public UnsavedBroadcast delete() {
         int rows = context.update(
@@ -28,7 +28,7 @@ public class Broadcast {
         if (rows != 1) {
             throw new IllegalStateException(String.format("Could not delete broadcast with id %s - %s rows modified", id, rows));
         }
-        return new UnsavedBroadcast(broadcast, context);
+        return new UnsavedBroadcast(context, broadcast);
     }
 
     public BroadcastView asView() {

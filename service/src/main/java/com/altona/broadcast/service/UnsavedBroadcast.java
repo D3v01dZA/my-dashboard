@@ -13,10 +13,10 @@ import java.util.Map;
 public class UnsavedBroadcast {
 
     @NonNull
-    private String broadcast;
+    private Context context;
 
     @NonNull
-    private Context context;
+    private String broadcast;
 
     public Broadcast save() {
         try {
@@ -27,7 +27,7 @@ public class UnsavedBroadcast {
                             .addValue("userId", context.getUserId())
             );
             Integer id = (Integer) stringObjectMap.get("id");
-            return new Broadcast(id, broadcast, context);
+            return new Broadcast(context, id, broadcast);
         } catch (IncorrectResultSizeDataAccessException ex) {
             throw new IllegalStateException(String.format("Inserting lead to %s rows returned", ex.getActualSize()));
         }

@@ -17,11 +17,11 @@ public class BroadcastUpdate {
 
     public Broadcast execute(Context context) {
         if (oldBroadcast != null) {
-            new BroadcastByBroadcast(oldBroadcast, context).execute()
+            new BroadcastByBroadcast(context, oldBroadcast).execute()
                     .ifPresent(Broadcast::delete);
         }
-        return new BroadcastByBroadcast(newBroadcast, context).execute()
-                .orElseGet(() -> new UnsavedBroadcast(newBroadcast, context).save());
+        return new BroadcastByBroadcast(context, newBroadcast).execute()
+                .orElseGet(() -> new UnsavedBroadcast(context, newBroadcast).save());
     }
 
 }

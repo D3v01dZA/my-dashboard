@@ -1,24 +1,22 @@
 package com.altona.context;
 
 import com.altona.security.Encryptor;
-import com.altona.security.UserContext;
 import com.altona.service.time.util.TimeConfig;
+import com.altona.user.service.UserContext;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.experimental.Delegate;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 @AllArgsConstructor
 class UserContextBasedEncryptionContext implements EncryptionContext {
 
     @NonNull
-    @Delegate(types = {TimeConfig.class, Encryptor.class})
-    private UserContext userContext;
+    @Delegate(types = SqlContext.class)
+    private SqlContext sqlContext;
 
     @NonNull
-    @Delegate(types = NamedParameterJdbcOperations.class)
-    private NamedParameterJdbcTemplate jdbcTemplate;
+    @Delegate(types = {TimeConfig.class, Encryptor.class})
+    private UserContext userContext;
 
     @Override
     public int getUserId() {

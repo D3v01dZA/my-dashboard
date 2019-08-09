@@ -2,12 +2,10 @@ package com.altona.html;
 
 import com.altona.facade.ProjectFacade;
 import com.altona.facade.TimeFacade;
-import com.altona.security.UserContext;
-import com.altona.security.UserService;
 import com.altona.service.project.model.Project;
 import com.altona.service.time.model.control.TimeStatus;
-import com.altona.service.time.model.summary.TimeSummary;
 import com.altona.service.time.model.summary.SummaryType;
+import com.altona.service.time.model.summary.TimeSummary;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
@@ -26,7 +24,6 @@ import java.util.TimeZone;
 @AllArgsConstructor
 public class InterfaceController {
 
-    private UserService userService;
     private ProjectFacade projectFacade;
     private TimeFacade timeFacade;
 
@@ -35,15 +32,15 @@ public class InterfaceController {
             Authentication authentication,
             TimeZone timeZone
     ) {
-        UserContext userContext = userService.getUserContext(authentication, timeZone);
-        List<Project> projects = projectFacade.projects(userContext);
-        TimeStatus timeStatus = timeFacade.timeStatus(userContext);
+        List<Project> projects = projectFacade.projects(authentication);
+        TimeStatus timeStatus = timeFacade.timeStatus(authentication, timeZone);
         if (!projects.isEmpty()) {
             Project project = projects.get(0);
             return timeFacade.summary(
-                    userContext,
+                    authentication,
+                    timeZone,
                     project.getId(),
-                    SummaryType.CURRENT_WEEK.getConfiguration(userContext)
+                    SummaryType.CURRENT_WEEK
             ).get().map(
                     summary -> new ResponseEntity<>(new TimeScreen(project, projects, timeStatus, summary), HttpStatus.OK),
                     summaryFailure -> new ResponseEntity<>(summaryFailure.getMessage(), HttpStatus.EXPECTATION_FAILED)

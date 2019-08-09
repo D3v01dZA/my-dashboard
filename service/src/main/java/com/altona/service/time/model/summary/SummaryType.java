@@ -1,6 +1,6 @@
 package com.altona.service.time.model.summary;
 
-import com.altona.security.UserContext;
+import com.altona.user.service.UserContext;
 
 import java.time.temporal.TemporalAdjusters;
 

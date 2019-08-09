@@ -2,7 +2,7 @@ package com.altona.service.synchronization;
 
 import com.altona.broadcast.broadcaster.Broadcaster;
 import com.altona.security.Encryptor;
-import com.altona.security.UserContext;
+import com.altona.user.service.UserContext;
 import com.altona.broadcast.broadcaster.BroadcastMessage;
 import com.altona.service.project.model.Project;
 import com.altona.service.synchronization.model.Synchronization;

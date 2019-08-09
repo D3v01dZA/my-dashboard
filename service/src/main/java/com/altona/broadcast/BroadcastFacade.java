@@ -7,9 +7,11 @@ import com.altona.broadcast.service.operation.BroadcastUpdate;
 import com.altona.broadcast.service.query.BroadcastById;
 import com.altona.broadcast.service.query.BroadcastsByUser;
 import com.altona.context.Context;
-import com.altona.security.User;
-import lombok.AllArgsConstructor;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import com.altona.context.facade.ContextFacade;
+import com.altona.context.SqlContext;
+import com.altona.service.time.util.TimeInfo;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,29 +19,35 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@AllArgsConstructor
-public class BroadcastFacade {
+public class BroadcastFacade extends ContextFacade {
 
-    private NamedParameterJdbcTemplate jdbcTemplate;
-
-    @Transactional
-    public Broadcast update(User user, BroadcastUpdate broadcastUpdate) {
-        return broadcastUpdate.execute(Context.of(user, jdbcTemplate));
+    @Autowired
+    public BroadcastFacade(SqlContext sqlContext, TimeInfo timeInfo) {
+        super(sqlContext, timeInfo);
     }
 
     @Transactional
-    public Optional<UnsavedBroadcast> delete(User user, BroadcastDelete broadcastDelete) {
-        return broadcastDelete.execute(Context.of(user, jdbcTemplate));
+    public Broadcast update(Authentication authentication, BroadcastUpdate broadcastUpdate) {
+        Context context = authenticate(authentication);
+        return broadcastUpdate.execute(context);
+    }
+
+    @Transactional
+    public Optional<UnsavedBroadcast> delete(Authentication authentication, BroadcastDelete broadcastDelete) {
+        Context context = authenticate(authentication);
+        return broadcastDelete.execute(context);
     }
 
     @Transactional(readOnly = true)
-    public Optional<Broadcast> broadcast(User user, int id) {
-        return new BroadcastById(id, Context.of(user, jdbcTemplate)).execute();
+    public Optional<Broadcast> broadcast(Authentication authentication, int id) {
+        Context context = authenticate(authentication);
+        return new BroadcastById(context, id).execute();
     }
 
     @Transactional(readOnly = true)
-    public List<Broadcast> broadcasts(User user) {
-        return new BroadcastsByUser(Context.of(user, jdbcTemplate)).execute();
+    public List<Broadcast> broadcasts(Authentication authentication) {
+        Context context = authenticate(authentication);
+        return new BroadcastsByUser(context).execute();
     }
 
 }

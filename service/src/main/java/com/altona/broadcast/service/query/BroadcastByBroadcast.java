@@ -13,10 +13,10 @@ import java.util.Optional;
 public class BroadcastByBroadcast {
 
     @NonNull
-    private String broadcast;
+    private Context context;
 
     @NonNull
-    private Context context;
+    private String broadcast;
 
     public Optional<Broadcast> execute() {
         try {

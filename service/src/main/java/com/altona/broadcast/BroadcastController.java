@@ -7,8 +7,6 @@ import com.altona.broadcast.service.view.BroadcastDeleteView;
 import com.altona.broadcast.service.view.BroadcastUpdateView;
 import com.altona.broadcast.service.view.BroadcastView;
 import com.altona.broadcast.service.view.UnsavedBroadcastView;
-import com.altona.security.User;
-import com.altona.security.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +24,6 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class BroadcastController {
 
-    private UserService userService;
     private BroadcastFacade broadcastFacade;
 
     @RequestMapping(path = "/broadcast/update", method = RequestMethod.POST, produces = "application/json")
@@ -34,10 +31,9 @@ public class BroadcastController {
             Authentication authentication,
             @RequestBody BroadcastUpdateView broadcastUpdate
     ) {
-        User user = userService.getUser(authentication);
         return new ResponseEntity<>(
                 broadcastFacade.update(
-                        user,
+                        authentication,
                         new BroadcastUpdate(broadcastUpdate.getOldBroadcast(), broadcastUpdate.getNewBroadcast())
                 ).asView(),
                 HttpStatus.OK
@@ -49,8 +45,7 @@ public class BroadcastController {
             Authentication authentication,
             @RequestBody BroadcastDeleteView broadcastDelete
     ) {
-        User user = userService.getUser(authentication);
-        return broadcastFacade.delete(user, new BroadcastDelete(broadcastDelete.getBroadcast()))
+        return broadcastFacade.delete(authentication, new BroadcastDelete(broadcastDelete.getBroadcast()))
                 .map(broadcast -> new ResponseEntity<>(broadcast.asView(), HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -59,9 +54,8 @@ public class BroadcastController {
     public ResponseEntity<List<BroadcastView>> get(
             Authentication authentication
     ) {
-        User user = userService.getUser(authentication);
         return new ResponseEntity<>(
-                broadcastFacade.broadcasts(user).stream()
+                broadcastFacade.broadcasts(authentication).stream()
                         .map(Broadcast::asView)
                         .collect(Collectors.toList()),
                 HttpStatus.OK
@@ -73,8 +67,7 @@ public class BroadcastController {
             Authentication authentication,
             @PathVariable int broadcastId
     ) {
-        User user = userService.getUser(authentication);
-        return broadcastFacade.broadcast(user, broadcastId)
+        return broadcastFacade.broadcast(authentication, broadcastId)
                 .map(broadcast -> new ResponseEntity<>(broadcast.asView(), HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }

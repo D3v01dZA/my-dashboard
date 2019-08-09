@@ -1,7 +1,7 @@
 package com.altona.service.synchronization.model;
 
 import com.altona.security.Encryptor;
-import com.altona.security.UserContext;
+import com.altona.user.service.UserContext;
 import com.altona.service.project.model.Project;
 import com.altona.service.time.util.TimeConfig;
 import lombok.Getter;

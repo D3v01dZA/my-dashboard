@@ -1,5 +1,6 @@
-package com.altona.security;
+package com.altona.user.service;
 
+import com.altona.security.Encryptor;
 import com.altona.service.time.util.TimeConfig;
 import com.altona.service.time.util.TimeInfo;
 import lombok.NonNull;
@@ -22,7 +23,7 @@ public class UserContext extends User implements TimeConfig, Encryptor {
 
     private Instant now;
 
-    UserContext(User user, @NonNull Authentication authentication, @NonNull TimeZone timeZone, @NonNull TimeInfo timeInfo) {
+    public UserContext(User user, @NonNull Authentication authentication, @NonNull TimeZone timeZone, @NonNull TimeInfo timeInfo) {
         super(user.getId(), user.getUsername(), user.getPassword(), user.getSalt());
         this.timeZone = Objects.requireNonNull(timeZone);
         Object credentials = authentication.getCredentials();

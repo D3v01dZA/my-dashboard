@@ -1,13 +1,11 @@
 package com.altona.context;
 
-import com.altona.security.User;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import com.altona.user.service.User;
 
-public interface Context extends NamedParameterJdbcOperations {
+public interface Context extends SqlContext {
 
-    static Context of(User user, NamedParameterJdbcTemplate jdbcTemplate) {
-        return new UserBasedContext(user, jdbcTemplate);
+    static Context of(SqlContext sqlContext, User user) {
+        return new UserBasedContext(sqlContext, user);
     }
 
     int getUserId();

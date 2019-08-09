@@ -17,7 +17,7 @@ public class BroadcastRowMapper implements RowMapper<Broadcast> {
 
     @Override
     public Broadcast mapRow(ResultSet rs, int rowNum) throws SQLException {
-        return new Broadcast(rs.getInt("id"), rs.getString("broadcast"), context);
+        return new Broadcast(context, rs.getInt("id"), rs.getString("broadcast"));
     }
 
 }

@@ -12,10 +12,10 @@ import java.util.Optional;
 @AllArgsConstructor
 public class BroadcastById {
 
-    private int id;
-
     @NonNull
     private Context context;
+
+    private int id;
 
     public Optional<Broadcast> execute() {
         try {

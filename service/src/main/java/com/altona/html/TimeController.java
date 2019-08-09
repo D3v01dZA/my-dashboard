@@ -1,15 +1,21 @@
 package com.altona.html;
 
 import com.altona.facade.TimeFacade;
-import com.altona.security.UserContext;
-import com.altona.security.UserService;
-import com.altona.service.time.model.control.*;
+import com.altona.service.time.model.control.BreakStart;
+import com.altona.service.time.model.control.BreakStop;
+import com.altona.service.time.model.control.TimeStatus;
+import com.altona.service.time.model.control.WorkStart;
+import com.altona.service.time.model.control.WorkStop;
 import com.altona.service.time.model.summary.SummaryType;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.TimeZone;
 
@@ -17,7 +23,6 @@ import java.util.TimeZone;
 @AllArgsConstructor
 public class TimeController {
 
-    private UserService userService;
     private TimeFacade timeFacade;
 
     @RequestMapping(path = "/time/project/{projectId}/start-work", method = RequestMethod.POST, produces = "application/json")
@@ -26,7 +31,7 @@ public class TimeController {
             TimeZone timeZone,
             @PathVariable Integer projectId
     ) {
-        return timeFacade.startWork(userService.getUserContext(authentication, timeZone), projectId)
+        return timeFacade.startWork(authentication, timeZone, projectId)
                 .map(workStart -> new ResponseEntity<>(workStart, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -37,7 +42,7 @@ public class TimeController {
             TimeZone timeZone,
             @PathVariable Integer projectId
     ) {
-        return timeFacade.startBreak(userService.getUserContext(authentication, timeZone), projectId)
+        return timeFacade.startBreak(authentication, timeZone, projectId)
                 .map(breakStart -> new ResponseEntity<>(breakStart, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -48,7 +53,7 @@ public class TimeController {
             TimeZone timeZone,
             @PathVariable Integer projectId
     ) {
-        return timeFacade.endWork(userService.getUserContext(authentication, timeZone), projectId)
+        return timeFacade.endWork(authentication, timeZone, projectId)
                 .map(workStop -> new ResponseEntity<>(workStop, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -59,7 +64,7 @@ public class TimeController {
             TimeZone timeZone,
             @PathVariable Integer projectId
     ) {
-        return timeFacade.endBreak(userService.getUserContext(authentication, timeZone), projectId)
+        return timeFacade.endBreak(authentication, timeZone, projectId)
                 .map(breakStop -> new ResponseEntity<>(breakStop, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -69,7 +74,7 @@ public class TimeController {
             Authentication authentication,
             TimeZone timeZone
     ) {
-        return timeFacade.timeStatus(userService.getUserContext(authentication, timeZone));
+        return timeFacade.timeStatus(authentication, timeZone);
     }
 
     @RequestMapping(path = "/time/project/{projectId}/summary", method = RequestMethod.GET, produces = "application/json")
@@ -79,8 +84,7 @@ public class TimeController {
             @PathVariable Integer projectId,
             @RequestParam SummaryType type
     ) {
-        UserContext userContext = userService.getUserContext(authentication, timeZone);
-        return timeFacade.summary(userContext, projectId, type.getConfiguration(userContext))
+        return timeFacade.summary(authentication, timeZone, projectId, type)
                 .map(summaryResult -> summaryResult.map(
                         summary -> new ResponseEntity<Object>(summary, HttpStatus.OK),
                         error -> new ResponseEntity<Object>(error, HttpStatus.CONFLICT)
