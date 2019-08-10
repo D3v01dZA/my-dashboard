@@ -33,8 +33,9 @@ public class LoginActivity extends InsecureAppActivity {
             password = credentials.getPassword();
             tryLogin(credentials);
         }
-        usernameField().setText(TestSetting.CURRENT.getSavedUsername(username));
-        passwordField().setText(TestSetting.CURRENT.getSavedPassword(password));
+        Credentials credentials = TestSetting.CURRENT.getCredentials(username, password);
+        usernameField().setText(credentials.getUsername());
+        passwordField().setText(credentials.getPassword());
     }
 
     @Override

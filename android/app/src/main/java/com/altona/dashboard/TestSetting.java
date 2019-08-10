@@ -1,5 +1,7 @@
 package com.altona.dashboard;
 
+import com.altona.dashboard.service.login.Credentials;
+
 public enum TestSetting {
 
     TEST_EMULATOR {
@@ -31,7 +33,7 @@ public enum TestSetting {
 
         @Override
         public String getHost() {
-            return "http://192.168.1.80:8080";
+            return "http://192.168.0.113:8080";
         }
     },
     PROD {
@@ -69,10 +71,14 @@ public enum TestSetting {
 
     public static final TestSetting CURRENT = TEST_EMULATOR;
 
-    public abstract String getSavedUsername(String actual);
-
-    public abstract String getSavedPassword(String actual);
-
     public abstract String getHost();
+
+    public Credentials getCredentials(String username, String password) {
+        return new Credentials(getSavedUsername(username), getSavedPassword(password));
+    }
+
+    protected abstract String getSavedPassword(String actual);
+
+    protected abstract String getSavedUsername(String actual);
 
 }

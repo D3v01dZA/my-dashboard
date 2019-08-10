@@ -54,7 +54,7 @@ public class Settings {
 
     public Optional<Credentials> getCredentials() {
         if (sharedPreferences.contains(USERNAME)) {
-            return Optional.of(new Credentials(sharedPreferences.getString(USERNAME, ""), sharedPreferences.getString(PASSWORD, "")));
+            return Optional.of(TestSetting.CURRENT.getCredentials(sharedPreferences.getString(USERNAME, ""), sharedPreferences.getString(PASSWORD, "")));
         }
         return Optional.empty();
     }
