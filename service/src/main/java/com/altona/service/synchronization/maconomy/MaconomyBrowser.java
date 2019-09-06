@@ -51,9 +51,9 @@ public class MaconomyBrowser {
             context.get(configuration.getUrl());
             synchronizationTraceRepository.trace(attempt, request, "Before Login", context);
 
-            context.findElement(By.id("username")).sendKeys(configuration.getUsername());
-            context.findElement(By.id("password")).sendKeys(configuration.getPassword());
-            context.findElement(By.id("login")).click();
+            context.waitForElement(By.id("username")).sendKeys(configuration.getUsername());
+            context.waitForElement(By.id("password")).sendKeys(configuration.getPassword());
+            context.waitForElement(By.id("login")).click();
 
             log.info("Submitting login led to page {}", context.getCurrentUrl());
 
@@ -89,7 +89,14 @@ public class MaconomyBrowser {
         synchronizationTraceRepository.trace(attempt, request, "Before Getting Weekly Data", context);
         log.info("Reading Weekly Time Data");
 
-        String heading = context.findElement(By.className("heading")).getText();
+        String heading = new WebDriverWait(context, 30)
+                .until(webDriver -> {
+                    String innerHeading = webDriver.findElement(By.className("heading")).getText();
+                    if (!WEEK_REGEX.matcher(innerHeading).matches()) {
+                        return null;
+                    }
+                    return innerHeading;
+                });
         Matcher matcher = WEEK_REGEX.matcher(heading);
         if (!matcher.matches()) {
             String message = String.format("Heading %s was unparseable", heading);
@@ -105,24 +112,25 @@ public class MaconomyBrowser {
         List<MaconomyTimeData> maconomyTimeDataList = Lists.newArrayList();
 
         for (WebElement timeRow : grid.findElements(By.tagName("tr"))) {
-            if (!"k-grid-norecords".equals(timeRow.getAttribute("class"))) {
+            String clazz = timeRow.getAttribute("class");
+            if (clazz != null && !clazz.contains("k-grid-norecords")) {
                 List<WebElement> cells = timeRow.findElements(By.tagName("td"));
-                if (cells.size() != 14) {
-                    return Result.failure(String.format("Expected 14 cells but found %s", cells));
+                if (cells.size() != 16) {
+                    return Result.failure(String.format("Expected 16 cells but found %s", cells.size()));
                 }
 
                 // Start at cell 4 + the start index
                 Map<LocalDate, LocalTime> timeMap = Maps.newHashMap();
                 for (LocalDate localDate : LocalDateIterator.inclusive(weekStart, weekEnd)) {
-                    int index = 3 + localDate.getDayOfWeek().getValue();
+                    int index = 5 + localDate.getDayOfWeek().getValue();
                     WebElement day = cells.get(index);
                     List<WebElement> dayInputs = day.findElements(By.tagName("input"));
-                    if (dayInputs.size() != 2) {
-                        String message = String.format("Expected 2 inputs but found %s on date %s", dayInputs, localDate);
+                    if (dayInputs.size() != 1) {
+                        String message = String.format("Expected 1 inputs but found %s on date %s", dayInputs, localDate);
                         log.error(message);
                         return Result.failure(message);
                     }
-                    String dayTime = dayInputs.get(1).getAttribute("value");
+                    String dayTime = dayInputs.get(0).getAttribute("value");
                     if (!StringUtils.isEmpty(dayTime)) {
                         LocalTime time = LocalTime.parse(dayTime, READ_TIME_FORMATTER);
                         timeMap.put(localDate, time);
@@ -130,8 +138,8 @@ public class MaconomyBrowser {
                 }
 
                 MaconomyTimeData timeData = new MaconomyTimeData(
-                        cells.get(2).findElement(By.tagName("input")).getAttribute("value"),
-                        cells.get(3).findElement(By.tagName("input")).getAttribute("value"),
+                        cells.get(4).findElement(By.tagName("input")).getAttribute("value"),
+                        cells.get(5).findElement(By.tagName("input")).getAttribute("value"),
                         timeMap
                 );
                 maconomyTimeDataList.add(timeData);
@@ -156,28 +164,28 @@ public class MaconomyBrowser {
 
         List<WebElement> cells = editRow.findElements(By.tagName("td"));
 
-        if (cells.size() != 14) {
-            String message = String.format("Expected 14 cells but found %s while editing", cells);
+        if (cells.size() != 16) {
+            String message = String.format("Expected 16 cells but found %s while editing", cells.size());
             log.error(message);
             return Optional.of(message);
         }
 
-        cells.get(2).findElement(By.tagName("input")).sendKeys(data.getProjectName());
+        cells.get(4).findElement(By.tagName("input")).sendKeys(data.getProjectName());
         sleep();
-        cells.get(3).findElement(By.tagName("input")).sendKeys(data.getTaskName());
+        cells.get(5).findElement(By.tagName("input")).sendKeys(data.getTaskName());
         sleep();
 
         for (LocalDate localDate : LocalDateIterator.inclusive(from, to)) {
-            int index = 3 + localDate.getDayOfWeek().getValue();
+            int index = 5 + localDate.getDayOfWeek().getValue();
             WebElement dayCell = cells.get(index);
             Optional<String> result = data.getTime(localDate).flatMap(dayTime -> {
                 List<WebElement> dayInputs = dayCell.findElements(By.tagName("input"));
-                if (dayInputs.size() != 2) {
-                    String message = String.format("Expected 2 inputs but found %s on date %s while editing", dayInputs, localDate);
+                if (dayInputs.size() != 1) {
+                    String message = String.format("Expected 1 input but found %s on date %s while editing", dayInputs, localDate);
                     log.error(message);
                     return Optional.of(message);
                 }
-                dayInputs.get(1).sendKeys(dayTime.format(READ_TIME_FORMATTER));
+                dayInputs.get(0).sendKeys(dayTime.format(READ_TIME_FORMATTER));
                 sleep();
                 return Optional.empty();
             });
@@ -186,8 +194,7 @@ public class MaconomyBrowser {
             }
         }
 
-        context.findElement(By.tagName("dm-actions-row"))
-                .findElement(By.className("icon-save"))
+        context.findElement(By.id("save"))
                 .click();
         sleep();
         return Optional.empty();
