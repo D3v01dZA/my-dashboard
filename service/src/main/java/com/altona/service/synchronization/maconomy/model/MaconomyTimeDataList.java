@@ -1,7 +1,7 @@
 package com.altona.service.synchronization.maconomy.model;
 
-import com.altona.service.time.model.summary.TimeSummary;
-import com.altona.util.LocalDateIterator;
+import com.altona.project.time.TimeSummary;
+import com.altona.project.time.TimeUtil;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
@@ -34,7 +34,7 @@ public class MaconomyTimeDataList {
 
     public TimeSummary getAllData(String projectName, String taskName) {
         LinkedHashMap<LocalDate, LocalTime> all = new LinkedHashMap<>();
-        for (LocalDate localDate : LocalDateIterator.inclusive(getWeekStart(), getWeekEnd())) {
+        for (LocalDate localDate : TimeUtil.LocalDateIterator.inclusive(getWeekStart(), getWeekEnd())) {
             all.put(localDate, LocalTime.of(0, 0));
         }
         for (MaconomyTimeData timeData : timeDataList) {

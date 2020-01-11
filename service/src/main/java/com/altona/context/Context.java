@@ -1,6 +1,6 @@
 package com.altona.context;
 
-import com.altona.user.service.User;
+import com.altona.user.User;
 
 public interface Context extends SqlContext {
 
@@ -8,6 +8,6 @@ public interface Context extends SqlContext {
         return new UserBasedContext(sqlContext, user);
     }
 
-    int getUserId();
+    int userId();
 
 }

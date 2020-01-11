@@ -1,7 +1,7 @@
 package com.altona;
 
-import com.altona.service.time.util.ClockTimeInfo;
-import com.altona.service.time.util.TimeInfo;
+import com.altona.util.ClockTimeInfo;
+import com.altona.context.TimeInfo;
 import com.opentable.db.postgres.embedded.EmbeddedPostgres;
 import com.opentable.db.postgres.embedded.LiquibasePreparer;
 import org.mockito.Mockito;

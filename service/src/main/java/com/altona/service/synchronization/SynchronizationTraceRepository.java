@@ -1,6 +1,6 @@
 package com.altona.service.synchronization;
 
-import com.altona.security.Encryptor;
+import com.altona.context.Encryptor;
 import com.altona.service.synchronization.model.SynchronizationAttempt;
 import com.altona.service.synchronization.model.SynchronizationTrace;
 import org.springframework.beans.factory.annotation.Autowired;

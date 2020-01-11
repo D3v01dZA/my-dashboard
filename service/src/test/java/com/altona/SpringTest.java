@@ -2,7 +2,7 @@ package com.altona;
 
 import com.altona.html.MockBroadcast;
 import com.altona.html.MockBroadcastInteractor;
-import com.altona.service.time.util.TimeInfo;
+import com.altona.context.TimeInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

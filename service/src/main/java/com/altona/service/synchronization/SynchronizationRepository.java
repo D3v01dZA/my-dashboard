@@ -1,7 +1,7 @@
 package com.altona.service.synchronization;
 
-import com.altona.security.Encryptor;
-import com.altona.service.project.model.Project;
+import com.altona.project.Project;
+import com.altona.context.Encryptor;
 import com.altona.service.synchronization.model.Synchronization;
 import com.altona.util.ObjectMapperHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,7 +42,7 @@ public class SynchronizationRepository {
                                 ObjectMapperHelper.serialize(objectMapper, synchronization.getConfiguration())
                         )
                 )
-                .addValue("projectId", project.getId())
+                .addValue("projectId", project.id())
         ).intValue();
     }
 
@@ -56,7 +56,7 @@ public class SynchronizationRepository {
                                 encryptor.encrypt(
                                         ObjectMapperHelper.serialize(objectMapper, synchronization.getConfiguration())
                                 ))
-                        .addValue("projectId", project.getId())
+                        .addValue("projectId", project.id())
                         .addValue("synchronizationId", synchronization.getId())
         );
         if (updated != 1) {
@@ -67,7 +67,7 @@ public class SynchronizationRepository {
     public List<Synchronization> select(Encryptor encryptor, Project project) {
         return namedJdbc.query(
                 "SELECT id, enabled, service, configuration FROM synchronization WHERE project_id = :projectId",
-                new MapSqlParameterSource("projectId", project.getId()),
+                new MapSqlParameterSource("projectId", project.id()),
                 rowMapper(encryptor, objectMapper)
         );
     }
@@ -77,7 +77,7 @@ public class SynchronizationRepository {
             return Optional.of(namedJdbc.queryForObject(
                     "SELECT id, enabled, service, configuration FROM synchronization WHERE project_id = :projectId and id = :id",
                     new MapSqlParameterSource()
-                            .addValue("projectId", project.getId())
+                            .addValue("projectId", project.id())
                             .addValue("id", id),
                     rowMapper(encryptor, objectMapper)
             ));

@@ -2,12 +2,10 @@ package com.altona.html;
 
 import com.altona.SpringTest;
 import com.altona.broadcast.broadcaster.BroadcastMessage;
-import com.altona.service.project.model.Project;
-import com.altona.service.time.model.control.BreakStart;
-import com.altona.service.time.model.control.BreakStop;
-import com.altona.service.time.model.control.TimeStatus;
-import com.altona.service.time.model.control.WorkStart;
-import com.altona.service.time.model.control.WorkStop;
+import com.altona.project.time.view.BreakStartView;
+import com.altona.project.time.view.BreakStopView;
+import com.altona.project.time.view.WorkStartView;
+import com.altona.project.time.view.WorkStopView;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -55,45 +53,45 @@ public class TimeTest extends SpringTest {
 
         // Start Break Without Work
         assertNoTimeStatus();
-        BreakStart breakStartWorkNotStarted = read(
+        BreakStartView breakStartViewWorkNotStarted = read(
                 mvc.perform(post("/time/project/" + project.getId() + "/start-break"))
                         .andExpect(status().isOk()),
-                BreakStart.class
+                BreakStartView.class
         );
-        assertEquals(BreakStart.Result.WORK_NOT_STARTED, breakStartWorkNotStarted.getResult());
-        assertFalse(breakStartWorkNotStarted.getTimeId().isPresent());
+        assertEquals(BreakStartView.Result.WORK_NOT_STARTED, breakStartViewWorkNotStarted.getResult());
+        assertFalse(breakStartViewWorkNotStarted.getTimeId().isPresent());
 
         // Stop Break Without Work
         assertNoTimeStatus();
-        BreakStop breakStopWorkNotStarted = read(
+        BreakStopView breakStopViewWorkNotStarted = read(
                 mvc.perform(post("/time/project/" + project.getId() + "/stop-break"))
                         .andExpect(status().isOk()),
-                BreakStop.class
+                BreakStopView.class
         );
-        assertEquals(BreakStop.Result.WORK_NOT_STARTED, breakStopWorkNotStarted.getResult());
-        assertFalse(breakStopWorkNotStarted.getTimeId().isPresent());
+        assertEquals(BreakStopView.Result.WORK_NOT_STARTED, breakStopViewWorkNotStarted.getResult());
+        assertFalse(breakStopViewWorkNotStarted.getTimeId().isPresent());
 
         // Start Work Without Work
         assertNoTimeStatus();
-        WorkStop workStopWorkNotStarted = read(
+        WorkStopView workStopWorkNotStartedView = read(
                 mvc.perform(post("/time/project/" + project.getId() + "/stop-work"))
                         .andExpect(status().isOk()),
-                WorkStop.class
+                WorkStopView.class
         );
-        assertEquals(WorkStop.Result.WORK_NOT_STARTED, workStopWorkNotStarted.getResult());
-        assertFalse(workStopWorkNotStarted.getWorkTimeId().isPresent());
-        assertFalse(workStopWorkNotStarted.getBreakTimeId().isPresent());
+        assertEquals(WorkStopView.Result.WORK_NOT_STARTED, workStopWorkNotStartedView.getResult());
+        assertFalse(workStopWorkNotStartedView.getWorkTimeId().isPresent());
+        assertFalse(workStopWorkNotStartedView.getBreakTimeId().isPresent());
 
         // Start Work
         assertNoTimeStatus();
-        WorkStart workStart = read(
+        WorkStartView workStartView = read(
                 mvc.perform(post("/time/project/" + project.getId() + "/start-work"))
                         .andExpect(status().isOk()),
-                WorkStart.class
+                WorkStartView.class
         );
-        assertEquals(WorkStart.Result.WORK_STARTED, workStart.getResult());
+        assertEquals(WorkStartView.Result.WORK_STARTED, workStartView.getResult());
         MockBroadcast workStartBroadcast = getBroadcast();
-        assertEquals(getTestUserId(), workStartBroadcast.getContext().getUserId());
+        assertEquals(getTestUserId(), workStartBroadcast.getContext().userId());
         assertEquals(BroadcastMessage.Type.TIME, workStartBroadcast.getBroadcastMessage().getType());
         TimeStatus workStartTimeStatus = assertInstanceOf(workStartBroadcast.getBroadcastMessage().getMessage(), TimeStatus.class);
         assertEquals(TimeStatus.Status.WORK, workStartTimeStatus.getStatus());
@@ -102,35 +100,35 @@ public class TimeTest extends SpringTest {
 
         // Start Work With Work Already Started
         assertWorkingTimeStatus(project, 4, 0);
-        WorkStart workStartWorkAlreadyStarted = read(
+        WorkStartView workStartWorkAlreadyStartedView = read(
                 mvc.perform(post("/time/project/" + project.getId() + "/start-work"))
                         .andExpect(status().isOk()),
-                WorkStart.class
+                WorkStartView.class
         );
-        assertEquals(WorkStart.Result.WORK_ALREADY_STARTED, workStartWorkAlreadyStarted.getResult());
-        assertEquals(workStart.getTimeId(), workStartWorkAlreadyStarted.getTimeId());
+        assertEquals(WorkStartView.Result.WORK_ALREADY_STARTED, workStartWorkAlreadyStartedView.getResult());
+        assertEquals(workStartView.getTimeId(), workStartWorkAlreadyStartedView.getTimeId());
 
         // Stop Break With Work Already Started Without Break Start
         assertWorkingTimeStatus(project, 4, 0);
-        BreakStop breakStopWorkStartedBreakNotStarted = read(
+        BreakStopView breakStopWorkStartedBreakNotStartedView = read(
                 mvc.perform(post("/time/project/" + project.getId() + "/stop-break"))
                         .andExpect(status().isOk()),
-                BreakStop.class
+                BreakStopView.class
         );
-        assertEquals(BreakStop.Result.BREAK_NOT_STARTED, breakStopWorkStartedBreakNotStarted.getResult());
-        assertFalse(breakStopWorkStartedBreakNotStarted.getTimeId().isPresent());
+        assertEquals(BreakStopView.Result.BREAK_NOT_STARTED, breakStopWorkStartedBreakNotStartedView.getResult());
+        assertFalse(breakStopWorkStartedBreakNotStartedView.getTimeId().isPresent());
 
         // Start Break With Work
         assertWorkingTimeStatus(project, 4, 0);
-        BreakStart breakStart = read(
+        BreakStartView breakStartView = read(
                 mvc.perform(post("/time/project/" + project.getId() + "/start-break"))
                         .andExpect(status().isOk()),
-                BreakStart.class
+                BreakStartView.class
         );
-        assertEquals(BreakStart.Result.BREAK_STARTED, breakStart.getResult());
-        assertTrue(breakStart.getTimeId().isPresent());
+        assertEquals(BreakStartView.Result.BREAK_STARTED, breakStartView.getResult());
+        assertTrue(breakStartView.getTimeId().isPresent());
         MockBroadcast breakStartBroadcast = getBroadcast();
-        assertEquals(getTestUserId(), breakStartBroadcast.getContext().getUserId());
+        assertEquals(getTestUserId(), breakStartBroadcast.getContext().userId());
         assertEquals(BroadcastMessage.Type.TIME, breakStartBroadcast.getBroadcastMessage().getType());
         TimeStatus breakStartTimeStatus = assertInstanceOf(breakStartBroadcast.getBroadcastMessage().getMessage(), TimeStatus.class);
         assertEquals(TimeStatus.Status.BREAK, breakStartTimeStatus.getStatus());
@@ -139,25 +137,25 @@ public class TimeTest extends SpringTest {
 
         // Start Break With Break Already Started
         assertBreakTimeStatus(project, 4, 1);
-        BreakStart breakStartBreakAlreadyStarted = read(
+        BreakStartView breakStartBreakAlreadyStartedView = read(
                 mvc.perform(post("/time/project/" + project.getId() + "/start-break"))
                         .andExpect(status().isOk()),
-                BreakStart.class
+                BreakStartView.class
         );
-        assertEquals(BreakStart.Result.BREAK_ALREADY_STARTED, breakStartBreakAlreadyStarted.getResult());
-        assertEquals(breakStartBreakAlreadyStarted.getTimeId(), breakStart.getTimeId());
+        assertEquals(BreakStartView.Result.BREAK_ALREADY_STARTED, breakStartBreakAlreadyStartedView.getResult());
+        assertEquals(breakStartBreakAlreadyStartedView.getTimeId(), breakStartView.getTimeId());
 
         // Stop Break With Break Started
         assertBreakTimeStatus(project, 4, 1);
-        BreakStop breakStop = read(
+        BreakStopView breakStopView = read(
                 mvc.perform(post("/time/project/" + project.getId() + "/stop-break"))
                         .andExpect(status().isOk()),
-                BreakStop.class
+                BreakStopView.class
         );
-        assertEquals(BreakStop.Result.BREAK_STOPPED, breakStop.getResult());
-        assertEquals(breakStop.getTimeId(), breakStart.getTimeId());
+        assertEquals(BreakStopView.Result.BREAK_STOPPED, breakStopView.getResult());
+        assertEquals(breakStopView.getTimeId(), breakStartView.getTimeId());
         MockBroadcast breakStopBroadcast = getBroadcast();
-        assertEquals(getTestUserId(), breakStopBroadcast.getContext().getUserId());
+        assertEquals(getTestUserId(), breakStopBroadcast.getContext().userId());
         assertEquals(BroadcastMessage.Type.TIME, breakStopBroadcast.getBroadcastMessage().getType());
         TimeStatus breakStopTimeStatus = assertInstanceOf(breakStopBroadcast.getBroadcastMessage().getMessage(), TimeStatus.class);
         assertEquals(TimeStatus.Status.WORK, breakStopTimeStatus.getStatus());
@@ -166,16 +164,16 @@ public class TimeTest extends SpringTest {
 
         // Stop Work
         assertWorkingTimeStatus(project, 8, 1);
-        WorkStop workStop = read(
+        WorkStopView workStopView = read(
                 mvc.perform(post("/time/project/" + project.getId() + "/stop-work"))
                         .andExpect(status().isOk()),
-                WorkStop.class
+                WorkStopView.class
         );
-        assertEquals(WorkStop.Result.WORK_STOPPED, workStop.getResult());
-        assertEquals(Optional.of(workStart.getTimeId()), workStop.getWorkTimeId());
-        assertFalse(workStop.getBreakTimeId().isPresent());
+        assertEquals(WorkStopView.Result.WORK_STOPPED, workStopView.getResult());
+        assertEquals(Optional.of(workStartView.getTimeId()), workStopView.getWorkTimeId());
+        assertFalse(workStopView.getBreakTimeId().isPresent());
         MockBroadcast workStopBroadcast = getBroadcast();
-        assertEquals(getTestUserId(), workStopBroadcast.getContext().getUserId());
+        assertEquals(getTestUserId(), workStopBroadcast.getContext().userId());
         assertEquals(BroadcastMessage.Type.TIME, workStopBroadcast.getBroadcastMessage().getType());
         TimeStatus workStopTimeStatus = assertInstanceOf(workStopBroadcast.getBroadcastMessage().getMessage(), TimeStatus.class);
         assertEquals(TimeStatus.Status.NONE, workStopTimeStatus.getStatus());
@@ -184,14 +182,14 @@ public class TimeTest extends SpringTest {
 
         // Start Work
         assertNoTimeStatus();
-        WorkStart workStartTwo = read(
+        WorkStartView workStartViewTwo = read(
                 mvc.perform(post("/time/project/" + project.getId() + "/start-work"))
                         .andExpect(status().isOk()),
-                WorkStart.class
+                WorkStartView.class
         );
-        assertEquals(WorkStart.Result.WORK_STARTED, workStartTwo.getResult());
+        assertEquals(WorkStartView.Result.WORK_STARTED, workStartViewTwo.getResult());
         MockBroadcast workStartTwoBroadcast = getBroadcast();
-        assertEquals(getTestUserId(), workStartTwoBroadcast.getContext().getUserId());
+        assertEquals(getTestUserId(), workStartTwoBroadcast.getContext().userId());
         assertEquals(BroadcastMessage.Type.TIME, workStartTwoBroadcast.getBroadcastMessage().getType());
         TimeStatus workStartTwoTimeStatus = assertInstanceOf(workStartTwoBroadcast.getBroadcastMessage().getMessage(), TimeStatus.class);
         assertEquals(TimeStatus.Status.WORK, workStartTwoTimeStatus.getStatus());
@@ -200,15 +198,15 @@ public class TimeTest extends SpringTest {
 
         // Start Break
         assertWorkingTimeStatus(project, 1, 0);
-        BreakStart breakStartTwo = read(
+        BreakStartView breakStartViewTwo = read(
                 mvc.perform(post("/time/project/" + project.getId() + "/start-break"))
                         .andExpect(status().isOk()),
-                BreakStart.class
+                BreakStartView.class
         );
-        assertEquals(BreakStart.Result.BREAK_STARTED, breakStartTwo.getResult());
-        assertTrue(breakStartTwo.getTimeId().isPresent());
+        assertEquals(BreakStartView.Result.BREAK_STARTED, breakStartViewTwo.getResult());
+        assertTrue(breakStartViewTwo.getTimeId().isPresent());
         MockBroadcast breakStartTwoBroadcast = getBroadcast();
-        assertEquals(getTestUserId(), breakStartTwoBroadcast.getContext().getUserId());
+        assertEquals(getTestUserId(), breakStartTwoBroadcast.getContext().userId());
         assertEquals(BroadcastMessage.Type.TIME, breakStartTwoBroadcast.getBroadcastMessage().getType());
         TimeStatus breakStartTwoTimeStatus = assertInstanceOf(breakStartTwoBroadcast.getBroadcastMessage().getMessage(), TimeStatus.class);
         assertEquals(TimeStatus.Status.BREAK, breakStartTwoTimeStatus.getStatus());
@@ -217,16 +215,16 @@ public class TimeTest extends SpringTest {
 
         // Start Break
         assertBreakTimeStatus(project, 1, 1);
-        WorkStop workStopTwo = read(
+        WorkStopView workStopViewTwo = read(
                 mvc.perform(post("/time/project/" + project.getId() + "/stop-work"))
                         .andExpect(status().isOk()),
-                WorkStop.class
+                WorkStopView.class
         );
-        assertEquals(WorkStop.Result.WORK_AND_BREAK_STOPPED, workStopTwo.getResult());
-        assertEquals(Optional.of(workStartTwo.getTimeId()), workStopTwo.getWorkTimeId());
-        assertEquals(breakStartTwo.getTimeId(), workStopTwo.getBreakTimeId());
+        assertEquals(WorkStopView.Result.WORK_AND_BREAK_STOPPED, workStopViewTwo.getResult());
+        assertEquals(Optional.of(workStartViewTwo.getTimeId()), workStopViewTwo.getWorkTimeId());
+        assertEquals(breakStartViewTwo.getTimeId(), workStopViewTwo.getBreakTimeId());
         MockBroadcast workStopTwoBroadcast = getBroadcast();
-        assertEquals(getTestUserId(), workStopTwoBroadcast.getContext().getUserId());
+        assertEquals(getTestUserId(), workStopTwoBroadcast.getContext().userId());
         assertEquals(BroadcastMessage.Type.TIME, workStopTwoBroadcast.getBroadcastMessage().getType());
         TimeStatus workStopTwoTimeStatus = assertInstanceOf(workStopTwoBroadcast.getBroadcastMessage().getMessage(), TimeStatus.class);
         assertEquals(TimeStatus.Status.NONE, workStopTwoTimeStatus.getStatus());

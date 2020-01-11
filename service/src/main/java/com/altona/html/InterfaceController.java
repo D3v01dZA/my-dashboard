@@ -1,11 +1,12 @@
 package com.altona.html;
 
-import com.altona.facade.ProjectFacade;
-import com.altona.facade.TimeFacade;
-import com.altona.service.project.model.Project;
-import com.altona.service.time.model.control.TimeStatus;
-import com.altona.service.time.model.summary.SummaryType;
-import com.altona.service.time.model.summary.TimeSummary;
+import com.altona.project.time.TimeFacade;
+import com.altona.project.ProjectFacade;
+import com.altona.project.Project;
+import com.altona.project.view.ProjectView;
+import com.altona.project.time.view.TimeStatusView;
+import com.altona.project.time.view.TimeSummaryView;
+import com.altona.project.time.SummaryType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Optional;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
 
 @RestController
 @AllArgsConstructor
@@ -32,44 +34,47 @@ public class InterfaceController {
             Authentication authentication,
             TimeZone timeZone
     ) {
-        List<Project> projects = projectFacade.projects(authentication);
-        TimeStatus timeStatus = timeFacade.timeStatus(authentication, timeZone);
+        List<ProjectView> projects = projectFacade.projects(authentication, timeZone).stream()
+                .map(Project::asView)
+                .collect(Collectors.toList());
+        TimeStatusView timeStatus = timeFacade.currentTime(authentication, timeZone)
+                .asTimeStatusView();
         if (!projects.isEmpty()) {
-            Project project = projects.get(0);
+            ProjectView project = projects.get(0);
             return timeFacade.summary(
                     authentication,
                     timeZone,
                     project.getId(),
                     SummaryType.CURRENT_WEEK
             ).get().map(
-                    summary -> new ResponseEntity<>(new TimeScreen(project, projects, timeStatus, summary), HttpStatus.OK),
-                    summaryFailure -> new ResponseEntity<>(summaryFailure.getMessage(), HttpStatus.EXPECTATION_FAILED)
+                    summary -> new ResponseEntity<>(new TimeScreenView(project, projects, timeStatus, summary.asTimeSummaryView()), HttpStatus.OK),
+                    summaryFailure -> new ResponseEntity<>(summaryFailure, HttpStatus.EXPECTATION_FAILED)
             );
         }
-        return new ResponseEntity<>(new TimeScreen(null, projects, timeStatus, null), HttpStatus.OK);
+        return new ResponseEntity<>(new TimeScreenView(null, projects, timeStatus, null), HttpStatus.OK);
     }
 
 
     @AllArgsConstructor
-    public static class TimeScreen {
+    public static class TimeScreenView {
 
-        private Project project;
-
-        @Getter
-        @NonNull
-        private List<Project> projects;
+        private ProjectView project;
 
         @Getter
         @NonNull
-        private TimeStatus timeStatus;
+        private List<ProjectView> projects;
 
-        private TimeSummary timeSummary;
+        @Getter
+        @NonNull
+        private TimeStatusView timeStatus;
 
-        public Optional<Project> getProject() {
+        private TimeSummaryView timeSummary;
+
+        public Optional<ProjectView> getProject() {
             return Optional.ofNullable(project);
         }
 
-        public Optional<TimeSummary> getTimeSummary() {
+        public Optional<TimeSummaryView> getTimeSummary() {
             return Optional.ofNullable(timeSummary);
         }
     }

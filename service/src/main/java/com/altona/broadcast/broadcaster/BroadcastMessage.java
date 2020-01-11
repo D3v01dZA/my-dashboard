@@ -1,7 +1,7 @@
 package com.altona.broadcast.broadcaster;
 
+import com.altona.project.time.view.TimeStatusView;
 import com.altona.service.synchronization.model.SynchronizationAttemptBroadcast;
-import com.altona.service.time.model.control.TimeStatus;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,7 +11,7 @@ import lombok.NonNull;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class BroadcastMessage<T> {
 
-    public static BroadcastMessage<TimeStatus> timeStatus(TimeStatus timeStatus) {
+    public static BroadcastMessage<TimeStatusView> timeStatus(TimeStatusView timeStatus) {
         return new BroadcastMessage<>(Type.TIME, timeStatus);
     }
 

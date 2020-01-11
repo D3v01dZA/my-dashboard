@@ -1,7 +1,6 @@
 package com.altona.service.synchronization.openair.model;
 
-import com.altona.service.time.model.summary.TimeSummary;
-import com.altona.util.LocalDateIterator;
+import com.altona.project.time.TimeUtil;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
@@ -35,7 +34,7 @@ public class OpenairTimeDataList {
 
     public TimeSummary getAllData(String project, String task) {
         LinkedHashMap<LocalDate, LocalTime> all = new LinkedHashMap<>();
-        for (LocalDate localDate : LocalDateIterator.inclusive(getWeekStart(), getWeekEnd())) {
+        for (LocalDate localDate : TimeUtil.LocalDateIterator.inclusive(getWeekStart(), getWeekEnd())) {
             all.put(localDate, LocalTime.of(0, 0));
         }
         for (OpenairTimeData timeData : timeDataList) {

@@ -1,5 +1,6 @@
 package com.altona.service.synchronization.netsuite;
 
+import com.altona.project.time.TimeUtil;
 import com.altona.service.synchronization.SynchronizationTraceRepository;
 import com.altona.service.synchronization.model.SynchronizationRequest;
 import com.altona.service.synchronization.model.SynchronizationAttempt;
@@ -7,7 +8,6 @@ import com.altona.service.synchronization.netsuite.model.NetsuiteConfiguration;
 import com.altona.service.synchronization.netsuite.model.NetsuiteContext;
 import com.altona.service.synchronization.netsuite.model.NetsuiteTimeData;
 import com.altona.service.synchronization.netsuite.model.NetsuiteTimeDataList;
-import com.altona.util.LocalDateIterator;
 import com.altona.util.Result;
 import com.google.common.collect.MoreCollectors;
 import lombok.AllArgsConstructor;
@@ -139,7 +139,7 @@ public class NetsuiteBrowser {
 
         List<WebElement> cells = context.findElement(By.className("uir-machine-row")).findElements(By.tagName("td"));
         int i = 16;
-        for (LocalDate date : LocalDateIterator.exclusive(from, to)) {
+        for (LocalDate date : TimeUtil.LocalDateIterator.exclusive(from, to)) {
             WebElement cell = cells.get(i++);
             cell.click();
             WebElement input = cell.findElement(By.tagName("input"));

@@ -1,6 +1,6 @@
 package com.altona.context;
 
-import com.altona.user.service.User;
+import com.altona.user.User;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.experimental.Delegate;
@@ -16,7 +16,7 @@ class UserBasedContext implements Context {
     private User user;
 
     @Override
-    public int getUserId() {
+    public int userId() {
         return user.getId();
     }
 

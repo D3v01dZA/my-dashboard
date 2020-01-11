@@ -1,8 +1,6 @@
 package com.altona.context;
 
-import com.altona.security.Encryptor;
-import com.altona.service.time.util.TimeConfig;
-import com.altona.user.service.UserContext;
+import com.altona.user.UserContext;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.experimental.Delegate;
@@ -19,7 +17,7 @@ class UserContextBasedEncryptionContext implements EncryptionContext {
     private UserContext userContext;
 
     @Override
-    public int getUserId() {
+    public int userId() {
         return userContext.getId();
     }
 

@@ -1,10 +1,10 @@
 package com.altona.service.synchronization;
 
-import com.altona.broadcast.broadcaster.Broadcaster;
-import com.altona.security.Encryptor;
-import com.altona.user.service.UserContext;
 import com.altona.broadcast.broadcaster.BroadcastMessage;
-import com.altona.service.project.model.Project;
+import com.altona.broadcast.broadcaster.Broadcaster;
+import com.altona.context.EncryptionContext;
+import com.altona.project.Project;
+import com.altona.context.Encryptor;
 import com.altona.service.synchronization.model.Synchronization;
 import com.altona.service.synchronization.model.SynchronizationAttempt;
 import com.altona.service.synchronization.model.SynchronizationAttemptBroadcast;
@@ -13,7 +13,7 @@ import com.altona.service.synchronization.model.SynchronizationError;
 import com.altona.service.synchronization.model.SynchronizationRequest;
 import com.altona.service.synchronization.model.SynchronizationTrace;
 import com.altona.util.Result;
-import com.altona.util.threading.TransactionalThreading;
+import com.altona.util.TransactionalThreading;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.AllArgsConstructor;
@@ -63,28 +63,28 @@ public class SynchronizationService {
         return Result.success(synchronizationRepository.select(encryptor, project, modified.getId()).get());
     }
     
-    public Optional<SynchronizationAttempt> attempt(UserContext userContext, Project project, int synchronizationId, int attemptId) {
-        return synchronizationRepository.select(userContext, project, synchronizationId)
-                .flatMap(synchronization -> synchronizationAttemptRepository.select(userContext, synchronization, attemptId));
+    public Optional<SynchronizationAttempt> attempt(EncryptionContext encryptionContext, Project project, int synchronizationId, int attemptId) {
+        return synchronizationRepository.select(encryptionContext, project, synchronizationId)
+                .flatMap(synchronization -> synchronizationAttemptRepository.select(encryptionContext, synchronization, attemptId));
     }
 
-    public Optional<List<SynchronizationTrace>> traces(UserContext userContext, Project project, int synchronizationId, int attemptId) {
-        return attempt(userContext, project, synchronizationId, attemptId)
-                .map(synchronizationAttempt -> synchronizationTraceRepository.traces(userContext, synchronizationAttempt));
+    public Optional<List<SynchronizationTrace>> traces(EncryptionContext encryptionContext, Project project, int synchronizationId, int attemptId) {
+        return attempt(encryptionContext, project, synchronizationId, attemptId)
+                .map(synchronizationAttempt -> synchronizationTraceRepository.traces(encryptionContext, synchronizationAttempt));
     }
 
-    public Optional<SynchronizationAttempt> synchronize(UserContext userContext, Project project, int synchronizationId, SynchronizationCommand command) {
-        SynchronizationRequest request = new SynchronizationRequest(synchronizationId, userContext, project, command);
-        return synchronizationRepository.select(userContext, project, synchronizationId)
+    public Optional<SynchronizationAttempt> synchronize(EncryptionContext encryptionContext, Project project, int synchronizationId, SynchronizationCommand command) {
+        SynchronizationRequest request = new SynchronizationRequest(synchronizationId, encryptionContext, project, command);
+        return synchronizationRepository.select(encryptionContext, project, synchronizationId)
                 .map(synchronization -> createService(synchronization, request))
-                .map(result -> synchronize(userContext, project, result));
+                .map(result -> synchronize(encryptionContext, project, result));
     }
 
-    public List<SynchronizationAttempt> synchronize(UserContext userContext, Project project) {
-        return synchronizationRepository.select(userContext, project).stream()
+    public List<SynchronizationAttempt> synchronize(EncryptionContext encryptionContext, Project project) {
+        return synchronizationRepository.select(encryptionContext, project).stream()
                 .filter(Synchronization::isEnabled)
-                .map(synchronization -> createService(synchronization, new SynchronizationRequest(synchronization.getId(), userContext, project, SynchronizationCommand.current())))
-                .map(result -> synchronize(userContext, project, result))
+                .map(synchronization -> createService(synchronization, new SynchronizationRequest(synchronization.getId(), encryptionContext, project, SynchronizationCommand.current())))
+                .map(result -> synchronize(encryptionContext, project, result))
                 .collect(Collectors.toList());
     }
 
@@ -92,22 +92,22 @@ public class SynchronizationService {
         return synchronization.createService(applicationContext, request);
     }
 
-    private SynchronizationAttempt synchronize(UserContext userContext, Project project, Result<Synchronizer, SynchronizationError> synchronizationResult) {
+    private SynchronizationAttempt synchronize(EncryptionContext encryptionContext, Project project, Result<Synchronizer, SynchronizationError> synchronizationResult) {
         return synchronizationResult.map(
                 synchronizer -> {
                     SynchronizationAttempt pending = SynchronizationAttempt.pending(synchronizer);
-                    SynchronizationAttempt inserted = synchronizationAttemptRepository.insert(userContext, synchronizer.getSynchronization(), pending);
-                    synchronizeInBackground(userContext, synchronizer, inserted, project);
+                    SynchronizationAttempt inserted = synchronizationAttemptRepository.insert(encryptionContext, synchronizer.getSynchronization(), pending);
+                    synchronizeInBackground(encryptionContext, synchronizer, inserted, project);
                     return inserted;
                 },
                 error -> {
                     SynchronizationAttempt failure = SynchronizationAttempt.failure(error);
-                    return synchronizationAttemptRepository.insert(userContext, error.getSynchronization(), failure);
+                    return synchronizationAttemptRepository.insert(encryptionContext, error.getSynchronization(), failure);
                 }
         );
     }
 
-    private void synchronizeInBackground(UserContext userContext, Synchronizer synchronizer, SynchronizationAttempt attempt, Project project) {
+    private void synchronizeInBackground(EncryptionContext encryptionContext, Synchronizer synchronizer, SynchronizationAttempt attempt, Project project) {
         transactionalThreading.executeInTransaction(() -> {
             SynchronizationAttempt update;
             try {
@@ -121,8 +121,8 @@ public class SynchronizationService {
                 update = attempt.failed(ex);
                 log.info("Runtime exception {} {}", synchronizer.getSynchronization().getService(), synchronizer.getSynchronization().getId(), ex);
             }
-            synchronizationAttemptRepository.update(userContext, update);
-            broadcaster.broadcast(userContext, BroadcastMessage.synchronization(SynchronizationAttemptBroadcast.of(update, synchronizer, project)));
+            synchronizationAttemptRepository.update(encryptionContext, update);
+            broadcaster.broadcast(encryptionContext, BroadcastMessage.synchronization(SynchronizationAttemptBroadcast.of(update, synchronizer, project)));
         });
     }
 

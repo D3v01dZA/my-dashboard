@@ -1,10 +1,10 @@
 package com.altona.html;
 
 import com.altona.SpringTest;
-import com.altona.broadcast.service.view.BroadcastDeleteView;
-import com.altona.broadcast.service.view.BroadcastUpdateView;
-import com.altona.broadcast.service.view.BroadcastView;
-import com.altona.broadcast.service.view.UnsavedBroadcastView;
+import com.altona.broadcast.view.BroadcastDeleteView;
+import com.altona.broadcast.view.BroadcastUpdateView;
+import com.altona.broadcast.view.BroadcastView;
+import com.altona.broadcast.view.UnsavedBroadcastView;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.jupiter.api.Test;
 

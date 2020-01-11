@@ -1,6 +1,9 @@
 package com.altona.html;
 
-import com.altona.facade.SynchronizationFacade;
+import com.altona.project.synchronization.UnsavedSynchronization;
+import com.altona.project.synchronization.view.SynchronizationView;
+import com.altona.project.synchronization.view.UnsavedSynchronizationView;
+import com.altona.service.synchronization.SynchronizationFacade;
 import com.altona.service.synchronization.model.Synchronization;
 import com.altona.service.synchronization.model.SynchronizationAttempt;
 import com.altona.service.synchronization.model.SynchronizationCommand;
@@ -27,13 +30,13 @@ public class SynchronizationController {
     private SynchronizationFacade synchronizationFacade;
 
     @RequestMapping(path = "/time/project/{projectId}/synchronization", method = RequestMethod.POST, produces = "application/json")
-    public ResponseEntity<Synchronization> createSynchronization(
+    public ResponseEntity<SynchronizationView> createSynchronization(
             Authentication authentication,
             TimeZone timeZone,
             @PathVariable Integer projectId,
-            @RequestBody Synchronization synchronization
+            @RequestBody UnsavedSynchronizationView unsavedSynchronizationView
     ) {
-        return synchronizationFacade.createSynchronization(authentication, timeZone, projectId, synchronization)
+        return synchronizationFacade.createSynchronization(authentication, timeZone, projectId, new UnsavedSynchronization(unsavedSynchronizationView.getEnabled(), unsavedSynchronizationView.getService(), unsavedSynchronizationView.getConfiguration()))
                 .map(created -> created.map(
                         success -> new ResponseEntity<>(success, HttpStatus.CREATED),
                         failure -> new ResponseEntity<Synchronization>(HttpStatus.BAD_REQUEST)

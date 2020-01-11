@@ -2,7 +2,6 @@ package com.altona.html;
 
 import com.altona.SpringTest;
 import com.altona.broadcast.broadcaster.BroadcastMessage;
-import com.altona.service.project.model.Project;
 import com.altona.service.synchronization.model.Synchronization;
 import com.altona.service.synchronization.model.SynchronizationAttempt;
 import com.altona.service.synchronization.model.SynchronizationAttemptBroadcast;
@@ -81,7 +80,7 @@ class SynchronizationTest extends SpringTest {
 
         // Fetch the broadcast after synchronizing
         MockBroadcast attemptBroadcast = getBroadcast();
-        assertEquals(getTestUserId(), attemptBroadcast.getContext().getUserId());
+        assertEquals(getTestUserId(), attemptBroadcast.getContext().userId());
         assertEquals(BroadcastMessage.Type.SYNCHRONIZE_ATTEMPT, attemptBroadcast.getBroadcastMessage().getType());
         SynchronizationAttemptBroadcast synchronizationAttemptBroadcast = assertInstanceOf(attemptBroadcast.getBroadcastMessage().getMessage(), SynchronizationAttemptBroadcast.class);
         assertEquals(SynchronizationStatus.SUCCESS, synchronizationAttemptBroadcast.getStatus());
@@ -145,7 +144,7 @@ class SynchronizationTest extends SpringTest {
 
         // Fetch the broadcast after failing synchronizing
         MockBroadcast failingAttemptBroadcast = getBroadcast();
-        assertEquals(getTestUserId(), failingAttemptBroadcast.getContext().getUserId());
+        assertEquals(getTestUserId(), failingAttemptBroadcast.getContext().userId());
         assertEquals(BroadcastMessage.Type.SYNCHRONIZE_ATTEMPT, failingAttemptBroadcast.getBroadcastMessage().getType());
         SynchronizationAttemptBroadcast failingSynchronizationAttemptBroadcast = assertInstanceOf(failingAttemptBroadcast.getBroadcastMessage().getMessage(), SynchronizationAttemptBroadcast.class);
         assertEquals(SynchronizationStatus.FAILURE, failingSynchronizationAttemptBroadcast.getStatus());

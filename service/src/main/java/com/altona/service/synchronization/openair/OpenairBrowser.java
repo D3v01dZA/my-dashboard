@@ -1,6 +1,7 @@
 package com.altona.service.synchronization.openair;
 
-import com.altona.security.Encryptor;
+import com.altona.context.Encryptor;
+import com.altona.project.time.TimeUtil;
 import com.altona.service.synchronization.SynchronizationException;
 import com.altona.service.synchronization.SynchronizationTraceRepository;
 import com.altona.service.synchronization.model.SynchronizationAttempt;
@@ -9,8 +10,6 @@ import com.altona.service.synchronization.openair.model.OpenairConfiguration;
 import com.altona.service.synchronization.openair.model.OpenairContext;
 import com.altona.service.synchronization.openair.model.OpenairTimeData;
 import com.altona.service.synchronization.openair.model.OpenairTimeDataList;
-import com.altona.service.time.model.summary.TimeSummary;
-import com.altona.util.LocalDateIterator;
 import com.google.common.collect.Maps;
 import com.google.common.collect.MoreCollectors;
 import lombok.AllArgsConstructor;
@@ -98,7 +97,7 @@ public class OpenairBrowser {
             throw new SynchronizationException(context.takeScreenshot(), "Task not found in select");
         }
         int i = 3;
-        for (LocalDate date : LocalDateIterator.inclusive(timeSummary.getFromDate(), timeSummary.getToDate())) {
+        for (LocalDate date : TimeUtil.LocalDateIterator.inclusive(timeSummary.getFromDate(), timeSummary.getToDate())) {
             WebElement day = tableRow.get(i++);
             timeSummary.getActualTime(date)
                     .ifPresent(time -> writeTime(day, time));
@@ -120,7 +119,7 @@ public class OpenairBrowser {
         String task = new Select(tableElements.get(2).findElement(By.tagName("select"))).getFirstSelectedOption().getText();
         Map<LocalDate, LocalTime> timeData = Maps.newHashMap();
         int i = 3;
-        for (LocalDate date : LocalDateIterator.inclusive(timeSheetDates.getStart(), timeSheetDates.getEnd())) {
+        for (LocalDate date : TimeUtil.LocalDateIterator.inclusive(timeSheetDates.getStart(), timeSheetDates.getEnd())) {
             readTime(tableElements.get(i++))
                     .ifPresent(time -> timeData.put(date, time));
         }

@@ -1,5 +1,6 @@
 package com.altona.service.synchronization.maconomy;
 
+import com.altona.project.time.TimeUtil;
 import com.altona.service.synchronization.SynchronizationTraceRepository;
 import com.altona.service.synchronization.model.SynchronizationRequest;
 import com.altona.service.synchronization.maconomy.model.MaconomyConfiguration;
@@ -7,7 +8,6 @@ import com.altona.service.synchronization.maconomy.model.MaconomyContext;
 import com.altona.service.synchronization.maconomy.model.MaconomyTimeData;
 import com.altona.service.synchronization.maconomy.model.MaconomyTimeDataList;
 import com.altona.service.synchronization.model.SynchronizationAttempt;
-import com.altona.util.LocalDateIterator;
 import com.altona.util.Result;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -113,7 +113,7 @@ public class MaconomyBrowser {
 
                 // Start at cell 4 + the start index
                 Map<LocalDate, LocalTime> timeMap = Maps.newHashMap();
-                for (LocalDate localDate : LocalDateIterator.inclusive(weekStart, weekEnd)) {
+                for (LocalDate localDate : TimeUtil.LocalDateIterator.inclusive(weekStart, weekEnd)) {
                     int index = 3 + localDate.getDayOfWeek().getValue();
                     WebElement day = cells.get(index);
                     List<WebElement> dayInputs = day.findElements(By.tagName("input"));
@@ -167,7 +167,7 @@ public class MaconomyBrowser {
         cells.get(3).findElement(By.tagName("input")).sendKeys(data.getTaskName());
         sleep();
 
-        for (LocalDate localDate : LocalDateIterator.inclusive(from, to)) {
+        for (LocalDate localDate : TimeUtil.LocalDateIterator.inclusive(from, to)) {
             int index = 3 + localDate.getDayOfWeek().getValue();
             WebElement dayCell = cells.get(index);
             Optional<String> result = data.getTime(localDate).flatMap(dayTime -> {

@@ -60,9 +60,9 @@ public class DefaultBroadcastInteractor implements BroadcastInteractor {
                     .build();
 
             BatchResponse response = firebaseMessaging.sendMulticast(message);
-            log.info("Broadcasted to user {} - {} succeeded and {} failed", context.getUserId(), response.getSuccessCount(), response.getFailureCount());
+            log.info("Broadcasted to user {} - {} succeeded and {} failed", context.userId(), response.getSuccessCount(), response.getFailureCount());
         } catch (FirebaseMessagingException | JsonProcessingException e) {
-            log.error("Broadcast to user {} failed", context.getUserId(), e);
+            log.error("Broadcast to user {} failed", context.userId(), e);
         }
     }
 

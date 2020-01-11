@@ -1,12 +1,8 @@
 package com.altona.html;
 
-import com.altona.facade.TimeFacade;
-import com.altona.service.time.model.control.BreakStart;
-import com.altona.service.time.model.control.BreakStop;
-import com.altona.service.time.model.control.TimeStatus;
-import com.altona.service.time.model.control.WorkStart;
-import com.altona.service.time.model.control.WorkStop;
-import com.altona.service.time.model.summary.SummaryType;
+import com.altona.project.time.TimeFacade;
+import com.altona.project.time.view.*;
+import com.altona.project.time.SummaryType;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,55 +22,56 @@ public class TimeController {
     private TimeFacade timeFacade;
 
     @RequestMapping(path = "/time/project/{projectId}/start-work", method = RequestMethod.POST, produces = "application/json")
-    public ResponseEntity<WorkStart> startWork(
+    public ResponseEntity<WorkStartView> startWork(
             Authentication authentication,
             TimeZone timeZone,
             @PathVariable Integer projectId
     ) {
         return timeFacade.startWork(authentication, timeZone, projectId)
-                .map(workStart -> new ResponseEntity<>(workStart, HttpStatus.OK))
+                .map(workStart -> new ResponseEntity<>(workStart.asWorkStartView(), HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @RequestMapping(path = "/time/project/{projectId}/start-break", method = RequestMethod.POST, produces = "application/json")
-    public ResponseEntity<BreakStart> startBreak(
+    public ResponseEntity<BreakStartView> startBreak(
             Authentication authentication,
             TimeZone timeZone,
             @PathVariable Integer projectId
     ) {
         return timeFacade.startBreak(authentication, timeZone, projectId)
-                .map(breakStart -> new ResponseEntity<>(breakStart, HttpStatus.OK))
+                .map(breakStart -> new ResponseEntity<>(breakStart.asBreakStartView(), HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @RequestMapping(path = "/time/project/{projectId}/stop-work", method = RequestMethod.POST, produces = "application/json")
-    public ResponseEntity<WorkStop> endWork(
+    public ResponseEntity<WorkStopView> endWork(
             Authentication authentication,
             TimeZone timeZone,
             @PathVariable Integer projectId
     ) {
         return timeFacade.endWork(authentication, timeZone, projectId)
-                .map(workStop -> new ResponseEntity<>(workStop, HttpStatus.OK))
+                .map(workStop -> new ResponseEntity<>(workStop.asWorkStopView(), HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @RequestMapping(path = "/time/project/{projectId}/stop-break", method = RequestMethod.POST, produces = "application/json")
-    public ResponseEntity<BreakStop> endBreak(
+    public ResponseEntity<BreakStopView> endBreak(
             Authentication authentication,
             TimeZone timeZone,
             @PathVariable Integer projectId
     ) {
         return timeFacade.endBreak(authentication, timeZone, projectId)
-                .map(breakStop -> new ResponseEntity<>(breakStop, HttpStatus.OK))
+                .map(breakStop -> new ResponseEntity<>(breakStop.asBreakStopView(), HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @RequestMapping(path = "/time/project/time-status", method = RequestMethod.POST, produces = "application/json")
-    public TimeStatus timeStatus(
+    public TimeStatusView timeStatus(
             Authentication authentication,
             TimeZone timeZone
     ) {
-        return timeFacade.timeStatus(authentication, timeZone);
+        return timeFacade.currentTime(authentication, timeZone)
+                .asTimeStatusView();
     }
 
     @RequestMapping(path = "/time/project/{projectId}/summary", method = RequestMethod.GET, produces = "application/json")

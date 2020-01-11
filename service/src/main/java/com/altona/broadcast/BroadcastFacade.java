@@ -1,15 +1,13 @@
 package com.altona.broadcast;
 
-import com.altona.broadcast.service.Broadcast;
-import com.altona.broadcast.service.UnsavedBroadcast;
-import com.altona.broadcast.service.operation.BroadcastDelete;
-import com.altona.broadcast.service.operation.BroadcastUpdate;
-import com.altona.broadcast.service.query.BroadcastById;
-import com.altona.broadcast.service.query.BroadcastsByUser;
+import com.altona.broadcast.operation.BroadcastDelete;
+import com.altona.broadcast.operation.BroadcastUpdate;
+import com.altona.broadcast.query.BroadcastById;
+import com.altona.broadcast.query.BroadcastsByUser;
 import com.altona.context.Context;
 import com.altona.context.facade.ContextFacade;
 import com.altona.context.SqlContext;
-import com.altona.service.time.util.TimeInfo;
+import com.altona.context.TimeInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;

@@ -14,7 +14,6 @@ import com.altona.service.synchronization.test.FailingSynchronizer;
 import com.altona.service.synchronization.test.SucceedingBrowser;
 import com.altona.service.synchronization.test.SucceedingSynchronizer;
 import com.altona.service.synchronization.test.model.SucceedingConfiguration;
-import com.altona.service.time.TimeService;
 import com.altona.util.Result;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

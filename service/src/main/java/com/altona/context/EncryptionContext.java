@@ -1,8 +1,6 @@
 package com.altona.context;
 
-import com.altona.security.Encryptor;
-import com.altona.service.time.util.TimeConfig;
-import com.altona.user.service.UserContext;
+import com.altona.user.UserContext;
 
 public interface EncryptionContext extends Context, TimeConfig, Encryptor {
 
