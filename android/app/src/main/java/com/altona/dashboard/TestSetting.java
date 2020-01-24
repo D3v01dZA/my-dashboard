@@ -49,7 +49,7 @@ public enum TestSetting {
 
         @Override
         public String getHost() {
-            return "https://caltona.net:1337";
+            return "https://caltona.net/dashboard";
         }
     },
     TEST {
