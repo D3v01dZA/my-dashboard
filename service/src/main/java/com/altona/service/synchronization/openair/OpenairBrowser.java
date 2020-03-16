@@ -34,6 +34,7 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Repository
@@ -54,10 +55,16 @@ public class OpenairBrowser {
             context.get("https://www.openair.com/index.pl");
             synchronizationTraceRepository.trace(attempt, request, "Before Login", context);
 
-            context.waitForElement(By.id("input_company")).sendKeys(configuration.getCompanyId());
-            context.waitForElement(By.id("input_user")).sendKeys(configuration.getUserId());
-            context.waitForElement(By.id("input_password")).sendKeys(configuration.getPassword());
-            context.waitForElement(By.id("oa_comp_login_submit")).click();
+            context.waitForElement(By.id("login"))
+                    .findElement(By.name("account"))
+                    .sendKeys(configuration.getCompanyId());
+            context.waitForElement(By.id("login"))
+                    .findElement(By.name("username"))
+                    .sendKeys(configuration.getUserId());
+            context.waitForElement(By.id("login"))
+                    .findElement(By.name("password"))
+                    .sendKeys(configuration.getPassword());
+            context.waitForElement(By.id("login_submit_button")).click();
 
             context.waitForElement(By.className("navdashboardGrayLarge"));
 
@@ -81,6 +88,7 @@ public class OpenairBrowser {
         TimeSheetDates timeSheetDates = enterTimesheet(encryptor, attempt, context, date);
         List<OpenairTimeData> rows = context.waitForElement(By.id("timesheet_grid")).findElement(By.tagName("table")).findElement(By.tagName("tbody")).findElements(By.tagName("tr")).stream()
                 .map(webElement -> readRow(timeSheetDates, webElement))
+                .flatMap(optional -> optional.map(Stream::of).orElseGet(Stream::of))
                 .collect(Collectors.toList());
         return new OpenairTimeDataList(timeSheetDates.getStart(), timeSheetDates.getEnd(), rows);
     }
@@ -114,17 +122,20 @@ public class OpenairBrowser {
         }
     }
 
-    private OpenairTimeData readRow(TimeSheetDates timeSheetDates, WebElement row) {
+    private Optional<OpenairTimeData> readRow(TimeSheetDates timeSheetDates, WebElement row) {
         List<WebElement> tableElements = row.findElements(By.tagName("td"));
         String project = new Select(tableElements.get(1).findElement(By.tagName("select"))).getFirstSelectedOption().getText();
         String task = new Select(tableElements.get(2).findElement(By.tagName("select"))).getFirstSelectedOption().getText();
+        if (task.equalsIgnoreCase("select...")) {
+            return Optional.empty();
+        }
         Map<LocalDate, LocalTime> timeData = Maps.newHashMap();
         int i = 3;
         for (LocalDate date : LocalDateIterator.inclusive(timeSheetDates.getStart(), timeSheetDates.getEnd())) {
             readTime(tableElements.get(i++))
                     .ifPresent(time -> timeData.put(date, time));
         }
-        return new OpenairTimeData(project, task, timeData);
+        return Optional.of(new OpenairTimeData(project, task, timeData));
     }
 
     private void writeTime(WebElement webElement, LocalTime time) {
