@@ -36,6 +36,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.altona.util.Util.sleep;
+
 @Slf4j
 @Repository
 @AllArgsConstructor
@@ -211,6 +213,7 @@ public class OpenairBrowser {
         context.waitForElements(By.className("nav-wrapper-content-shadow"), By.className("item-subtab"), "Open", 2)
                 .get(0).click();
 
+        sleep();
         WebElement sheet = context.waitForElement(By.className("list-view-content"))
                 .findElements(By.className("cell-content-value")).stream()
                 .flatMap(webElement -> webElement.findElements(By.tagName("a")).stream())
