@@ -211,8 +211,8 @@ public class OpenairBrowser {
         context.waitForElements(By.className("nav-wrapper-content-shadow"), By.className("item-subtab"), "Open", 2)
                 .get(0).click();
 
-        WebElement sheet = context.waitForElement(By.id("list_data"))
-                .findElements(By.className("listCellContent")).stream()
+        WebElement sheet = context.waitForElement(By.className("list-view-content"))
+                .findElements(By.className("cell-content-value")).stream()
                 .flatMap(webElement -> webElement.findElements(By.tagName("a")).stream())
                 .filter(webElement -> {
                     Matcher matcher = TIMESHEET_NAME.matcher(webElement.getText());
