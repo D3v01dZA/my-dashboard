@@ -185,7 +185,11 @@ public class MaconomyBrowser {
                     log.error(message);
                     return Optional.of(message);
                 }
-                dayInputs.get(0).sendKeys(dayTime.format(READ_TIME_FORMATTER));
+                String format = dayTime.format(READ_TIME_FORMATTER);
+                for (int i = 0; i < format.length(); i++) {
+                    dayInputs.get(0).sendKeys(String.valueOf(format.charAt(i)));
+                    sleep(100);
+                }
                 sleep();
                 return Optional.empty();
             });
