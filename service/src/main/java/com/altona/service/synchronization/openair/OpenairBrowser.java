@@ -223,7 +223,7 @@ public class OpenairBrowser {
                         LocalDate from = LocalDate.parse(matcher.group(1), TIMESHEET_NAME_DATE);
                         // Timesheets that end in the middle of a week have a prepended character on them
                         String toRaw = matcher.group(2);
-                        while (!Character.isAlphabetic(toRaw.charAt(toRaw.length() - 1))) {
+                        while (!Character.isDigit(toRaw.charAt(toRaw.length() - 1))) {
                             toRaw = toRaw.substring(0, toRaw.length() - 1);
                         }
                         LocalDate to = LocalDate.parse(toRaw, TIMESHEET_NAME_DATE);
