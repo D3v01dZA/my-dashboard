@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ProjectFacade extends ContextFacade {
@@ -20,6 +21,24 @@ public class ProjectFacade extends ContextFacade {
     public ProjectFacade(SqlContext sqlContext, TimeInfo timeInfo, ProjectService projectService) {
         super(sqlContext, timeInfo);
         this.projectService = projectService;
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Project> project(Authentication authentication, int projectId) {
+        User user = legacyAuthenticate(authentication);
+        return projectService.project(user, projectId);
+    }
+
+    @Transactional
+    public Optional<Project> replaceProject(Authentication authentication, int projectId, Project project) {
+        User user = legacyAuthenticate(authentication);
+        return projectService.replaceProject(user, projectId, project);
+    }
+
+    @Transactional
+    public Optional<Project> deleteProject(Authentication authentication, int projectId) {
+        User user = legacyAuthenticate(authentication);
+        return projectService.deleteProject(user, projectId);
     }
 
     @Transactional(readOnly = true)

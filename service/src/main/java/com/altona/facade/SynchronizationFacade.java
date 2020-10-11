@@ -3,6 +3,7 @@ package com.altona.facade;
 import com.altona.context.facade.ContextFacade;
 import com.altona.context.SqlContext;
 import com.altona.service.project.ProjectService;
+import com.altona.service.project.model.Project;
 import com.altona.service.synchronization.SynchronizationService;
 import com.altona.service.synchronization.model.Synchronization;
 import com.altona.service.synchronization.model.SynchronizationAttempt;
@@ -51,6 +52,25 @@ public class SynchronizationFacade extends ContextFacade {
         UserContext userContext = legacyAuthenticate(authentication, timeZone);
         return projectService.project(userContext, projectId)
                 .flatMap(project -> synchronizationService.getSynchronization(userContext, project, synchronizationId));
+    }
+
+    @Transactional
+    public Optional<Synchronization> deleteSynchronization(Authentication authentication, TimeZone timeZone, int projectId, int synchronizationId) {
+        UserContext userContext = legacyAuthenticate(authentication, timeZone);
+        return projectService.project(userContext, projectId)
+                .flatMap(project -> synchronizationService.deleteSynchronization(userContext, project, synchronizationId));
+    }
+
+    @Transactional
+    public Result<Optional<Synchronization>, String> replaceSynchronization(Authentication authentication, TimeZone timeZone, int projectId, int synchronizationId, Synchronization synchronization) {
+        UserContext userContext = legacyAuthenticate(authentication, timeZone);
+        Optional<Project> projectOptional = projectService.project(userContext, projectId);
+        if (!projectOptional.isPresent()) {
+            return Result.success(Optional.empty());
+        } else {
+            Project project = projectOptional.get();
+            return synchronizationService.replaceSynchronization(userContext, project, synchronizationId, synchronization);
+        }
     }
 
     @Transactional

@@ -1,6 +1,9 @@
 package com.altona.service.time;
 
 import com.altona.broadcast.broadcaster.Broadcaster;
+import com.altona.service.time.model.LocalizedTime;
+import com.altona.service.time.model.summary.*;
+import com.altona.user.service.User;
 import com.altona.user.service.UserContext;
 import com.altona.broadcast.broadcaster.BroadcastMessage;
 import com.altona.service.project.model.Project;
@@ -12,10 +15,6 @@ import com.altona.service.time.model.control.BreakStop;
 import com.altona.service.time.model.control.TimeStatus;
 import com.altona.service.time.model.control.WorkStart;
 import com.altona.service.time.model.control.WorkStop;
-import com.altona.service.time.model.summary.SummaryConfiguration;
-import com.altona.service.time.model.summary.SummaryCreator;
-import com.altona.service.time.model.summary.SummaryFailure;
-import com.altona.service.time.model.summary.TimeSummary;
 import com.altona.service.time.util.SingleTimeStatusCollector;
 import com.altona.service.time.util.TimeConfig;
 import com.altona.service.time.util.TimeInfo;
@@ -25,12 +24,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -115,9 +116,8 @@ public class TimeService {
         );
     }
 
-    public TimeStatus timeStatus(List<Project> projects, TimeInfo timeInfo) {
-        return timeStatusInternal(projects, timeInfo)
-                .orElseGet(TimeStatus::none);
+    public Optional<TimeStatus> timeStatus(List<Project> projects, TimeInfo timeInfo) {
+        return timeStatusInternal(projects, timeInfo);
     }
 
     public Result<TimeSummary, SummaryFailure> summary(TimeConfig timeConfig, Project project, SummaryConfiguration configuration) {
@@ -129,6 +129,106 @@ public class TimeService {
                         timeConfig.unlocalize(configuration.getTo())
                 );
         return new SummaryCreator(timeConfig, configuration).create(timeConfig, TimeCombination.createCombinations(times));
+    }
+
+    public Optional<LocalizedTime> time(TimeConfig timeConfig, Project project, int timeId) {
+        log.info("Retrieving time {}", timeId);
+        return timeRepository
+                .select(project.getId(), timeId)
+                .map(time -> time.toLocalizedTime(timeConfig));
+    }
+
+    public Result<Optional<LocalizedTime>, String> replaceTime(TimeConfig timeConfig, Project project, int timeId, LocalizedTime localizedTime) {
+        log.info("Replacing time {}", timeId);
+        Optional<Time> existingTimeOptional = timeRepository.select(project.getId(), timeId);
+        if (!existingTimeOptional.isPresent()) {
+            return Result.success(Optional.empty());
+        }
+        Time existingTime = existingTimeOptional.get();
+        Optional<LocalDateTime> replacedEnd = localizedTime.getEnd();
+        if (replacedEnd.isPresent()) {
+            if (!replacedEnd.get().isAfter(localizedTime.getStart())) {
+                return Result.failure("End time cannot be before start time");
+            }
+            if (timeConfig.unlocalize(replacedEnd.get()).isAfter(timeConfig.now())) {
+                return Result.failure("Cannot change time to the future");
+            }
+        }
+        Time replacedTime = localizedTime.unlocalize(timeConfig);
+        boolean isStartReplacement = !existingTime.getStart().equals(replacedTime.getStart());
+        boolean isEndReplacement = !existingTime.getEnd().equals(replacedTime.getEnd());
+        if (isStartReplacement && isEndReplacement) {
+            return Result.failure("Cannot change both start and end simultaneously");
+        }
+        if (!existingTime.getEnd().isPresent() || !replacedTime.getEnd().isPresent()) {
+            return Result.failure("Cannot end time through a replacement");
+        }
+        if (existingTime.getType() != replacedTime.getType()) {
+            return Result.failure("Cannot change time type through a replacement");
+        }
+        if (replacedTime.getType() == TimeType.WORK) {
+            if (
+                    (isStartReplacement && existingTime.getStart().isBefore(replacedTime.getStart())) ||
+                            (isEndReplacement && existingTime.getEnd().get().isAfter(replacedTime.getEnd().get()))
+            ) {
+                List<Time> toModify = timeRepository.selectBetween(project.getId(), existingTime.getStart(), existingTime.getEnd().get())
+                        .stream()
+                        .filter(time -> time.getId() != timeId)
+                        .collect(Collectors.toList());
+                if (toModify.stream().anyMatch(time -> time.getType() == TimeType.WORK)) {
+                    return Result.failure("Should not have found any work time");
+                }
+                List<Time> toDelete = toModify.stream()
+                        .filter(time -> (isStartReplacement && !time.getStart().isAfter(replacedTime.getStart())) || (isEndReplacement && !time.getEnd().get().isBefore(replacedTime.getEnd().get())))
+                        .collect(Collectors.toList());
+                toDelete.forEach(time -> timeRepository.deleteTime(project.getId(), time.getId()));
+                timeRepository.updateTime(project.getId(), timeId, replacedTime.getStart(), replacedTime.getEnd().get());
+                return Result.success(timeRepository.select(project.getId(), timeId).map(time -> time.toLocalizedTime(timeConfig)));
+            } else if (
+                    (isStartReplacement && existingTime.getStart().isAfter(replacedTime.getStart())) ||
+                            (isEndReplacement && existingTime.getEnd().get().isBefore(replacedTime.getEnd().get()))
+            ) {
+                List<Time> existingTimes = timeRepository.selectBetween(project.getId(), replacedTime.getStart(), replacedTime.getEnd().get());
+                long workCount = existingTimes.stream()
+                        .filter(time -> time.getType() == TimeType.WORK)
+                        .count();
+                if (workCount > 1) {
+                    return Result.failure("Cannot change time to overlap other work");
+                }
+                timeRepository.updateTime(project.getId(), timeId, replacedTime.getStart(), replacedTime.getEnd().get());
+                return Result.success(timeRepository.select(project.getId(), timeId).map(time -> time.toLocalizedTime(timeConfig)));
+            } else {
+                return Result.failure("Work time change scenario not supported");
+            }
+        } else {
+            return Result.failure("Cannot change Breaks");
+        }
+    }
+
+    public Optional<LocalizedTime> deleteTime(TimeConfig timeConfig, Project project, int timeId) {
+        log.info("Retrieving time {}", timeId);
+        return timeRepository.select(project.getId(), timeId)
+                .map(time -> {
+                    if (time.getType() == TimeType.WORK) {
+                        timeRepository.selectBetween(project.getId(), time.getStart(), time.getEnd().orElseGet(timeConfig::now))
+                                .forEach(delete -> timeRepository.deleteTime(project.getId(), delete.getId()));
+                    } else {
+                        timeRepository.deleteTime(project.getId(), timeId);
+                    }
+                    return time.toLocalizedTime(timeConfig);
+                });
+    }
+
+    public List<LocalizedTime> times(TimeConfig timeConfig, Project project, TimeRetrievalConfiguration configuration) {
+        log.info("Retrieving times {}", configuration);
+        return timeRepository
+                .selectBetween(
+                        project.getId(),
+                        timeConfig.unlocalize(configuration.getFrom()),
+                        timeConfig.unlocalize(configuration.getTo())
+                ).stream()
+                .map(time -> time.toLocalizedTime(timeConfig))
+                .collect(Collectors.toList());
     }
 
     private Optional<TimeStatus> timeStatusInternal(List<Project> projects, TimeInfo timeInfo) {

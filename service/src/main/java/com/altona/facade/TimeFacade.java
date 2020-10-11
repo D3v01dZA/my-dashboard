@@ -4,16 +4,16 @@ import com.altona.context.facade.ContextFacade;
 import com.altona.context.SqlContext;
 import com.altona.service.project.ProjectService;
 import com.altona.service.project.model.Project;
+import com.altona.service.synchronization.model.Synchronization;
 import com.altona.service.time.TimeService;
+import com.altona.service.time.model.LocalizedTime;
+import com.altona.service.time.model.Time;
 import com.altona.service.time.model.control.BreakStart;
 import com.altona.service.time.model.control.BreakStop;
 import com.altona.service.time.model.control.TimeStatus;
 import com.altona.service.time.model.control.WorkStart;
 import com.altona.service.time.model.control.WorkStop;
-import com.altona.service.time.model.summary.SummaryConfiguration;
-import com.altona.service.time.model.summary.SummaryFailure;
-import com.altona.service.time.model.summary.SummaryType;
-import com.altona.service.time.model.summary.TimeSummary;
+import com.altona.service.time.model.summary.*;
 import com.altona.service.time.util.TimeInfo;
 import com.altona.user.service.UserContext;
 import com.altona.util.Result;
@@ -74,7 +74,20 @@ public class TimeFacade extends ContextFacade {
     public TimeStatus timeStatus(Authentication authentication, TimeZone timeZone) {
         UserContext user = legacyAuthenticate(authentication, timeZone);
         List<Project> projects = projectService.projects(user);
-        return timeService.timeStatus(projects, user);
+        return timeService.timeStatus(projects, user)
+                .orElseGet(TimeStatus::none);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<TimeStatus> timeStatus(Authentication authentication, TimeZone timeZone, int projectId) {
+        UserContext user = legacyAuthenticate(authentication, timeZone);
+        List<Project> projects = projectService.projects(user);
+        Optional<TimeStatus> timeStatus = timeService.timeStatus(projects, user);
+        if (timeStatus.isPresent()) {
+            return timeStatus.filter(status -> status.getProjectId().equals(Optional.of(projectId)));
+        } else {
+            return Optional.of(TimeStatus.none());
+        }
     }
 
     @Transactional(readOnly = true)
@@ -83,6 +96,38 @@ public class TimeFacade extends ContextFacade {
         SummaryConfiguration configuration = summaryType.getConfiguration(user);
         return projectService.project(user, projectId)
                 .map(project -> timeService.summary(user, project, configuration));
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<LocalizedTime> time(Authentication authentication, TimeZone timeZone, int projectId, int timeId) {
+        UserContext user = legacyAuthenticate(authentication, timeZone);
+        return projectService.project(user, projectId)
+                .flatMap(project -> timeService.time(user, project, timeId));
+    }
+
+    @Transactional
+    public Result<Optional<LocalizedTime>, String> replaceTime(Authentication authentication, TimeZone timeZone, int projectId, int timeId, LocalizedTime localizedTime) {
+        UserContext user = legacyAuthenticate(authentication, timeZone);
+        Optional<Project> project = projectService.project(user, projectId);
+        if (!project.isPresent()) {
+            return Result.success(Optional.empty());
+        }
+        return timeService.replaceTime(user, project.get(), timeId, localizedTime);
+    }
+
+    @Transactional
+    public Optional<LocalizedTime> deleteTime(Authentication authentication, TimeZone timeZone, int projectId, int timeId) {
+        UserContext user = legacyAuthenticate(authentication, timeZone);
+        return projectService.project(user, projectId)
+                .flatMap(project -> timeService.deleteTime(user, project, timeId));
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<List<LocalizedTime>> times(Authentication authentication, TimeZone timeZone, int projectId, SummaryType summaryType) {
+        UserContext user = legacyAuthenticate(authentication, timeZone);
+        TimeRetrievalConfiguration configuration = summaryType.getTimeRetrievalConfiguration(user);
+        return projectService.project(user, projectId)
+                .map(project -> timeService.times(user, project, configuration));
     }
 
 }

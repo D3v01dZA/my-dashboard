@@ -196,4 +196,26 @@
 
     </changeSet>
 
+    <changeSet id="add_synchronization_name_column" author="chris">
+
+        <addColumn tableName="synchronization">
+            <column name="name" type="text"/>
+        </addColumn>
+
+    </changeSet>
+
+    <changeSet id="migrate_synchronization_name_column" author="chris">
+
+        <update tableName="synchronization">
+            <column name="name" valueComputed="service"/>
+        </update>
+
+    </changeSet>
+
+    <changeSet id="not_null_synchronization_name_column" author="chris">
+
+        <addNotNullConstraint tableName="synchronization" columnName="service"/>
+
+    </changeSet>
+
 </databaseChangeLog>

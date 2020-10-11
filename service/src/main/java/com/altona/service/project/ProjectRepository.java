@@ -56,4 +56,23 @@ public class ProjectRepository {
                 .intValue();
     }
 
+    public void update(User user, int projectId, Project project) {
+        namedJdbc.update(
+                "UPDATE project SET name = :name WHERE id = :id AND user_id = :user_id",
+                new MapSqlParameterSource()
+                        .addValue("name", project.getName())
+                        .addValue("id", projectId)
+                        .addValue("user_id", user.getId())
+        );
+    }
+
+    public void delete(User user, Project project) {
+        namedJdbc.update(
+                "DELETE FROM project WHERE id = :id AND user_id = :user_id",
+                new MapSqlParameterSource()
+                        .addValue("id", project.getId())
+                        .addValue("user_id", user.getId())
+        );
+    }
+
 }

@@ -2,17 +2,17 @@ import {View} from "react-native";
 import * as React from "react";
 import {useContext, useState} from "react";
 import {Button, Header, Input} from "react-native-elements";
-import {Context} from "../util/context";
+import {AppContext} from "../util/app-context";
 import base64 from "react-native-base64";
 import {toastError} from "../util/errors";
 
 export const LoginScreen = () => {
 
-    const {url, setCredentials} = useContext(Context);
+    const {url, setAuthenticated} = useContext(AppContext);
 
-    const [username, setUsername] = useState<string>("");
+    const [username, setUsername] = useState<string>("test");
 
-    const [password, setPassword] = useState<string>("");
+    const [password, setPassword] = useState<string>("password");
 
     const login = () => {
         const encoded = base64.encode(`${username}:${password}`);
@@ -32,7 +32,7 @@ export const LoginScreen = () => {
             })
             .then(response => {
                 if (response.endsWith(`${username}!`)) {
-                    setCredentials({username, password});
+                    setAuthenticated(true);
                 } else {
                     return Promise.reject(`Login failed with ${response}`);
                 }
@@ -43,12 +43,13 @@ export const LoginScreen = () => {
     return (
         <View style={{flex: 1}}>
             <Header
-                centerComponent={{text: "Login", style: {color: "#fff"}}}
+                centerComponent={{text: "Login", style: {color: "#fff", fontSize: 18}}}
             />
             <View style={{flex: 1, alignItems: "center", justifyContent: "center"}}>
                 <Input
                     label="Username"
                     placeholder="Username"
+                    textContentType="username"
                     value={username}
                     onChangeText={setUsername}
                 />

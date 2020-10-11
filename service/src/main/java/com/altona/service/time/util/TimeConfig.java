@@ -22,4 +22,6 @@ public interface TimeConfig extends TimeInfo {
 
     Instant unlocalize(LocalDate localDate);
 
+    Instant unlocalize(LocalDateTime localDate);
+
 }

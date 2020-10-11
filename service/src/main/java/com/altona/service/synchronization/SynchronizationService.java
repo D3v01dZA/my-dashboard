@@ -54,15 +54,37 @@ public class SynchronizationService {
         return synchronizationRepository.select(encryptor, project, synchronizationId);
     }
 
+    public Optional<Synchronization> deleteSynchronization(Encryptor encryptor, Project project, int synchronizationId) {
+        Optional<Synchronization> synchronization = synchronizationRepository.select(encryptor, project, synchronizationId);
+        synchronization.ifPresent(value -> synchronizationRepository.delete(project, synchronizationId));
+        return synchronization;
+    }
+
+    public Result<Optional<Synchronization>, String> replaceSynchronization(Encryptor encryptor, Project project, int synchronizationId, Synchronization synchronization) {
+        Optional<Synchronization> existingSynchronizationOptional = synchronizationRepository.select(encryptor, project, synchronizationId);
+        if (!existingSynchronizationOptional.isPresent()) {
+            return Result.success(existingSynchronizationOptional);
+        }
+        Synchronization existingSynchronization = existingSynchronizationOptional.get();
+        if (existingSynchronization.getService() != synchronization.getService()) {
+            return Result.failure("Cannot change synchronization type");
+        }
+        if (!synchronization.hasValidConfiguration(objectMapper)) {
+            return Result.failure("Invalid configuration");
+        }
+        synchronizationRepository.update(encryptor, project, synchronizationId, synchronization);
+        return Result.success(synchronizationRepository.select(encryptor, project, synchronizationId));
+    }
+
     public Result<Synchronization, String> updateSynchronization(Encryptor encryptor, Project project, Synchronization original, ObjectNode modification) {
         Synchronization modified = original.modify(modification);
         if (!modified.hasValidConfiguration(objectMapper)) {
             return Result.failure("Invalid Configuration");
         }
-        synchronizationRepository.update(encryptor, project, modified);
+        synchronizationRepository.update(encryptor, project, modified.getId(), modified);
         return Result.success(synchronizationRepository.select(encryptor, project, modified.getId()).get());
     }
-    
+
     public Optional<SynchronizationAttempt> attempt(UserContext userContext, Project project, int synchronizationId, int attemptId) {
         return synchronizationRepository.select(userContext, project, synchronizationId)
                 .flatMap(synchronization -> synchronizationAttemptRepository.select(userContext, synchronization, attemptId));

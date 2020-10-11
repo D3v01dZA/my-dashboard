@@ -18,6 +18,14 @@ public enum SummaryType {
                     true
             );
         }
+
+        @Override
+        public TimeRetrievalConfiguration getTimeRetrievalConfiguration(UserContext userContext) {
+            return new TimeRetrievalConfiguration(
+                    userContext.today(),
+                    userContext.today().plusDays(1)
+            );
+        }
     },
     CURRENT_WEEK {
         @Override
@@ -29,6 +37,14 @@ public enum SummaryType {
                     TimeRounding.NONE,
                     NotStoppedAction.INCLUDE,
                     true
+            );
+        }
+
+        @Override
+        public TimeRetrievalConfiguration getTimeRetrievalConfiguration(UserContext userContext) {
+            return new TimeRetrievalConfiguration(
+                    userContext.firstDayOfWeek(),
+                    userContext.lastDayOfWeek().plusDays(1)
             );
         }
     },
@@ -44,6 +60,14 @@ public enum SummaryType {
                     true
             );
         }
+
+        @Override
+        public TimeRetrievalConfiguration getTimeRetrievalConfiguration(UserContext userContext) {
+            return new TimeRetrievalConfiguration(
+                    userContext.firstDayOfMonth(),
+                    userContext.lastDayOfMonth().plusDays(1)
+            );
+        }
     },
     PREVIOUS_MONTH {
         @Override
@@ -57,7 +81,18 @@ public enum SummaryType {
                     true
             );
         }
+
+        @Override
+        public TimeRetrievalConfiguration getTimeRetrievalConfiguration(UserContext userContext) {
+            return new TimeRetrievalConfiguration(
+                    userContext.firstDayOfMonth().minusMonths(1).with(TemporalAdjusters.firstDayOfMonth()),
+                    userContext.lastDayOfMonth().minusMonths(1).with(TemporalAdjusters.lastDayOfMonth()).plusDays(1)
+            );
+        }
     };
 
     public abstract SummaryConfiguration getConfiguration(UserContext userContext);
+
+    public abstract TimeRetrievalConfiguration getTimeRetrievalConfiguration(UserContext userContext);
+
 }

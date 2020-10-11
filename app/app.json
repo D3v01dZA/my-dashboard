@@ -1,4 +1,10 @@
 {
   "name": "Time",
-  "displayName": "Time"
+  "displayName": "Time",
+  "expo": {
+    "platforms": [
+      "web",
+      "android"
+    ]
+  }
 }

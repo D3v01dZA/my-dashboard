@@ -27,4 +27,19 @@ public class ProjectService {
         return project(user, key).get();
     }
 
+    public Optional<Project> replaceProject(User user, int projectId, Project project) {
+        Optional<Project> projectOptional = projectRepository.select(user, projectId);
+        if (!projectOptional.isPresent()) {
+            return Optional.empty();
+        }
+        projectRepository.update(user, projectId, project);
+        return projectRepository.select(user, projectId);
+    }
+
+    public Optional<Project> deleteProject(User user, int projectId) {
+        Optional<Project> project = projectRepository.select(user, projectId);
+        project.ifPresent(value -> projectRepository.delete(user, value));
+        return project;
+    }
+
 }

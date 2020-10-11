@@ -41,6 +41,35 @@ public class SynchronizationController {
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    @RequestMapping(path = "/time/project/{projectId}/synchronization/{synchronizationId}", method = RequestMethod.DELETE, produces = "application/json")
+    public ResponseEntity<Synchronization> deleteSynchronization(
+            Authentication authentication,
+            TimeZone timeZone,
+            @PathVariable Integer projectId,
+            @PathVariable Integer synchronizationId
+    ) {
+        return synchronizationFacade.deleteSynchronization(authentication, timeZone, projectId, synchronizationId)
+                .map(found -> new ResponseEntity<>(found, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @RequestMapping(path = "/time/project/{projectId}/synchronization/{synchronizationId}", method = RequestMethod.PUT, produces = "application/json")
+    public ResponseEntity<Object> replaceSynchronization(
+            Authentication authentication,
+            TimeZone timeZone,
+            @PathVariable Integer projectId,
+            @PathVariable Integer synchronizationId,
+            @RequestBody Synchronization replacementSynchronization
+    ) {
+        return synchronizationFacade.replaceSynchronization(authentication, timeZone, projectId, synchronizationId, replacementSynchronization)
+                .map(
+                        optionalSynchronization -> optionalSynchronization
+                                .map(synchronization -> new ResponseEntity<Object>(synchronization, HttpStatus.OK))
+                                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND)),
+                        failure -> new ResponseEntity<>(failure, HttpStatus.BAD_REQUEST)
+                );
+    }
+
     @RequestMapping(path = "/time/project/{projectId}/synchronization", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<List<Synchronization>> getSynchronizations(
             Authentication authentication,

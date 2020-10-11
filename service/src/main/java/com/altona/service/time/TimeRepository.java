@@ -1,8 +1,10 @@
 package com.altona.service.time;
 
+import com.altona.service.project.model.Project;
 import com.altona.service.time.model.Time;
 import com.altona.service.time.model.TimeType;
 import com.altona.service.time.util.TimeInfo;
+import com.altona.user.service.User;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -26,13 +28,14 @@ public class TimeRepository {
      * Exists because dates and date formats are so bad
      * Also this will quite definitely break if the db changes
      * Reason this exists:
-     *      App Inserts Date        2019-01-26 18:45:08.460-05
-     *      DB Saves Date           2019-01-26 18:45:08.46-05
-     *      App Retrieves Date      2019-01-26 18:45:08.046-05
+     * App Inserts Date        2019-01-26 18:45:08.460-05
+     * DB Saves Date           2019-01-26 18:45:08.46-05
+     * App Retrieves Date      2019-01-26 18:45:08.046-05
      * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      */
     private static final int MINIMUM_LENGTH = 22;
     private static final int EXPECTED_LENGTH = 26;
+
     private static Instant padMissingZeroMillis(String date) {
         try {
             char padding = '0';
@@ -108,10 +111,10 @@ public class TimeRepository {
         return namedJdbc.query(
                 "SELECT id, type, start_time, end_time FROM time WHERE " +
                         "(" +
-                        "   (end_time IS NULL AND ((start_time > :fromDate AND start_time < :toDate) OR start_time < :toDate))" +
-                        "   OR (end_time < :toDate AND start_time > :fromDate) " +
-                        "   OR (start_time < :fromDate AND end_time > :fromDate) " +
-                        "   OR (end_time < :toDate AND end_time > :toDate) " +
+                        "   (end_time IS NULL AND ((start_time >= :fromDate AND start_time <= :toDate) OR start_time <= :toDate))" +
+                        "   OR (end_time <= :toDate AND start_time >= :fromDate) " +
+                        "   OR (start_time <= :fromDate AND end_time >= :fromDate) " +
+                        "   OR (end_time <= :toDate AND end_time >= :toDate) " +
                         ") " +
                         "AND project_id = :projectId " +
                         "ORDER BY start_time ASC, end_time ASC",
@@ -133,11 +136,31 @@ public class TimeRepository {
 
     public void stopTime(int projectId, int id, TimeInfo timeInfo) {
         namedJdbc.update(
-                "UPDATE time SET end_time = :endTime WHERE id = :id AND project_id = :projectId",
+                "UPDATE time SET end_time = :endTime WHERE id = :id AND project_id = :project_id",
                 new MapSqlParameterSource()
                         .addValue("endTime", Date.from(timeInfo.now()))
                         .addValue("id", id)
-                        .addValue("projectId", projectId)
+                        .addValue("project_id", projectId)
+        );
+    }
+
+    public void updateTime(int projectId, int timeId, Instant start, Instant end) {
+        namedJdbc.update(
+                "UPDATE time SET start_time = :start_time, end_time = :end_time WHERE id = :id AND project_id = :project_id",
+                new MapSqlParameterSource()
+                        .addValue("start_time", Date.from(start))
+                        .addValue("end_time", Date.from(end))
+                        .addValue("id", timeId)
+                        .addValue("project_id", projectId)
+        );
+    }
+
+    public void deleteTime(int projectId, int timeId) {
+        namedJdbc.update(
+                "DELETE FROM time WHERE id = :id AND project_id = :project_id",
+                new MapSqlParameterSource()
+                        .addValue("id", timeId)
+                        .addValue("project_id", projectId)
         );
     }
 

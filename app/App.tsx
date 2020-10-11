@@ -1,71 +1,129 @@
 import "react-native-gesture-handler";
 import * as React from "react";
+import {useEffect, useState} from "react";
 import {createDrawerNavigator, DrawerNavigationProp} from "@react-navigation/drawer";
+import {RouteProp} from "@react-navigation/core";
 import {NavigationContainer} from "@react-navigation/native";
-import {useState} from "react";
+import {RootSiblingParent} from "react-native-root-siblings";
 import {LoginScreen} from "./screens/login-screen";
 import {HomeScreen} from "./screens/home-screen";
 import {ConfigurationScreen} from "./screens/configuration-screen";
 import {LogoutScreen} from "./screens/logout-screen";
-import {Credentials, Context} from "./util/context";
+import {AppContext} from "./util/app-context";
+import {ProjectsScreen} from "./screens/projects-screen";
+import {ProjectScreen} from "./screens/project-screen";
+import {TimesScreen} from "./screens/times-screen";
+import {TimeScreen} from "./screens/time-screen";
+import {SynchronizationsScreen} from "./screens/synchronizations-screen";
+import {SynchronizationScreen} from "./screens/synchronization-screen";
+import DeviceInfo from 'react-native-device-info';
 
 export type Routes = {
     Login: undefined,
     Logout: undefined,
 
-    Home: undefined,
-    Configuration: undefined,
-    TimeList: {
-        page: number
-    }
+    Home: {
+        projectId: number | undefined
+    },
+    Projects: undefined,
+    Project: {
+        projectId: number | undefined
+    },
+    Times: {
+        projectId: number | undefined
+    },
+    Time: {
+        projectId: number | undefined,
+        timeId: number | undefined
+    },
+    Synchronizations: {
+        projectId: number | undefined
+    },
+    Synchronization: {
+        projectId: number | undefined,
+        synchronizationId: number | undefined
+    },
+    Configuration: undefined
 }
 
 export type Navigation = DrawerNavigationProp<Routes>;
+export type Route<Route extends keyof Routes> = RouteProp<Routes, Route>;
 
 const Drawer = createDrawerNavigator<Routes>();
 
 const App = () => {
 
-    const [credentials, setCredentials] = useState<Credentials | undefined>(undefined);
-    const clearCredentials = () => setCredentials(undefined);
+    const [authenticated, setAuthenticated] = useState<boolean>(false);
 
     return (
-        <Context.Provider
+        <AppContext.Provider
             value={{
-                url: "http://10.0.2.2:8080",
-                credentials,
-                setCredentials,
-                clearCredentials
+                url: DeviceInfo.isEmulatorSync() ? "http://10.0.2.2:8080" : "https://caltona.net/dashboard",
+                authenticated,
+                setAuthenticated
             }}
         >
-            <NavigationContainer>
-                {
-                    !credentials ? (
-                        <Drawer.Navigator initialRouteName="Login" screenOptions={{gestureEnabled: false}}>
-                            <Drawer.Screen
-                                name="Login"
-                                component={LoginScreen}
-                            />
-                        </Drawer.Navigator>
-                    ) : (
-                        <Drawer.Navigator initialRouteName="Home">
-                            <Drawer.Screen
-                                name="Home"
-                                component={HomeScreen}
-                            />
-                            <Drawer.Screen
-                                name="Configuration"
-                                component={ConfigurationScreen}
-                            />
-                            <Drawer.Screen
-                                name="Logout"
-                                component={LogoutScreen}
-                            />
-                        </Drawer.Navigator>
-                    )
-                }
-            </NavigationContainer>
-        </Context.Provider>
+            <RootSiblingParent>
+                <NavigationContainer>
+                    {
+                        !authenticated ? (
+                            <Drawer.Navigator initialRouteName="Login" screenOptions={{gestureEnabled: false}}>
+                                <Drawer.Screen
+                                    name="Login"
+                                    component={LoginScreen}
+                                />
+                            </Drawer.Navigator>
+                        ) : (
+                            <Drawer.Navigator initialRouteName="Home">
+                                <Drawer.Screen
+                                    name="Home"
+                                    component={HomeScreen}
+                                    initialParams={{projectId: undefined}}
+                                />
+                                <Drawer.Screen
+                                    name="Projects"
+                                    component={ProjectsScreen}
+                                    options={{swipeEnabled: false}}
+                                />
+                                <Drawer.Screen
+                                    name="Project"
+                                    component={ProjectScreen}
+                                    initialParams={{projectId: undefined}}
+                                />
+                                <Drawer.Screen
+                                    name="Times"
+                                    component={TimesScreen}
+                                    initialParams={{projectId: undefined}}
+                                />
+                                <Drawer.Screen
+                                    name="Time"
+                                    component={TimeScreen}
+                                    initialParams={{projectId: undefined, timeId: undefined}}
+                                />
+                                <Drawer.Screen
+                                    name="Synchronizations"
+                                    component={SynchronizationsScreen}
+                                    initialParams={{projectId: undefined}}
+                                />
+                                <Drawer.Screen
+                                    name="Synchronization"
+                                    component={SynchronizationScreen}
+                                    initialParams={{projectId: undefined, synchronizationId: undefined}}
+                                />
+                                <Drawer.Screen
+                                    name="Configuration"
+                                    component={ConfigurationScreen}
+                                />
+                                <Drawer.Screen
+                                    name="Logout"
+                                    component={LogoutScreen}
+                                />
+                            </Drawer.Navigator>
+                        )
+                    }
+                </NavigationContainer>
+            </RootSiblingParent>
+        </AppContext.Provider>
     );
 }
 

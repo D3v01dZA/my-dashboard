@@ -8,6 +8,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @AllArgsConstructor
@@ -16,10 +17,18 @@ public class ProjectController {
     private ProjectFacade projectFacade;
 
     @RequestMapping(path = "/time/project", method = RequestMethod.GET, produces = "application/json")
-    public List<Project> getProjects(
+    public List<Project> getProject(
             Authentication authentication
     ) {
         return projectFacade.projects(authentication);
+    }
+
+    @RequestMapping(path = "/time/project/{projectId}", method = RequestMethod.GET, produces = "application/json")
+    public Optional<Project> getProject(
+            Authentication authentication,
+            @PathVariable int projectId
+    ) {
+        return projectFacade.project(authentication, projectId);
     }
 
     @RequestMapping(path = "/time/project", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
@@ -29,6 +38,23 @@ public class ProjectController {
             @RequestBody Project project
     ) {
         return projectFacade.createProject(authentication, project);
+    }
+
+    @RequestMapping(path = "/time/project/{projectId}", method = RequestMethod.PUT, produces = "application/json")
+    public Optional<Project> replaceProject(
+            Authentication authentication,
+            @PathVariable int projectId,
+            @RequestBody Project project
+    ) {
+        return projectFacade.replaceProject(authentication, projectId, project);
+    }
+
+    @RequestMapping(path = "/time/project/{projectId}", method = RequestMethod.DELETE, produces = "application/json")
+    public Optional<Project> deleteProject(
+            Authentication authentication,
+            @PathVariable int projectId
+    ) {
+        return projectFacade.deleteProject(authentication, projectId);
     }
 
 }

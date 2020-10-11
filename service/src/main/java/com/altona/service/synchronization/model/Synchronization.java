@@ -19,6 +19,8 @@ public class Synchronization {
 
     private int id;
 
+    private String name;
+
     private boolean enabled;
 
     @NonNull
@@ -27,8 +29,8 @@ public class Synchronization {
     @NonNull
     private ObjectNode configuration;
 
-    public Synchronization(int id, boolean enabled, String service, ObjectNode configuration) {
-        this(id, enabled, SynchronizationServiceType.valueOf(service), configuration);
+    public Synchronization(int id, String name, boolean enabled, String service, ObjectNode configuration) {
+        this(id, name, enabled, SynchronizationServiceType.valueOf(service), configuration);
     }
 
     public boolean hasValidConfiguration(ObjectMapper objectMapper) {
@@ -42,7 +44,7 @@ public class Synchronization {
             Map.Entry<String, JsonNode> field = fields.next();
             newConfiguration.set(field.getKey(), field.getValue());
         }
-        return new Synchronization(id, enabled, service, newConfiguration);
+        return new Synchronization(id, name, enabled, service, newConfiguration);
     }
 
     public Result<Synchronizer, SynchronizationError> createService(ApplicationContext applicationContext, SynchronizationRequest request) {

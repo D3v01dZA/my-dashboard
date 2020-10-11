@@ -3,6 +3,7 @@ package com.altona.service.synchronization;
 import com.altona.security.Encryptor;
 import com.altona.service.project.model.Project;
 import com.altona.service.synchronization.model.Synchronization;
+import com.altona.user.service.User;
 import com.altona.util.ObjectMapperHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -36,6 +37,7 @@ public class SynchronizationRepository {
     public int insert(Encryptor encryptor, Project project, Synchronization synchronization) {
         return synchronizationJdbcInsert.executeAndReturnKey(new MapSqlParameterSource()
                 .addValue("service", synchronization.getService().name())
+                .addValue("name", synchronization.getName())
                 .addValue("enabled", synchronization.isEnabled())
                 .addValue("configuration",
                         encryptor.encrypt(
@@ -46,18 +48,19 @@ public class SynchronizationRepository {
         ).intValue();
     }
 
-    public void update(Encryptor encryptor, Project project, Synchronization synchronization) {
+    public void update(Encryptor encryptor, Project project, int synchronizationId, Synchronization synchronization) {
         int updated = namedJdbc.update(
-                "UPDATE synchronization SET enabled = :enabled, service = :service, configuration = :configuration WHERE project_id = :projectId AND id = :synchronizationId",
+                "UPDATE synchronization SET name = :name, enabled = :enabled, service = :service, configuration = :configuration WHERE project_id = :projectId AND id = :synchronizationId",
                 new MapSqlParameterSource()
                         .addValue("service", synchronization.getService().name())
+                        .addValue("name", synchronization.getName())
                         .addValue("enabled", synchronization.isEnabled())
                         .addValue("configuration",
                                 encryptor.encrypt(
                                         ObjectMapperHelper.serialize(objectMapper, synchronization.getConfiguration())
                                 ))
                         .addValue("projectId", project.getId())
-                        .addValue("synchronizationId", synchronization.getId())
+                        .addValue("synchronizationId", synchronizationId)
         );
         if (updated != 1) {
             throw new RuntimeException("Didn't update the correct number of rows, should have been 1, was " + updated);
@@ -66,7 +69,7 @@ public class SynchronizationRepository {
 
     public List<Synchronization> select(Encryptor encryptor, Project project) {
         return namedJdbc.query(
-                "SELECT id, enabled, service, configuration FROM synchronization WHERE project_id = :projectId",
+                "SELECT id, name, enabled, service, configuration FROM synchronization WHERE project_id = :projectId",
                 new MapSqlParameterSource("projectId", project.getId()),
                 rowMapper(encryptor, objectMapper)
         );
@@ -75,7 +78,7 @@ public class SynchronizationRepository {
     public Optional<Synchronization> select(Encryptor encryptor, Project project, int id) {
         try {
             return Optional.of(namedJdbc.queryForObject(
-                    "SELECT id, enabled, service, configuration FROM synchronization WHERE project_id = :projectId and id = :id",
+                    "SELECT id, name, enabled, service, configuration FROM synchronization WHERE project_id = :projectId and id = :id",
                     new MapSqlParameterSource()
                             .addValue("projectId", project.getId())
                             .addValue("id", id),
@@ -90,11 +93,21 @@ public class SynchronizationRepository {
         }
     }
 
+    public void delete(Project project, int id) {
+        namedJdbc.update(
+                "DELETE FROM synchronization WHERE id = :id AND project_id = :project_id",
+                new MapSqlParameterSource()
+                        .addValue("id", id)
+                        .addValue("project_id", project.getId())
+        );
+    }
+
     private static RowMapper<Synchronization> rowMapper(Encryptor encryptor, ObjectMapper objectMapper) {
         return (rs, rn) -> {
             try {
                 return new Synchronization(
                         rs.getInt("id"),
+                        rs.getString("name"),
                         rs.getBoolean("enabled"),
                         rs.getString("service"),
                         objectMapper.readValue(

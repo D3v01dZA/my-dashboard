@@ -80,6 +80,11 @@ public class UserContext extends User implements TimeConfig, Encryptor {
     }
 
     @Override
+    public Instant unlocalize(LocalDateTime localDate) {
+        return localDate.atZone(timeZone.toZoneId()).toInstant();
+    }
+
+    @Override
     public String encrypt(String original) {
         return encryptor.encrypt(original);
     }
