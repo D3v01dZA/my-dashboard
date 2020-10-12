@@ -1,6 +1,6 @@
-import {View} from "react-native";
+import {Dimensions, View} from "react-native";
 import * as React from "react";
-import {useCallback, useContext, useState} from "react";
+import {useCallback, useContext, useEffect, useState} from "react";
 import {Navigation, Route} from "../App";
 import {Button, Text} from "react-native-elements";
 import {useFocusEffect} from '@react-navigation/native';
@@ -101,55 +101,67 @@ export const HomeScreen = ({navigation, route}: { navigation: Navigation, route:
         }, [url, route.params.projectId])
     );
 
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (route.params.projectId !== undefined) {
+                fetchTime();
+            }
+        }, 60000);
+        return () => clearInterval(interval);
+    }, []);
+
     return (
         <View style={{flex: 1}}>
             <Header
                 navigation={navigation}
                 title="Home"
             />
-            <View style={{flex: 1, justifyContent: "center"}}>
+            <View style={{flex: 1, justifyContent: "center", alignItems: "center"}}>
                 <View style={{justifyContent: "center", flexDirection: "row"}}>
                     <Text style={{fontSize: 30, fontWeight: "bold"}}>{project?.name}</Text>
                 </View>
-                <View style={{justifyContent: "space-around", flexDirection: "row"}}>
-                    <Text>Worked</Text>
-                    <Text>Break</Text>
-                </View>
-                <View style={{justifyContent: "space-around", flexDirection: "row"}}>
-                    <Button
-                        title={isNone() || isBreak() ? "Start" : "Pause"}
-                        containerStyle={{flexGrow: 1}}
-                        icon={{
-                            type: "font-awesome-5",
-                            name: `${isNone() || isBreak() ? "play" : "pause"}`,
-                            color: "white"
-                        }}
-                        onPress={() => {
-                            if (isNone()) {
-                                modifyTime("start-work");
-                            } else if (isBreak()) {
-                                modifyTime("stop-break");
-                            } else {
-                                modifyTime("start-break");
-                            }
-                        }}
-                    />
-                    <Button
-                        title={isWork() || isBreak() ? "Stop" : "Sync"}
-                        containerStyle={{flexGrow: 1}}
-                        icon={{
-                            type: "font-awesome-5",
-                            name: `${isWork() || isBreak() ? "stop" : "sync"}`,
-                            color: "white"
-                        }}
-                        onPress={() => {
-                            if (isWork() || isBreak()) {
-                                modifyTime("stop-work");
-                            } else {
-                                syncTime();
-                            }
-                        }}
-                    />
+                <View style={{justifyContent: "center", width: Dimensions.get('window').width * 0.85}}>
+                    <View style={{justifyContent: "space-around", flexDirection: "row", padding: 30}}>
+                        <Text>Work: {timeStatus.runningWorkTotal?.substr(0, 5) ?? "00:00"}</Text>
+                        <Text>Break: {timeStatus.runningBreakTotal?.substr(0, 5) ?? "00:00"}</Text>
+                    </View>
+                    <View style={{justifyContent: "space-around", flexDirection: "row"}}>
+                        <Button
+                            title={isNone() ? "Start" : isBreak() ? "Resume" : "Pause"}
+                            containerStyle={{flexGrow: 1}}
+                            icon={{
+                                type: "font-awesome-5",
+                                name: `${isNone() || isBreak() ? "play" : "pause"}`,
+                                color: "white"
+                            }}
+                            onPress={() => {
+                                if (isNone()) {
+                                    modifyTime("start-work");
+                                } else if (isBreak()) {
+                                    modifyTime("stop-break");
+                                } else {
+                                    modifyTime("start-break");
+                                }
+                            }}
+                        />
+                        <Button
+                            title={isWork() || isBreak() ? "Stop" : "Sync"}
+                            containerStyle={{flexGrow: 1}}
+                            icon={{
+                                type: "font-awesome-5",
+                                name: `${isWork() || isBreak() ? "stop" : "sync"}`,
+                                color: "white"
+                            }}
+                            buttonStyle={{backgroundColor: "red"}}
+                            onPress={() => {
+                                if (isWork() || isBreak()) {
+                                    modifyTime("stop-work");
+                                } else {
+                                    syncTime();
+                                }
+                            }}
+                        />
+                    </View>
                 </View>
             </View>
         </View>

@@ -5,14 +5,15 @@ import {Button, Header, Input} from "react-native-elements";
 import {AppContext} from "../util/app-context";
 import base64 from "react-native-base64";
 import {toastError} from "../util/errors";
+import DeviceInfo from "react-native-device-info";
 
 export const LoginScreen = () => {
 
     const {url, setAuthenticated} = useContext(AppContext);
 
-    const [username, setUsername] = useState<string>("test");
+    const [username, setUsername] = useState<string>(DeviceInfo.isEmulatorSync() ? "test" : "");
 
-    const [password, setPassword] = useState<string>("password");
+    const [password, setPassword] = useState<string>(DeviceInfo.isEmulatorSync() ? "password" : "");
 
     const login = () => {
         const encoded = base64.encode(`${username}:${password}`);

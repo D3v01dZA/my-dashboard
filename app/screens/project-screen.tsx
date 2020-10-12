@@ -10,6 +10,7 @@ import {fetchProject} from "../util/web-calls";
 import {Button, Input, ListItem, Overlay, Text} from "react-native-elements";
 import {toastError} from "../util/errors";
 import {selectProject} from "../util/nav";
+import AsyncStorage from "@react-native-community/async-storage";
 
 export const ProjectScreen = ({navigation, route}: { navigation: Navigation, route: Route<"Project"> }) => {
 
@@ -73,6 +74,14 @@ export const ProjectScreen = ({navigation, route}: { navigation: Navigation, rou
                 setEditing({...editing, editing: false})
                 setProject(project);
             })
+            .catch(reason => {
+                toastError(reason);
+            })
+    }
+
+    const selectPressed = () => {
+        navigation.navigate("Home", {projectId: route.params.projectId});
+        AsyncStorage.setItem("savedProject", `${route.params.projectId}`, () => {})
             .catch(reason => {
                 toastError(reason);
             })
@@ -166,7 +175,7 @@ export const ProjectScreen = ({navigation, route}: { navigation: Navigation, rou
                     }}
                     buttonStyle={{backgroundColor: "green"}}
                     containerStyle={{flexGrow: 1}}
-                    onPress={() => navigation.navigate("Home", {projectId: route.params.projectId})}
+                    onPress={selectPressed}
                 />
                 <Button
                     title="Time"

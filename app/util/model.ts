@@ -56,8 +56,8 @@ export type TimeStatus = {
     status: TimeStatusType,
     projectId?: number,
     timeId?: number,
-    runningWorkTotal?: Date,
-    runningBreakTotal?: Date
+    runningWorkTotal?: string,
+    runningBreakTotal?: string
 }
 
 export enum SummaryType {
