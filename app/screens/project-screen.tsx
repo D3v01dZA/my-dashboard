@@ -184,6 +184,7 @@ export const ProjectScreen = ({navigation, route}: { navigation: Navigation, rou
                         name: "clock",
                         color: "white"
                     }}
+                    buttonStyle={{backgroundColor: "violet"}}
                     containerStyle={{flexGrow: 1}}
                     onPress={() => navigation.navigate("Times", {projectId: route.params.projectId})}
                 />
