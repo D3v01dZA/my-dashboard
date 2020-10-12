@@ -54,7 +54,7 @@ public class TimeTest extends SpringTest {
         doReturn(instant(2019, 2, 2, 8, 0)).when(timeInfo).now();
 
         // Start Break Without Work
-        assertNoTimeStatus();
+        assertNoTimeStatus(project);
         BreakStart breakStartWorkNotStarted = read(
                 mvc.perform(post("/time/project/" + project.getId() + "/start-break"))
                         .andExpect(status().isOk()),
@@ -64,7 +64,7 @@ public class TimeTest extends SpringTest {
         assertFalse(breakStartWorkNotStarted.getTimeId().isPresent());
 
         // Stop Break Without Work
-        assertNoTimeStatus();
+        assertNoTimeStatus(project);
         BreakStop breakStopWorkNotStarted = read(
                 mvc.perform(post("/time/project/" + project.getId() + "/stop-break"))
                         .andExpect(status().isOk()),
@@ -74,7 +74,7 @@ public class TimeTest extends SpringTest {
         assertFalse(breakStopWorkNotStarted.getTimeId().isPresent());
 
         // Start Work Without Work
-        assertNoTimeStatus();
+        assertNoTimeStatus(project);
         WorkStop workStopWorkNotStarted = read(
                 mvc.perform(post("/time/project/" + project.getId() + "/stop-work"))
                         .andExpect(status().isOk()),
@@ -85,7 +85,7 @@ public class TimeTest extends SpringTest {
         assertFalse(workStopWorkNotStarted.getBreakTimeId().isPresent());
 
         // Start Work
-        assertNoTimeStatus();
+        assertNoTimeStatus(project);
         WorkStart workStart = read(
                 mvc.perform(post("/time/project/" + project.getId() + "/start-work"))
                         .andExpect(status().isOk()),
@@ -183,7 +183,7 @@ public class TimeTest extends SpringTest {
         doReturn(instant(2019, 2, 2, 18, 0)).when(timeInfo).now();
 
         // Start Work
-        assertNoTimeStatus();
+        assertNoTimeStatus(project);
         WorkStart workStartTwo = read(
                 mvc.perform(post("/time/project/" + project.getId() + "/start-work"))
                         .andExpect(status().isOk()),
@@ -231,12 +231,12 @@ public class TimeTest extends SpringTest {
         TimeStatus workStopTwoTimeStatus = assertInstanceOf(workStopTwoBroadcast.getBroadcastMessage().getMessage(), TimeStatus.class);
         assertEquals(TimeStatus.Status.NONE, workStopTwoTimeStatus.getStatus());
 
-        assertNoTimeStatus();
+        assertNoTimeStatus(project);
     }
 
-    private void assertNoTimeStatus() throws Exception {
+    private void assertNoTimeStatus(Project project) throws Exception {
         TimeStatusRepresentation timeStatus = read(
-                mvc.perform(post("/time/project/time-status"))
+                mvc.perform(post("/time/project/" + project.getId() + "/time-status"))
                         .andExpect(status().isOk())
                         .andExpect(content().contentType(APPLICATION_JSON_UTF8))
                         .andReturn()
@@ -261,7 +261,7 @@ public class TimeTest extends SpringTest {
 
     private void assertTimeStatus(Project project, TimeStatus.Status status, int workHours, int breakHours) throws Exception {
         TimeStatusRepresentation timeStatus = read(
-                mvc.perform(post("/time/project/time-status"))
+                mvc.perform(post("/time/project/" + project.getId() + "/time-status"))
                         .andExpect(status().isOk())
                         .andExpect(content().contentType(APPLICATION_JSON_UTF8))
                         .andReturn()

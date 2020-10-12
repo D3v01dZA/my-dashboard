@@ -50,7 +50,7 @@ class SynchronizationTest extends SpringTest {
         // Create a succeeding synchronizer
         SucceedingConfiguration succeedingConfiguration = new SucceedingConfiguration("https://www.google.com");
         Synchronization synchronization = read(
-                mvc.perform(post("/time/project/" + project.getId() + "/synchronization", new Synchronization(12, true, SynchronizationServiceType.SUCCEEDING, objectMapper.valueToTree(succeedingConfiguration))))
+                mvc.perform(post("/time/project/" + project.getId() + "/synchronization", new Synchronization(12, SynchronizationServiceType.SUCCEEDING.name(), true, SynchronizationServiceType.SUCCEEDING, objectMapper.valueToTree(succeedingConfiguration))))
                         .andExpect(status().isCreated()),
                 Synchronization.class
         );
@@ -114,7 +114,7 @@ class SynchronizationTest extends SpringTest {
 
         // Create a failing synchronizer
         Synchronization failingSynchronization = read(
-                mvc.perform(post("/time/project/" + project.getId() + "/synchronization", new Synchronization(12, true, SynchronizationServiceType.FAILING, objectMapper.createObjectNode())))
+                mvc.perform(post("/time/project/" + project.getId() + "/synchronization", new Synchronization(12, SynchronizationServiceType.FAILING.name(), true, SynchronizationServiceType.FAILING, objectMapper.createObjectNode())))
                         .andExpect(status().isCreated()),
                 Synchronization.class
         );
