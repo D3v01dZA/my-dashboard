@@ -16,4 +16,4 @@ VOLUME /home/time/logs
 
 EXPOSE 8080
 
-ENTRYPOINT ["run.sh"]
+ENTRYPOINT ["./run.sh"]
