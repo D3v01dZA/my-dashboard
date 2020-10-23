@@ -8,7 +8,7 @@ import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.util.List;
@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public class OpenairContext implements WebDriver, TakesScreenshot, Screenshotter {
 
     @Delegate(types = {WebDriver.class, TakesScreenshot.class})
-    private ChromeDriver webDriver = Driver.getChromeDriver();
+    private RemoteWebDriver webDriver = Driver.getDriver();
 
     public WebElement waitForElement(By by) {
         return new WebDriverWait(this, 30)

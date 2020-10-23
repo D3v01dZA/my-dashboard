@@ -14,10 +14,12 @@ public class SystemProperties {
 
     @PostConstruct
     public void postConstruct() {
-        System.setProperty("webdriver.chrome.driver", environment.getRequiredProperty("webdriver.chrome.driver"));
-        System.setProperty("webdriver.chrome.headless", environment.getRequiredProperty("webdriver.chrome.headless"));
-        System.setProperty("webdriver.chrome.silent", environment.getRequiredProperty("webdriver.chrome.silent"));
-        System.setProperty("webdriver.chrome.linux", environment.getRequiredProperty("webdriver.chrome.linux"));
+        System.setProperty("webdriver.chrome.driver", environment.getProperty("webdriver.chrome.driver", ""));
+        System.setProperty("webdriver.chrome.headless", environment.getProperty("webdriver.chrome.headless", ""));
+        System.setProperty("webdriver.chrome.silent", environment.getProperty("webdriver.chrome.silent", ""));
+        System.setProperty("webdriver.chrome.linux", environment.getProperty("webdriver.chrome.linux", ""));
+        System.setProperty("webdriver.chrome.docker", environment.getProperty("webdriver.chrome.docker", ""));
+        System.setProperty("webdriver.chrome.host", environment.getProperty("webdriver.chrome.host", ""));
     }
 
 }

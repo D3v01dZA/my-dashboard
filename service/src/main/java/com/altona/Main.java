@@ -7,6 +7,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import java.awt.*;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.stream.Stream;
 
 @Slf4j
 @SpringBootApplication
@@ -32,6 +36,14 @@ public class Main {
             log.info("Decided on Windows");
             return "windows";
         } else if (SystemUtils.IS_OS_LINUX) {
+            try (Stream<String> stream = Files.lines(Paths.get("/proc/1/cgroup"))) {
+                if (stream.anyMatch(line -> line.contains("/docker"))) {
+                    log.info("Decided on Docker");
+                    return "docker";
+                }
+            } catch (IOException e) {
+                // Intentionally ignored
+            }
             if (GraphicsEnvironment.isHeadless()) {
                 log.info("Decided on Linux Headless");
                 return "linuxheadless";
