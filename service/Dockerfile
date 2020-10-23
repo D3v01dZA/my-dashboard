@@ -10,4 +10,10 @@ COPY . .
 
 RUN ./gradlew clean build
 
+VOLUME /home/time/config
+
+VOLUME /home/time/logs
+
+EXPOSE 8080
+
 ENTRYPOINT ["run.sh"]
