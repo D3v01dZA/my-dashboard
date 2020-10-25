@@ -15,13 +15,15 @@ import {
 } from "../util/model";
 import {toastError} from "../util/errors";
 import {Dimensions, ScrollView, View} from "react-native";
-import {Button, Header, Input, ListItem, Overlay, Text} from "react-native-elements";
+import {Button, Input, ListItem, Overlay, Text} from "react-native-elements";
 import {useFocusEffect} from '@react-navigation/native';
 import {selectProject} from "../util/nav";
 import {SynchronizationEdit} from "./synchronization-edit";
 import {Picker} from "@react-native-community/picker";
+import {ProjectsNavigation, ProjectsRoute} from "./projects-navigator";
+import {Header} from "../util/header";
 
-export const SynchronizationsScreen = ({navigation, route}: { navigation: Navigation, route: Route<"Synchronizations"> }) => {
+export const SynchronizationsScreen = ({navigation, route}: { navigation: ProjectsNavigation, route: ProjectsRoute<"Synchronizations"> }) => {
 
     const emptyMaconomy: MaconomyConfiguration = {url: "", username: "", password: "", projectName: "", taskName: ""};
     const emptyNetsuite: NetsuiteConfiguration = {username: "", password: "", project: "", task: "", answers: []}
@@ -104,10 +106,7 @@ export const SynchronizationsScreen = ({navigation, route}: { navigation: Naviga
 
     return (
         <View style={{flex: 1}}>
-            <Header
-                leftComponent={{icon: "menu", color: "#fff", onPress: () => navigation.openDrawer()}}
-                centerComponent={{text: "Synchronizations", style: {color: "#fff", fontSize: 18}}}
-            />
+            <Header navigation={navigation.dangerouslyGetParent()} title="Synchronizations"/>
             <ScrollView>
                 {
                     synchronizations.map(synchronization => {

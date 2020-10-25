@@ -10,16 +10,12 @@ import {HomeScreen} from "./screens/home-screen";
 import {ConfigurationScreen} from "./screens/configuration-screen";
 import {LogoutScreen} from "./screens/logout-screen";
 import {AppContext} from "./util/app-context";
-import {ProjectsScreen} from "./screens/projects-screen";
-import {ProjectScreen} from "./screens/project-screen";
-import {TimesScreen} from "./screens/times-screen";
-import {TimeScreen} from "./screens/time-screen";
-import {SynchronizationsScreen} from "./screens/synchronizations-screen";
-import {SynchronizationScreen} from "./screens/synchronization-screen";
 import DeviceInfo from 'react-native-device-info';
 import {View} from "react-native";
 import AsyncStorage from '@react-native-community/async-storage';
 import {toastError} from "./util/errors";
+import {createChannels} from "./util/notification";
+import {ProjectsNavigator} from "./screens/projects-navigator";
 
 export type Routes = {
     Login: undefined,
@@ -29,23 +25,6 @@ export type Routes = {
         projectId: number | undefined
     },
     Projects: undefined,
-    Project: {
-        projectId: number | undefined
-    },
-    Times: {
-        projectId: number | undefined
-    },
-    Time: {
-        projectId: number | undefined,
-        timeId: number | undefined
-    },
-    Synchronizations: {
-        projectId: number | undefined
-    },
-    Synchronization: {
-        projectId: number | undefined,
-        synchronizationId: number | undefined
-    },
     Configuration: undefined
 }
 
@@ -56,13 +35,15 @@ const Drawer = createDrawerNavigator<Routes>();
 
 const App = () => {
 
-    const [savedProject, setSavedProject] = useState<{ id: number | undefined }>();
+    const [url, setUrl] = useState<string>();
 
     const [authenticated, setAuthenticated] = useState<boolean>(false);
 
+    const [savedProject, setSavedProject] = useState<{ id: number | undefined }>();
+
     useEffect(() => {
-        console.log("Fetching");
-        AsyncStorage.getItem("savedProject", () => {})
+        AsyncStorage.getItem("savedProject", () => {
+        })
             .then(result => {
                 if (result === undefined || result === null) {
                     setSavedProject({id: undefined});
@@ -73,13 +54,31 @@ const App = () => {
             .catch(reason => {
                 toastError(reason)
             })
-    }, [])
+    }, []);
+
+    useEffect(() => {
+        DeviceInfo.isEmulator()
+            .then(emulator => {
+                if (emulator) {
+                    setUrl("http://10.0.2.2:8080");
+                } else {
+                    setUrl("https://time.caltona.net");
+                }
+            })
+            .catch(reason => {
+                toastError(reason);
+            });
+    }, []);
+
+    useEffect(() => {
+        createChannels();
+    }, []);
 
     return (
-        savedProject === undefined ? <View/> : (
+        savedProject === undefined || url === undefined ? <View/> : (
             <AppContext.Provider
                 value={{
-                    url: DeviceInfo.isEmulatorSync() ? "http://10.0.2.2:8080" : "https://caltona.net/dashboard",
+                    url,
                     authenticated,
                     setAuthenticated
                 }}
@@ -88,7 +87,8 @@ const App = () => {
                     <NavigationContainer>
                         {
                             !authenticated ? (
-                                <Drawer.Navigator initialRouteName="Login" screenOptions={{gestureEnabled: false}}>
+                                <Drawer.Navigator initialRouteName="Login"
+                                                  screenOptions={{gestureEnabled: false}}>
                                     <Drawer.Screen
                                         name="Login"
                                         component={LoginScreen}
@@ -99,36 +99,11 @@ const App = () => {
                                     <Drawer.Screen
                                         name="Home"
                                         component={HomeScreen}
-                                        initialParams={{projectId: savedProject.id}}
+                                        initialParams={{projectId: savedProject?.id}}
                                     />
                                     <Drawer.Screen
                                         name="Projects"
-                                        component={ProjectsScreen}
-                                    />
-                                    <Drawer.Screen
-                                        name="Project"
-                                        component={ProjectScreen}
-                                        initialParams={{projectId: savedProject.id}}
-                                    />
-                                    <Drawer.Screen
-                                        name="Times"
-                                        component={TimesScreen}
-                                        initialParams={{projectId: savedProject.id}}
-                                    />
-                                    <Drawer.Screen
-                                        name="Time"
-                                        component={TimeScreen}
-                                        initialParams={{projectId: savedProject.id, timeId: undefined}}
-                                    />
-                                    <Drawer.Screen
-                                        name="Synchronizations"
-                                        component={SynchronizationsScreen}
-                                        initialParams={{projectId: savedProject.id}}
-                                    />
-                                    <Drawer.Screen
-                                        name="Synchronization"
-                                        component={SynchronizationScreen}
-                                        initialParams={{projectId: savedProject.id, synchronizationId: undefined}}
+                                        component={ProjectsNavigator}
                                     />
                                     <Drawer.Screen
                                         name="Configuration"

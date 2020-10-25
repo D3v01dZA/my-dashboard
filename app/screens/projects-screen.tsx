@@ -1,14 +1,15 @@
-import {Navigation} from "../App";
 import {useCallback, useContext, useState} from "react";
 import {AppContext} from "../util/app-context";
 import {createPost, Project} from "../util/model";
 import {toastError} from "../util/errors";
 import {Dimensions, ScrollView, View} from "react-native";
-import {Button, Header, Input, ListItem, Overlay, Text} from "react-native-elements";
+import {Button, Input, ListItem, Overlay, Text} from "react-native-elements";
 import {useFocusEffect} from '@react-navigation/native';
 import * as React from "react";
+import {ProjectsNavigation, ProjectsRoute} from "./projects-navigator";
+import {Header} from "../util/header";
 
-export const ProjectsScreen = ({navigation}: { navigation: Navigation }) => {
+export const ProjectsScreen = ({navigation, route}: { navigation: ProjectsNavigation, route: ProjectsRoute<"Projects"> }) => {
 
     const {url} = useContext(AppContext);
 
@@ -64,10 +65,7 @@ export const ProjectsScreen = ({navigation}: { navigation: Navigation }) => {
 
     return (
         <View style={{flex: 1}}>
-            <Header
-                leftComponent={{icon: "menu", color: "#fff", onPress: () => navigation.openDrawer()}}
-                centerComponent={{text: "Projects", style: {color: "#fff", fontSize: 18}}}
-            />
+            <Header navigation={navigation.dangerouslyGetParent()} title="Projects"/>
             <ScrollView>
                 {
                     projects.map(project => {

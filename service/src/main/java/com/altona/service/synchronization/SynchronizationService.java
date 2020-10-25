@@ -85,6 +85,11 @@ public class SynchronizationService {
         return Result.success(synchronizationRepository.select(encryptor, project, modified.getId()).get());
     }
 
+    public Optional<List<SynchronizationAttempt>> attempts(UserContext userContext, Project project, int synchronizationId) {
+        return synchronizationRepository.select(userContext, project, synchronizationId)
+                .map(synchronization -> synchronizationAttemptRepository.select(userContext, synchronization));
+    }
+
     public Optional<SynchronizationAttempt> attempt(UserContext userContext, Project project, int synchronizationId, int attemptId) {
         return synchronizationRepository.select(userContext, project, synchronizationId)
                 .flatMap(synchronization -> synchronizationAttemptRepository.select(userContext, synchronization, attemptId));

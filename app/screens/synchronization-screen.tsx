@@ -4,15 +4,26 @@ import {Navigation, Route} from "../App";
 import {Alert, Dimensions, ScrollView, View} from "react-native";
 import * as React from "react";
 import {Header} from "../util/header";
-import {createDelete, createPut, format, Project, Synchronization, SynchronizationType, TimeType} from "../util/model";
+import {
+    createDelete,
+    createPost,
+    createPut,
+    format,
+    Project,
+    Synchronization,
+    SynchronizationType,
+    TimeType
+} from "../util/model";
 import {useFocusEffect} from "@react-navigation/native";
 import {Button, Input, ListItem, Overlay, Text} from "react-native-elements";
 import {toastError} from "../util/errors";
 import {selectProject, selectTime} from "../util/nav";
 import {SynchronizationDisplay} from "./synchronization-display";
 import {SynchronizationEdit} from "./synchronization-edit";
+import {ProjectsNavigation, ProjectsRoute} from "./projects-navigator";
+import Toast from "react-native-root-toast";
 
-export const SynchronizationScreen = ({navigation, route}: { navigation: Navigation, route: Route<"Synchronization"> }) => {
+export const SynchronizationScreen = ({navigation, route}: { navigation: ProjectsNavigation, route: ProjectsRoute<"Synchronization"> }) => {
 
     const {url} = useContext(AppContext);
 
@@ -98,6 +109,26 @@ export const SynchronizationScreen = ({navigation, route}: { navigation: Navigat
             })
     }
 
+    const synchronize = () => {
+        fetch(
+            `${url}/time/project/${route.params.projectId}/synchronization/${route.params.synchronizationId}/synchronize`,
+            createPost(editing.synchronization)
+        )
+            .then(response => {
+                if (response.status === 200) {
+                    return response.json();
+                } else {
+                    return Promise.reject(`Failed to start synchronization with ${response.status}`);
+                }
+            })
+            .then(() => {
+                Toast.show("Synchronization started in the background");
+            })
+            .catch(reason => {
+                toastError(reason);
+            })
+    }
+
     useFocusEffect(
         useCallback(() => {
             if (route.params.projectId === undefined) {
@@ -171,7 +202,7 @@ export const SynchronizationScreen = ({navigation, route}: { navigation: Navigat
 
     return (
         <View style={{flex: 1}}>
-            <Header navigation={navigation} title="Time"/>
+            <Header navigation={navigation.dangerouslyGetParent()} title="Time"/>
             <ScrollView>
                 {
                     synchronization?.id === undefined ? undefined : (
@@ -220,7 +251,29 @@ export const SynchronizationScreen = ({navigation, route}: { navigation: Navigat
                     )
                 }
             </ScrollView>
-            <View style={{flexDirection: "row", justifyContent: "space-evenly"}}>
+            <View style={{flexDirection: "row", flexWrap: "wrap", justifyContent: "center"}}>
+                <Button
+                    title="Synchronize"
+                    icon={{
+                        type: "font-awesome-5",
+                        name: "sync",
+                        color: "white"
+                    }}
+                    buttonStyle={{backgroundColor: "green"}}
+                    containerStyle={{flexGrow: 1}}
+                    onPress={synchronize}
+                />
+                <Button
+                    title="Attempts"
+                    icon={{
+                        type: "font-awesome-5",
+                        name: "eye",
+                        color: "white"
+                    }}
+                    buttonStyle={{backgroundColor: "orange"}}
+                    containerStyle={{flexGrow: 1}}
+                    onPress={() => navigation.navigate("Attempts", {projectId: route.params.projectId, synchronizationId: route.params.synchronizationId})}
+                />
                 <Button
                     title="Edit"
                     icon={{

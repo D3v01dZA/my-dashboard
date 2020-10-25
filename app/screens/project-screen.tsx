@@ -1,6 +1,5 @@
 import {useCallback, useContext, useState} from "react";
 import {AppContext} from "../util/app-context";
-import {Navigation, Route} from "../App";
 import {Alert, Dimensions, ScrollView, View} from "react-native";
 import * as React from "react";
 import {Header} from "../util/header";
@@ -11,8 +10,10 @@ import {Button, Input, ListItem, Overlay, Text} from "react-native-elements";
 import {toastError} from "../util/errors";
 import {selectProject} from "../util/nav";
 import AsyncStorage from "@react-native-community/async-storage";
+import {ProjectsNavigation, ProjectsRoute} from "./projects-navigator";
+import {Navigation} from "../App";
 
-export const ProjectScreen = ({navigation, route}: { navigation: Navigation, route: Route<"Project"> }) => {
+export const ProjectScreen = ({navigation, route}: { navigation: ProjectsNavigation, route: ProjectsRoute<"Project"> }) => {
 
     const {url} = useContext(AppContext);
 
@@ -80,7 +81,8 @@ export const ProjectScreen = ({navigation, route}: { navigation: Navigation, rou
     }
 
     const selectPressed = () => {
-        navigation.navigate("Home", {projectId: route.params.projectId});
+        let parentNavigation: Navigation = navigation.dangerouslyGetParent();
+        parentNavigation.navigate("Home", {projectId: route.params.projectId});
         AsyncStorage.setItem("savedProject", `${route.params.projectId}`, () => {})
             .catch(reason => {
                 toastError(reason);
@@ -150,7 +152,7 @@ export const ProjectScreen = ({navigation, route}: { navigation: Navigation, rou
 
     return (
         <View style={{flex: 1}}>
-            <Header navigation={navigation} title="Project"/>
+            <Header navigation={navigation.dangerouslyGetParent()} title="Project"/>
             <ScrollView>
                 <ListItem>
                     <ListItem.Content style={{flexDirection: "row", justifyContent: "space-between"}}>

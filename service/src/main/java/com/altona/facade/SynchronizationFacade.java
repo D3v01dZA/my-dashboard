@@ -97,6 +97,13 @@ public class SynchronizationFacade extends ContextFacade {
     }
 
     @Transactional(readOnly = true)
+    public Optional<List<SynchronizationAttempt>> attempts(Authentication authentication, TimeZone timeZone, int projectId, int synchronizationId) {
+        UserContext userContext = legacyAuthenticate(authentication, timeZone);
+        return projectService.project(userContext, projectId)
+                .flatMap(project -> synchronizationService.attempts(userContext, project, synchronizationId));
+    }
+
+    @Transactional(readOnly = true)
     public Optional<SynchronizationAttempt> attempt(Authentication authentication, TimeZone timeZone, int projectId, int synchronizationId, int attemptId) {
         UserContext userContext = legacyAuthenticate(authentication, timeZone);
         return projectService.project(userContext, projectId)

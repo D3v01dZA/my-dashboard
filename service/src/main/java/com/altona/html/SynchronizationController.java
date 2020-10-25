@@ -134,6 +134,18 @@ public class SynchronizationController {
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    @RequestMapping(path = "/time/project/{projectId}/synchronization/{synchronizationId}/attempt", method = RequestMethod.GET, produces = "application/json")
+    public ResponseEntity<List<SynchronizationAttempt>> synchronizeAttempts(
+            Authentication authentication,
+            TimeZone timeZone,
+            @PathVariable Integer projectId,
+            @PathVariable Integer synchronizationId
+    ) {
+        return synchronizationFacade.attempts(authentication, timeZone, projectId, synchronizationId)
+                .map(traces -> new ResponseEntity<>(traces, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
     @RequestMapping(path = "/time/project/{projectId}/synchronization/{synchronizationId}/attempt/{attemptId}", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<SynchronizationAttempt> synchronizeAttempt(
             Authentication authentication,

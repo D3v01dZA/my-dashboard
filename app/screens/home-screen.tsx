@@ -8,8 +8,7 @@ import {Header} from "../util/header";
 import {createPost, Project, TimeStatus, TimeStatusType} from "../util/model";
 import {toastError} from "../util/errors";
 import {AppContext} from "../util/app-context";
-import {fetchProject} from "../util/web-calls";
-import {selectProject} from "../util/nav";
+import {fetchProject, timeAction} from "../util/web-calls";
 import Toast from 'react-native-root-toast';
 
 export const HomeScreen = ({navigation, route}: { navigation: Navigation, route: Route<"Home"> }) => {
@@ -18,6 +17,11 @@ export const HomeScreen = ({navigation, route}: { navigation: Navigation, route:
 
     const [project, setProject] = useState<Project>();
     const [timeStatus, setTimeStatus] = useState<TimeStatus>({status: TimeStatusType.NONE});
+
+    const selectProject = (navigation: Navigation) => {
+        Toast.show("Select a Project");
+        navigation.navigate("Projects");
+    }
 
     const fetchTime = () => {
         fetch(
@@ -42,23 +46,7 @@ export const HomeScreen = ({navigation, route}: { navigation: Navigation, route:
     }
 
     const modifyTime = (type: string) => {
-        fetch(
-            `${url}/time/project/${route.params.projectId}/${type}`,
-            createPost(undefined)
-        )
-            .then(response => {
-                if (response.status === 200) {
-                    return response.json();
-                } else {
-                    return Promise.reject(`Failed to ${type} with ${response.status}`);
-                }
-            })
-            .then(() => {
-                fetchTime();
-            })
-            .catch(reason => {
-                toastError(reason);
-            })
+        timeAction(url, route.params.projectId as number, type, fetchTime);
     }
 
     const syncTime = () => {
@@ -152,7 +140,7 @@ export const HomeScreen = ({navigation, route}: { navigation: Navigation, route:
                                 name: `${isWork() || isBreak() ? "stop" : "sync"}`,
                                 color: "white"
                             }}
-                            buttonStyle={{backgroundColor: "red"}}
+                            buttonStyle={{backgroundColor: `${isWork() || isBreak() ? "red" : "green"}`}}
                             onPress={() => {
                                 if (isWork() || isBreak()) {
                                     modifyTime("stop-work");

@@ -6,13 +6,13 @@ import {ScrollView, View} from "react-native";
 import {Header} from "../util/header";
 import {format, Time, TimeType} from "../util/model";
 import {useFocusEffect} from "@react-navigation/native";
-import SimpleToast from "react-native-simple-toast";
 import {ListItem, Text} from "react-native-elements";
 import {toastError} from "../util/errors";
 import moment from "moment";
 import {selectProject} from "../util/nav";
+import {ProjectsNavigation, ProjectsRoute} from "./projects-navigator";
 
-export const TimesScreen = ({navigation, route}: { navigation: Navigation, route: Route<"Times"> }) => {
+export const TimesScreen = ({navigation, route}: { navigation: ProjectsNavigation, route: ProjectsRoute<"Times"> }) => {
 
     const {url} = useContext(AppContext);
 

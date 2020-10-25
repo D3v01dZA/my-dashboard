@@ -6,6 +6,7 @@ import {AppContext} from "../util/app-context";
 import base64 from "react-native-base64";
 import {toastError} from "../util/errors";
 import DeviceInfo from "react-native-device-info";
+import {updateFirebaseToken} from "../util/notification";
 
 export const LoginScreen = () => {
 
@@ -34,6 +35,7 @@ export const LoginScreen = () => {
             .then(response => {
                 if (response.endsWith(`${username}!`)) {
                     setAuthenticated(true);
+                    updateFirebaseToken(url);
                 } else {
                     return Promise.reject(`Login failed with ${response}`);
                 }

@@ -12,6 +12,9 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -28,6 +31,15 @@ public class SynchronizationAttemptRepository {
                 .usingGeneratedKeyColumns("id");
     }
 
+    public List<SynchronizationAttempt> select(Encryptor encryptor, Synchronization synchronization) {
+        return jdbcTemplate.query(
+                "SELECT id, synchronization_id, status, message, screenshot FROM synchronization_attempt WHERE synchronization_id = :synchronizationId ORDER BY id DESC",
+                new MapSqlParameterSource()
+                        .addValue("synchronizationId", synchronization.getId()),
+                (rs, rn) -> mapper(encryptor, rs)
+        );
+    }
+
     public Optional<SynchronizationAttempt> select(Encryptor encryptor, Synchronization synchronization, int id) {
         try {
             return Optional.of(jdbcTemplate.queryForObject(
@@ -35,13 +47,7 @@ public class SynchronizationAttemptRepository {
                     new MapSqlParameterSource()
                             .addValue("id", id)
                             .addValue("synchronizationId", synchronization.getId()),
-                    (rs, rn) -> new SynchronizationAttempt(
-                            rs.getInt("id"),
-                            SynchronizationStatus.valueOf(rs.getString("status")),
-                            rs.getString("message"),
-                            Optional.ofNullable(rs.getString("screenshot")).map(encryptor::decrypt).map(Screenshot::new).orElse(null),
-                            rs.getInt("synchronization_id")
-                    )
+                    (rs, rn) -> mapper(encryptor, rs)
             ));
         } catch (IncorrectResultSizeDataAccessException ex) {
             return Optional.empty();
@@ -77,6 +83,16 @@ public class SynchronizationAttemptRepository {
                 .addValue("synchronization_id", synchronizationAttempt.getSynchronizationId()))
                 .intValue();
         return select(encryptor, synchronization, id).get();
+    }
+
+    private SynchronizationAttempt mapper(Encryptor encryptor, ResultSet rs) throws SQLException {
+        return new SynchronizationAttempt(
+                rs.getInt("id"),
+                SynchronizationStatus.valueOf(rs.getString("status")),
+                rs.getString("message"),
+                Optional.ofNullable(rs.getString("screenshot")).map(encryptor::decrypt).map(Screenshot::new).orElse(null),
+                rs.getInt("synchronization_id")
+        );
     }
 
 }

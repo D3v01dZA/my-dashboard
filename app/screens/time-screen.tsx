@@ -1,7 +1,6 @@
 import * as React from "react";
 import {useCallback, useContext, useState} from "react";
 import {AppContext} from "../util/app-context";
-import {Navigation, Route} from "../App";
 import {Alert, Dimensions, ScrollView, TouchableOpacity, View} from "react-native";
 import {Header} from "../util/header";
 import {createDelete, createPut, format, Time, TimeType} from "../util/model";
@@ -11,8 +10,9 @@ import {Button, Input, ListItem, Overlay, Text} from "react-native-elements";
 import moment from "moment";
 import {selectProject, selectTime} from "../util/nav";
 import DatePicker from "react-native-date-picker";
+import {ProjectsNavigation, ProjectsRoute} from "./projects-navigator";
 
-export const TimeScreen = ({navigation, route}: { navigation: Navigation, route: Route<"Time"> }) => {
+export const TimeScreen = ({navigation, route}: { navigation: ProjectsNavigation, route: ProjectsRoute<"Time"> }) => {
 
     const {url} = useContext(AppContext);
 
@@ -188,7 +188,7 @@ export const TimeScreen = ({navigation, route}: { navigation: Navigation, route:
 
     return (
         <View style={{flex: 1}}>
-            <Header navigation={navigation} title="Time"/>
+            <Header navigation={navigation.dangerouslyGetParent()} title="Time"/>
             <ScrollView>
                 {
                     time?.id === undefined ? undefined : (

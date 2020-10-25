@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "420892956526",
+    "firebase_url": "https://time-80340.firebaseio.com",
+    "project_id": "time-80340",
+    "storage_bucket": "time-80340.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:420892956526:android:6e9639b2c5c25e656ed37f",
+        "android_client_info": {
+          "package_name": "com.time"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "420892956526-8s0682cbhs87l9gtssa5vnaspqbn3r6a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA-2VpzmRlSaESG64sdRcXUd5vm4wNQKJ0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "420892956526-8s0682cbhs87l9gtssa5vnaspqbn3r6a.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -106,11 +106,14 @@ export type SucceedingConfiguration = {
     website: string
 }
 
-export type FailingConfiguration = {
+export type FailingConfiguration = {}
 
-}
-
-export type SynchronizationConfiguration = MaconomyConfiguration | NetsuiteConfiguration | OpenairConfiguration | SucceedingConfiguration | FailingConfiguration;
+export type SynchronizationConfiguration =
+    MaconomyConfiguration
+    | NetsuiteConfiguration
+    | OpenairConfiguration
+    | SucceedingConfiguration
+    | FailingConfiguration;
 
 export type Synchronization = {
     id: number,
@@ -118,6 +121,30 @@ export type Synchronization = {
     enabled: boolean,
     service: SynchronizationType,
     configuration: SynchronizationConfiguration
+}
+
+export type SynchronizationAttempt = {
+    id: number,
+    synchronizationId: number,
+    status: "SUCCESS" | "FAILURE" | "PENDING",
+    message: string;
+    screenshot: {
+        base64: string
+    };
+}
+
+export type BroadcastSynchronizationAttempt = {
+    id: number,
+    projectId: string,
+    synchronizationId: string,
+    status: "SUCCESS" | "FAILURE" | "PENDING"
+}
+
+export type BroadcastMessage = {
+
+    type: "TIME" | "SYNCHRONIZE_ATTEMPT",
+    message: TimeStatus | BroadcastSynchronizationAttempt
+
 }
 
 export const format = (moment: Moment) => {
