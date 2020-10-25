@@ -85,13 +85,15 @@ export const AttemptsScreen = ({navigation, route}: { navigation: ProjectsNaviga
                     width: Dimensions.get('window').width * 0.85,
                     maxHeight: Dimensions.get('window').height * 0.85
                 }}>
-                    <Image
-                        style={{
-                            width: Dimensions.get('window').width * 0.85,
-                            height: Dimensions.get('window').height * 0.85
-                        }}
-                        source={{uri: `data:image/png;base64,${displayedSynchronizationAttempt?.screenshot.base64}`}}
-                    />
+                    <ScrollView>
+                        <Image
+                            style={{
+                                width: Dimensions.get('window').width * 0.85,
+                                height: Dimensions.get('window').height * 0.85
+                            }}
+                            source={{uri: `data:image/png;base64,${displayedSynchronizationAttempt?.screenshot.base64}`}}
+                        />
+                    </ScrollView>
                 </View>
             </Overlay>
         </View>
